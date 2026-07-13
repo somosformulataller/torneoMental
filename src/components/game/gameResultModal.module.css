@@ -1,0 +1,139 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal {
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.titleWin {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent-cyan, #00f5ff);
+  margin-bottom: 20px;
+}
+
+.titleLose {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary, #ffffff);
+  margin-bottom: 20px;
+}
+
+.streakSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.streakLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #7a7a9e);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.streakValue {
+  font-size: 4rem;
+  font-weight: 900;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+
+.greenGlow {
+  color: var(--accent-green, #39ff14);
+  text-shadow: 0 0 30px rgba(57, 255, 20, 0.5);
+}
+
+.redGlow {
+  color: var(--accent-pink, #ff6b9d);
+  text-shadow: 0 0 30px rgba(255, 107, 157, 0.5);
+}
+
+.pairsInfo {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #7a7a9e);
+  margin-bottom: 8px;
+}
+
+.rankingNote {
+  font-size: 0.8rem;
+  color: var(--text-muted, #4a4a6a);
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+.playAgainBtn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-orange, #ff6b35), #ff8c42);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+}
+
+.playAgainBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+}
+
+.noTickets {
+  color: var(--accent-orange, #ff6b35);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(255, 107, 53, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 107, 53, 0.2);
+}
+
+.backBtn {
+  width: 100%;
+  padding: 14px;
+  background: var(--bg-secondary, #12121c);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: var(--text-primary, #ffffff);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: var(--bg-card-hover, #222240);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

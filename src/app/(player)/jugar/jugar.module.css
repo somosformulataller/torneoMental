@@ -1,0 +1,245 @@
+.container {
+  min-height: 100vh;
+  padding: 12px 12px 100px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Loading / Message Screens */
+.loadingScreen, .messageScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  gap: 16px;
+  padding: 20px;
+  text-align: center;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--bg-card);
+  border-top: 3px solid var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.messageIcon { font-size: 4rem; margin-bottom: 8px; }
+.messageScreen h2 { font-size: 1.5rem; color: var(--text-primary); }
+.gameRule { color: var(--text-secondary); line-height: 1.6; max-width: 300px; }
+
+.alertBox {
+  background: rgba(255, 107, 53, 0.15);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 12px;
+  padding: 16px 24px;
+  color: var(--accent-orange);
+  font-weight: 600;
+}
+
+.backBtn {
+  padding: 14px 40px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.backBtn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-cyan);
+}
+
+/* Game Stats Bar */
+.gameStats {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 8px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.gameStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.gameStatLabel {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.gameStatValue {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+}
+
+/* Streak Section */
+.streakSection {
+  text-align: center;
+  margin: 12px 0 8px;
+}
+
+.streakLabel {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.streakNumber {
+  display: inline-block;
+  font-size: 3.5rem;
+  font-weight: 900;
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-green);
+  text-shadow: 0 0 30px rgba(57, 255, 20, 0.5), 0 0 60px rgba(57, 255, 20, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.streakUp {
+  animation: streakBounce 0.5s ease;
+}
+
+@keyframes streakBounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* Result Indicators */
+.resultMatch {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--accent-green);
+  text-shadow: 0 0 20px rgba(57, 255, 20, 0.6), 0 0 40px rgba(57, 255, 20, 0.3);
+  animation: winText 0.6s ease;
+  letter-spacing: 3px;
+  margin: 4px 0;
+}
+
+.resultNoMatch {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--accent-red);
+  text-shadow: 0 0 20px rgba(255, 56, 96, 0.6), 0 0 40px rgba(255, 56, 96, 0.3);
+  animation: loseText 0.6s ease;
+  letter-spacing: 3px;
+  margin: 4px 0;
+}
+
+@keyframes winText {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes loseText {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Reveal Zone */
+.revealZone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.revealSlot {
+  width: 70px;
+  height: 90px;
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.revealActive {
+  border-style: solid;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+}
+
+.revealImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.vsText {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+
+/* Theme Indicator */
+.themeIndicator {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  text-transform: capitalize;
+}
+
+/* Card Grid */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 8px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 400px) {
+  .cardGrid {
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 10px;
+  }
+}
+
+/* Countdown Section */
+.countdownSection {
+  text-align: center;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}

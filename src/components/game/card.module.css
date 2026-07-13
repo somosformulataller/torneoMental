@@ -1,0 +1,126 @@
+.scene {
+  perspective: 800px;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  cursor: pointer;
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.card:hover:not(.disabled):not(.flipped):not(.matched) {
+  transform: scale(1.05);
+}
+
+.flipped {
+  transform: rotateY(180deg);
+}
+
+.matched {
+  transform: rotateY(180deg);
+  animation: matchPulse 0.6s ease;
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@keyframes matchPulse {
+  0% { box-shadow: none; }
+  50% { box-shadow: 0 0 25px rgba(57, 255, 20, 0.6); }
+  100% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+}
+
+/* Card Faces */
+.cardFace {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card Back (face down) */
+.cardBack {
+  background: linear-gradient(135deg, #1e1e3a, #2a2a4a);
+  border: 2px solid rgba(0, 245, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.cardBackDesign {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.cardBackLogo {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--accent-cyan, #00f5ff);
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+  letter-spacing: 2px;
+  z-index: 1;
+}
+
+.cardBackPattern {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(0, 245, 255, 0.1);
+  border-radius: 6px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 8px,
+    rgba(0, 245, 255, 0.03) 8px,
+    rgba(0, 245, 255, 0.03) 16px
+  );
+}
+
+/* Card Front (face up) */
+.cardFront {
+  transform: rotateY(180deg);
+  background: var(--bg-card, #1a1a2e);
+  border: 2px solid rgba(57, 255, 20, 0.2);
+  padding: 6px;
+  gap: 4px;
+}
+
+.matched .cardFront {
+  border-color: rgba(57, 255, 20, 0.5);
+  box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+}
+
+.cardImage {
+  width: 85%;
+  height: 70%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.cardName {
+  font-size: 0.55rem;
+  color: var(--text-secondary, #7a7a9e);
+  text-transform: capitalize;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
