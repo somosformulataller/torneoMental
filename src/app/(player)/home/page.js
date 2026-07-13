@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client';
 import { requestTicketsAction } from '@/actions/tickets';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import Modal from '@/components/ui/Modal';
+import Spinner from '@/components/ui/Spinner';
+import Button from '@/components/ui/Button';
+import FormInput from '@/components/ui/FormInput';
 import styles from './home.module.css';
 
 export default function HomePage() {
@@ -102,7 +105,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
-        <div className={styles.spinner}></div>
+        <Spinner />
         <p>Cargando...</p>
       </div>
     );
@@ -190,12 +193,9 @@ export default function HomePage() {
           Total: <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong>
         </div>
 
-        <button
-          className={styles.buyButton}
-          onClick={() => setShowPaymentModal(true)}
-        >
+        <Button variant="accent" fullWidth onClick={() => setShowPaymentModal(true)}>
           Comprar {ticketQuantity} {ticketQuantity === 1 ? 'ticket' : 'tickets'}
-        </button>
+        </Button>
       </div>
 
       {/* Payment Modal */}
@@ -209,32 +209,29 @@ export default function HomePage() {
             Transfiere <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong> y coloca la referencia del pago
           </p>
           {buyError && <div className={styles.error || ''}>{buyError}</div>}
-          <div className={styles.formGroup}>
-            <label>Referencia de pago</label>
-            <input
-              type="text"
-              value={paymentRef}
-              onChange={(e) => setPaymentRef(e.target.value)}
-              placeholder="Número de referencia o comprobante"
-              className={styles.input}
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Cantidad de tickets</label>
-            <input
-              type="number"
-              value={ticketQuantity}
-              readOnly
-              className={styles.input}
-            />
-          </div>
-          <button
-            className={styles.submitPayment}
+          <FormInput
+            label="Referencia de pago"
+            type="text"
+            value={paymentRef}
+            onChange={(e) => setPaymentRef(e.target.value)}
+            placeholder="Número de referencia o comprobante"
+          />
+          <FormInput
+            label="Cantidad de tickets"
+            type="number"
+            value={ticketQuantity}
+            readOnly
+          />
+          <Button
+            variant="primary"
+            fullWidth
             onClick={handleBuyTickets}
             disabled={buying || !paymentRef.trim()}
+            loading={buying}
+            loadingText="Enviando..."
           >
-            {buying ? 'Enviando...' : 'Enviar solicitud de pago'}
-          </button>
+            Enviar solicitud de pago
+          </Button>
         </div>
       </Modal>
 
@@ -250,12 +247,9 @@ export default function HomePage() {
           <p className={styles.confirmNote}>
             El resultado se reflejará en minutos en tu historial.
           </p>
-          <button
-            className={styles.confirmBtn}
-            onClick={() => setShowConfirmModal(false)}
-          >
+          <Button variant="primary" fullWidth onClick={() => setShowConfirmModal(false)}>
             Listo
-          </button>
+          </Button>
         </div>
       </Modal>
     </div>

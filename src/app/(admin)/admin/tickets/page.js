@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/client';
 import { approveTicketAction, rejectTicketAction } from '@/actions/tickets';
 import { PAYMENT_STATUSES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
+import Spinner from '@/components/ui/Spinner';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import styles from './tickets.module.css';
 
 export default function AdminTicketsPage() {
@@ -115,7 +118,7 @@ export default function AdminTicketsPage() {
       </div>
 
       {loading ? (
-        <div className={styles.loading}>Cargando solicitudes...</div>
+        <div className={styles.loading}><Spinner /></div>
       ) : tickets.length === 0 ? (
         <div className={styles.emptyState}>No hay solicitudes para mostrar</div>
       ) : (
@@ -151,29 +154,24 @@ export default function AdminTicketsPage() {
                     </div>
                   </td>
                   <td>
-                    <span 
-                      className={styles.badge}
-                      style={{ 
-                        backgroundColor: `${PAYMENT_STATUSES[t.payment_status]?.color}20`,
-                        color: PAYMENT_STATUSES[t.payment_status]?.color,
-                        borderColor: `${PAYMENT_STATUSES[t.payment_status]?.color}50`
-                      }}
-                    >
+                    <Badge color={PAYMENT_STATUSES[t.payment_status]?.color}>
                       {PAYMENT_STATUSES[t.payment_status]?.label}
-                    </span>
+                    </Badge>
                   </td>
                   <td>
                     {t.payment_status === 'pendiente' && (
                       <div className={styles.actions}>
-                        <button 
-                          className={styles.approveBtn}
+                        <Button
+                          variant="success"
+                          size="sm"
                           onClick={() => handleApprove(t)}
                           disabled={processing}
                         >
                           ✓ Aprobar
-                        </button>
-                        <button 
-                          className={styles.rejectBtn}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
                           onClick={() => {
                             setSelectedTicket(t);
                             setShowRejectModal(true);
@@ -181,7 +179,7 @@ export default function AdminTicketsPage() {
                           disabled={processing}
                         >
                           ✕ Rechazar
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </td>
@@ -211,13 +209,16 @@ export default function AdminTicketsPage() {
             placeholder="Ej: La referencia no coincide con nuestros registros bancarios..."
             rows={4}
           />
-          <button 
-            className={styles.submitRejectBtn}
+          <Button
+            variant="dangerSolid"
+            fullWidth
             onClick={handleReject}
             disabled={processing || !rejectReason.trim()}
+            loading={processing}
+            loadingText="Procesando..."
           >
-            {processing ? 'Procesando...' : 'Confirmar Rechazo'}
-          </button>
+            Confirmar Rechazo
+          </Button>
         </div>
       </Modal>
     </div>

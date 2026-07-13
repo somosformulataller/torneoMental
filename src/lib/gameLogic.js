@@ -30,12 +30,3 @@ export function generateCardPairs(themeId, count) {
   
   return shuffleArray(pairs);
 }
-
-export function getNextTheme(currentTheme) {
-  const themes = ['tecnologia', 'naturaleza', 'animales'];
-  if (!currentTheme) return themes[0];
-  
-  const currentIndex = themes.indexOf(currentTheme);
-  const nextIndex = (currentIndex + 1) % themes.length;
-  return themes[nextIndex];
-}

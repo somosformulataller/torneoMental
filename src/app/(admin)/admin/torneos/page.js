@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/client';
 import { createTournamentAction, updateTournamentAction } from '@/actions/tournaments';
 import { TOURNAMENT_STATUSES, THEMES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import Spinner from '@/components/ui/Spinner';
 import styles from './torneos.module.css';
 
 export default function AdminTorneosPage() {
@@ -23,7 +26,6 @@ export default function AdminTorneosPage() {
     nombre: '',
     card_theme: 'aleatorio',
     card_count: 14,
-    streak_target: 5,
     start_time: '',
     duration_minutes: 60,
     status: 'programado'
@@ -63,7 +65,6 @@ export default function AdminTorneosPage() {
         nombre: tournament.nombre,
         card_theme: tournament.card_theme,
         card_count: tournament.card_count,
-        streak_target: tournament.streak_target,
         start_time: date.toISOString().slice(0, 16),
         duration_minutes: tournament.duration_minutes,
         status: tournament.status
@@ -75,7 +76,6 @@ export default function AdminTorneosPage() {
         nombre: '',
         card_theme: 'aleatorio',
         card_count: 14,
-        streak_target: 5,
         start_time: '',
         duration_minutes: 60,
         status: 'programado'
@@ -95,7 +95,6 @@ export default function AdminTorneosPage() {
         nombre: formData.nombre,
         card_theme: formData.card_theme,
         card_count: Number(formData.card_count),
-        streak_target: Number(formData.streak_target),
         start_time: new Date(formData.start_time).toISOString(),
         duration_minutes: Number(formData.duration_minutes),
         status: formData.status
@@ -131,13 +130,13 @@ export default function AdminTorneosPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Torneos</h1>
-        <button className={styles.createBtn} onClick={() => handleOpenModal()}>
+        <Button variant="primary" size="sm" onClick={() => handleOpenModal()}>
           + Nuevo Torneo
-        </button>
+        </Button>
       </div>
 
       {loading ? (
-        <div className={styles.loading}>Cargando torneos...</div>
+        <div className={styles.loading}><Spinner /></div>
       ) : tournaments.length === 0 ? (
         <div className={styles.emptyState}>No hay torneos creados</div>
       ) : (
@@ -145,16 +144,9 @@ export default function AdminTorneosPage() {
           {tournaments.map((t) => (
             <div key={t.id} className={styles.card}>
               <div className={styles.cardHeader}>
-                <span 
-                  className={styles.statusBadge}
-                  style={{
-                    backgroundColor: `${TOURNAMENT_STATUSES[t.status]?.color}20`,
-                    color: TOURNAMENT_STATUSES[t.status]?.color,
-                    borderColor: `${TOURNAMENT_STATUSES[t.status]?.color}50`
-                  }}
-                >
+                <Badge color={TOURNAMENT_STATUSES[t.status]?.color}>
                   {TOURNAMENT_STATUSES[t.status]?.label}
-                </span>
+                </Badge>
                 <button className={styles.editBtn} onClick={() => handleOpenModal(t)}>
                   Editar
                 </button>
@@ -180,10 +172,6 @@ export default function AdminTorneosPage() {
                 <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Cartas</span>
                   <span className={styles.detailValue}>{t.card_count}</span>
-                </div>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Objetivo de racha</span>
-                  <span className={styles.detailValue}>{t.streak_target}</span>
                 </div>
               </div>
             </div>
@@ -265,39 +253,28 @@ export default function AdminTorneosPage() {
           </div>
 
           <div className={styles.inputGroup}>
-            <label>Objetivo de Racha (pares seguidos para ganar sin perder ticket)</label>
-            <input
-              type="number"
-              required
-              min="1"
-              value={formData.streak_target}
-              onChange={(e) => setFormData({...formData, streak_target: e.target.value})}
-              className={styles.input}
-            />
+            <label>Estado del Torneo</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              className={styles.select}
+            >
+              {Object.entries(TOURNAMENT_STATUSES).map(([key, val]) => (
+                <option key={key} value={key}>{val.label}</option>
+              ))}
+            </select>
+            <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '4px' }}>
+              Debe estar en <strong>Activo</strong> para que los jugadores puedan jugar.
+            </p>
           </div>
 
-          {isEditing && (
-            <div className={styles.inputGroup}>
-              <label>Estado del Torneo</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
-                className={styles.select}
-              >
-                {Object.entries(TOURNAMENT_STATUSES).map(([key, val]) => (
-                  <option key={key} value={key}>{val.label}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
           <div className={styles.formActions}>
-            <button type="button" className={styles.cancelBtn} onClick={() => setShowModal(false)}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setShowModal(false)}>
               Cancelar
-            </button>
-            <button type="submit" className={styles.saveBtn} disabled={processing}>
-              {processing ? 'Guardando...' : 'Guardar Torneo'}
-            </button>
+            </Button>
+            <Button type="submit" variant="primary" size="sm" loading={processing} loadingText="Guardando...">
+              Guardar Torneo
+            </Button>
           </div>
         </form>
       </Modal>

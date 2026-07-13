@@ -2,31 +2,11 @@
 
 import { createClient } from '@/lib/supabase/server';
 
-export async function startGameAction(tournamentId) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('start_game', {
-    p_tournament_id: tournamentId,
-  });
-
-  if (error) return { error: error.message };
-  return { game: data };
-}
-
-export async function endGameAction({ gameId, finalStreak, totalPairs, timeMs, status }) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('end_game', {
-    p_game_id: gameId,
-    p_final_streak: finalStreak,
-    p_total_pairs: totalPairs,
-    p_time_ms: timeMs,
-    p_status: status,
-  });
-
-  if (error) return { error: error.message };
-
+async function currentProfile(supabase) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return null;
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -34,5 +14,29 @@ export async function endGameAction({ gameId, finalStreak, totalPairs, timeMs, s
     .eq('id', user.id)
     .single();
 
+  return profile;
+}
+
+export async function startGameAction(tournamentId) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('start_game', {
+    p_tournament_id: tournamentId,
+  });
+
+  if (error) return { error: error.message };
+
+  const profile = await currentProfile(supabase);
   return { game: data, profile };
+}
+
+export async function endGameAction({ gameId, pairsMatched, timeMs }) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('end_game', {
+    p_game_id: gameId,
+    p_pairs_matched: pairsMatched,
+    p_time_ms: timeMs,
+  });
+
+  if (error) return { error: error.message };
+  return { game: data };
 }

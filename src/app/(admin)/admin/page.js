@@ -1,8 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
+import Spinner from '@/components/ui/Spinner';
 import styles from './dashboard.module.css';
+
+const STAT_CARDS = [
+  { key: 'users', label: 'Usuarios Totales', icon: '👥', color: 'var(--accent-cyan)', format: (v) => v },
+  { key: 'tournaments', label: 'Torneos Creados', icon: '🏆', color: 'var(--accent-orange)', format: (v) => v },
+  { key: 'ticketsSold', label: 'Tickets Vendidos', icon: '🎫', color: 'var(--accent-green)', format: (v) => v },
+  { key: 'revenue', label: 'Ingresos USD', icon: '💰', color: 'var(--accent-gold)', format: (v) => `$${v.toFixed(2)}` },
+];
 
 export default function AdminDashboardPage() {
   const supabase = createClient();
@@ -65,7 +74,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>Cargando dashboard...</div>
+        <div className={styles.loading}><Spinner /></div>
       </div>
     );
   }
@@ -76,37 +85,21 @@ export default function AdminDashboardPage() {
       <p className={styles.subtitle}>Resumen del Torneo Mental</p>
 
       <div className={styles.grid}>
-        <div className={styles.statCard}>
-          <div className={styles.iconBox} style={{ color: 'var(--accent-cyan)' }}>👥</div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Usuarios Totales</span>
-            <span className={styles.statValue}>{stats.users}</span>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.iconBox} style={{ color: 'var(--accent-orange)' }}>🏆</div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Torneos Creados</span>
-            <span className={styles.statValue}>{stats.tournaments}</span>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.iconBox} style={{ color: 'var(--accent-green)' }}>🎫</div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Tickets Vendidos</span>
-            <span className={styles.statValue}>{stats.ticketsSold}</span>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.iconBox} style={{ color: 'var(--accent-gold)' }}>💰</div>
-          <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Ingresos USD</span>
-            <span className={styles.statValue}>${stats.revenue.toFixed(2)}</span>
-          </div>
-        </div>
+        {STAT_CARDS.map((s, i) => (
+          <motion.div
+            key={s.key}
+            className={styles.statCard}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.06, type: 'spring', stiffness: 260, damping: 24 }}
+          >
+            <div className={styles.iconBox} style={{ color: s.color }}>{s.icon}</div>
+            <div className={styles.statInfo}>
+              <span className={styles.statLabel}>{s.label}</span>
+              <span className={styles.statValue}>{s.format(stats[s.key])}</span>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );

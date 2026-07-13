@@ -4,7 +4,15 @@
 -- Ejecutar completo en el SQL Editor de Supabase (proyecto vacío).
 -- Este script reemplaza cualquier versión anterior: crea tablas, vista de
 -- ranking, funciones RPC (SECURITY DEFINER) y políticas RLS que impiden que
--- el cliente (navegador) manipule tickets, rachas o aprobaciones directamente.
+-- el cliente (navegador) manipule tickets o resultados directamente.
+--
+-- Reglas del juego:
+-- 1 ticket = 1 partida. Al iniciar se consume el ticket. El jugador voltea
+-- cartas buscando pares: si acierta, el par queda revelado; si falla,
+-- simplemente las cartas se voltean de nuevo y puede seguir intentando (no
+-- pierde ni gasta otro ticket). La partida termina cuando completa todo el
+-- tablero o se acaba el tiempo del torneo. Gana quien encuentre más pares
+-- en menos tiempo.
 
 -- ==========================================
 -- 1. TABLAS
@@ -31,7 +39,6 @@ create table tournaments (
     check (card_theme in ('tecnologia', 'naturaleza', 'animales', 'aleatorio')),
   card_count integer not null default 14
     check (card_count >= 14 and card_count % 2 = 0),
-  streak_target integer not null default 5 check (streak_target > 0),
   status text not null default 'programado'
     check (status in ('borrador', 'programado', 'activo', 'finalizado')),
   created_by uuid references profiles(id),
@@ -56,11 +63,10 @@ create table games (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references profiles(id) on delete cascade not null,
   tournament_id uuid references tournaments(id) on delete cascade not null,
-  best_streak integer not null default 0 check (best_streak >= 0),
-  total_pairs_matched integer not null default 0 check (total_pairs_matched >= 0),
+  pairs_matched integer not null default 0 check (pairs_matched >= 0),
   total_time_ms bigint,
   card_layout jsonb,
-  status text not null default 'en_curso' check (status in ('en_curso', 'completado', 'perdido')),
+  status text not null default 'en_curso' check (status in ('en_curso', 'completado')),
   created_at timestamp with time zone default now(),
   ended_at timestamp with time zone
 );
@@ -92,8 +98,10 @@ $$;
 -- Las vistas se ejecutan con los privilegios de su dueño (por defecto el rol
 -- que las crea), por lo que no quedan sujetas a las políticas RLS restrictivas
 -- de "profiles"/"games" que se definen más abajo. Así, cualquier jugador puede
--- ver el ranking completo (nombre + racha) sin poder leer el resto de columnas
+-- ver el ranking completo (nombre + pares) sin poder leer el resto de columnas
 -- sensibles de otros usuarios directamente desde la tabla.
+--
+-- Orden: más pares encontrados primero; entre empates, menor tiempo total.
 
 create or replace view tournament_rankings as
 select
@@ -101,21 +109,21 @@ select
   g.user_id,
   p.nombre as user_nombre,
   p.apellido as user_apellido,
-  max(g.best_streak) as best_streak,
-  min(g.total_time_ms) filter (where g.best_streak = (
-    select max(g2.best_streak) from games g2
+  max(g.pairs_matched) as pairs_matched,
+  min(g.total_time_ms) filter (where g.pairs_matched = (
+    select max(g2.pairs_matched) from games g2
     where g2.user_id = g.user_id
       and g2.tournament_id = g.tournament_id
-      and g2.status in ('completado', 'perdido')
+      and g2.status = 'completado'
   )) as best_time_ms,
   count(g.id) as partidas_jugadas,
   row_number() over (
     partition by g.tournament_id
-    order by max(g.best_streak) desc, min(g.total_time_ms) asc
+    order by max(g.pairs_matched) desc, min(g.total_time_ms) asc
   ) as posicion
 from games g
 join profiles p on p.id = g.user_id
-where g.status in ('completado', 'perdido')
+where g.status = 'completado'
 group by g.tournament_id, g.user_id, p.nombre, p.apellido;
 
 -- ==========================================
@@ -146,13 +154,13 @@ create trigger on_auth_user_created
 -- 5. FUNCIONES RPC (mutaciones sensibles)
 -- ==========================================
 -- Todas corren como SECURITY DEFINER: validan auth.uid() / rol admin por sí
--- mismas y son la ÚNICA vía para tocar tickets_balance, best_streak y el
+-- mismas y son la ÚNICA vía para tocar tickets_balance, pairs_matched y el
 -- estado de aprobación de tickets. El cliente nunca escribe esas columnas
 -- directamente (no existen políticas RLS de UPDATE para ellas).
 
--- Inicia una partida: exige tener >=1 ticket disponible pero NO lo consume
--- todavía (según la regla del torneo: el ticket solo se pierde si el
--- jugador falla; si alcanza la racha objetivo, no se descuenta).
+-- Inicia una partida: valida que el torneo esté activo y consume 1 ticket
+-- de inmediato (la partida ya no se puede "perder": dura hasta que se
+-- completa el tablero o se acaba el tiempo del torneo).
 create or replace function public.start_game(p_tournament_id uuid)
 returns games
 language plpgsql
@@ -180,6 +188,8 @@ begin
     raise exception 'No tienes tickets disponibles';
   end if;
 
+  update profiles set tickets_balance = tickets_balance - 1 where id = v_uid;
+
   insert into games (user_id, tournament_id, status)
   values (v_uid, p_tournament_id, 'en_curso')
   returning * into v_game;
@@ -188,17 +198,14 @@ begin
 end;
 $$;
 
--- Finaliza una partida propia. status = 'perdido' consume 1 ticket;
--- status = 'completado' (objetivo de racha alcanzado o corte por tiempo del
--- torneo) no consume ticket. Solo puede llamarse una vez por partida
--- (transición en_curso -> completado/perdido) y valida coherencia básica
--- entre racha, pares y tiempo transcurrido para dificultar el "cheateo".
+-- Finaliza una partida propia (al completar el tablero o por corte de
+-- tiempo del torneo). Solo puede llamarse una vez por partida (transición
+-- en_curso -> completado) y valida coherencia básica entre pares y tiempo
+-- transcurrido para dificultar el "cheateo".
 create or replace function public.end_game(
   p_game_id uuid,
-  p_final_streak integer,
-  p_total_pairs integer,
-  p_time_ms integer,
-  p_status text
+  p_pairs_matched integer,
+  p_time_ms integer
 )
 returns games
 language plpgsql
@@ -214,10 +221,6 @@ begin
     raise exception 'No autenticado';
   end if;
 
-  if p_status not in ('completado', 'perdido') then
-    raise exception 'Estado inválido';
-  end if;
-
   select * into v_game from games where id = p_game_id and user_id = v_uid for update;
   if not found then
     raise exception 'Partida no encontrada';
@@ -227,27 +230,22 @@ begin
     raise exception 'La partida ya fue finalizada';
   end if;
 
-  if p_final_streak < 0 or p_final_streak > greatest(coalesce(p_total_pairs, 0), 0) then
-    raise exception 'Racha inválida';
+  if p_pairs_matched is null or p_pairs_matched < 0 then
+    raise exception 'Cantidad de pares inválida';
   end if;
 
-  v_min_time := greatest(coalesce(p_total_pairs, 0), 0) * 300; -- 300ms mínimo por par
+  v_min_time := greatest(p_pairs_matched, 0) * 300; -- 300ms mínimo por par
   if p_time_ms is not null and p_time_ms < v_min_time then
     raise exception 'Tiempo de partida no plausible';
   end if;
 
   update games set
-    best_streak = p_final_streak,
-    total_pairs_matched = coalesce(p_total_pairs, 0),
+    pairs_matched = p_pairs_matched,
     total_time_ms = p_time_ms,
-    status = p_status,
+    status = 'completado',
     ended_at = now()
   where id = p_game_id
   returning * into v_game;
-
-  if p_status = 'perdido' then
-    update profiles set tickets_balance = greatest(tickets_balance - 1, 0) where id = v_uid;
-  end if;
 
   return v_game;
 end;
@@ -318,7 +316,7 @@ end;
 $$;
 
 grant execute on function public.start_game(uuid) to authenticated;
-grant execute on function public.end_game(uuid, integer, integer, integer, text) to authenticated;
+grant execute on function public.end_game(uuid, integer, integer) to authenticated;
 grant execute on function public.approve_ticket(uuid) to authenticated;
 grant execute on function public.reject_ticket(uuid, text) to authenticated;
 grant execute on function public.is_admin(uuid) to authenticated;

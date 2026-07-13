@@ -16,28 +16,21 @@
   color: var(--text-primary);
 }
 
-.createBtn {
-  padding: 12px 20px;
-  background: linear-gradient(135deg, var(--accent-cyan), #00c8ff);
-  color: #000;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 60px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md, 12px);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
-.createBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
-}
-
-.loading, .emptyState {
+.emptyState {
   text-align: center;
   padding: 60px;
   color: var(--text-secondary);
   background: var(--bg-card);
-  border-radius: 12px;
+  border-radius: var(--radius-md, 12px);
   border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
@@ -66,17 +59,6 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-}
-
-.statusBadge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 12px;
-  border-width: 1px;
-  border-style: solid;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .editBtn {
@@ -178,26 +160,3 @@
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.cancelBtn {
-  padding: 10px 20px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-secondary);
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.saveBtn {
-  padding: 10px 20px;
-  background: var(--accent-cyan);
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.saveBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}

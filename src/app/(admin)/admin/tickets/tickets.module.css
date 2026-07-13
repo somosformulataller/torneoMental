@@ -113,62 +113,26 @@
   color: var(--accent-green);
 }
 
-.badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 12px;
-  border-width: 1px;
-  border-style: solid;
-  text-transform: uppercase;
-}
-
 .actions {
   display: flex;
   gap: 8px;
 }
 
-.approveBtn, .rejectBtn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 60px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md, 12px);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
-.approveBtn {
-  background: rgba(57, 255, 20, 0.1);
-  color: var(--accent-green);
-  border: 1px solid rgba(57, 255, 20, 0.3);
-}
-
-.approveBtn:hover {
-  background: rgba(57, 255, 20, 0.2);
-}
-
-.rejectBtn {
-  background: rgba(255, 56, 96, 0.1);
-  color: var(--accent-red);
-  border: 1px solid rgba(255, 56, 96, 0.3);
-}
-
-.rejectBtn:hover {
-  background: rgba(255, 56, 96, 0.2);
-}
-
-.approveBtn:disabled, .rejectBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.loading, .emptyState {
+.emptyState {
   text-align: center;
   padding: 60px;
   color: var(--text-secondary);
   background: var(--bg-card);
-  border-radius: 12px;
+  border-radius: var(--radius-md, 12px);
   border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
@@ -194,17 +158,3 @@
   border-color: var(--accent-cyan);
 }
 
-.submitRejectBtn {
-  padding: 12px;
-  background: var(--accent-red);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.submitRejectBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}

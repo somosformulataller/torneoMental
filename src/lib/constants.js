@@ -22,16 +22,18 @@ export const THEMES = {
   },
 };
 
+// Colores en hex (no var()) porque se les concatena un sufijo de alfa,
+// ej. `${color}20`, y eso solo es válido con hex, no con var(--token).
 export const PAYMENT_STATUSES = {
-  pendiente: { label: 'Pendiente', color: 'var(--accent-gold)' },
-  validando: { label: 'Validando', color: 'var(--accent-cyan)' },
-  aprobado: { label: 'Aprobado', color: 'var(--accent-green)' },
-  rechazado: { label: 'Rechazado', color: 'var(--accent-red)' },
+  pendiente: { label: 'Pendiente', color: '#ffd700' },
+  validando: { label: 'Validando', color: '#00f5ff' },
+  aprobado: { label: 'Aprobado', color: '#39ff14' },
+  rechazado: { label: 'Rechazado', color: '#ff3860' },
 };
 
 export const TOURNAMENT_STATUSES = {
-  borrador: { label: 'Borrador', color: 'var(--text-secondary)' },
-  programado: { label: 'Programado', color: 'var(--accent-cyan)' },
-  activo: { label: 'Activo', color: 'var(--accent-green)' },
-  finalizado: { label: 'Finalizado', color: 'var(--accent-red)' },
+  borrador: { label: 'Borrador', color: '#7a7a9e' },
+  programado: { label: 'Programado', color: '#00f5ff' },
+  activo: { label: 'Activo', color: '#39ff14' },
+  finalizado: { label: 'Finalizado', color: '#ff3860' },
 };

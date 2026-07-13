@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PAYMENT_STATUSES } from '@/lib/constants';
+import Spinner from '@/components/ui/Spinner';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import styles from './billetera.module.css';
 
 export default function BilleteraPage() {
@@ -58,7 +61,7 @@ export default function BilleteraPage() {
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
-        <div className={styles.spinner}></div>
+        <Spinner />
         <p>Cargando billetera...</p>
       </div>
     );
@@ -82,12 +85,9 @@ export default function BilleteraPage() {
         <div className={styles.balanceSub}>
           Valor estimado: ${(profile?.tickets_balance * 1.00 || 0).toFixed(2)} USD
         </div>
-        <button 
-          className={styles.buyBtn}
-          onClick={() => router.push('/home')}
-        >
+        <Button variant="ghost" fullWidth className={styles.buyBtn} onClick={() => router.push('/home')}>
           Comprar más tickets
-        </button>
+        </Button>
       </div>
 
       {/* Transactions History */}
@@ -105,16 +105,9 @@ export default function BilleteraPage() {
               <div key={t.id} className={styles.transactionCard}>
                 <div className={styles.txHeader}>
                   <div className={styles.txDate}>{formatDate(t.created_at)}</div>
-                  <span 
-                    className={styles.statusBadge}
-                    style={{ 
-                      backgroundColor: `${PAYMENT_STATUSES[t.payment_status].color}20`,
-                      color: PAYMENT_STATUSES[t.payment_status].color,
-                      borderColor: `${PAYMENT_STATUSES[t.payment_status].color}50`
-                    }}
-                  >
+                  <Badge color={PAYMENT_STATUSES[t.payment_status].color}>
                     {PAYMENT_STATUSES[t.payment_status].label}
-                  </span>
+                  </Badge>
                 </div>
                 
                 <div className={styles.txBody}>

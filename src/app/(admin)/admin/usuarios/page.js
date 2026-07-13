@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import Spinner from '@/components/ui/Spinner';
+import Badge from '@/components/ui/Badge';
 import styles from './usuarios.module.css';
 
 export default function AdminUsuariosPage() {
@@ -50,7 +52,7 @@ export default function AdminUsuariosPage() {
       </div>
 
       {loading ? (
-        <div className={styles.loading}>Cargando usuarios...</div>
+        <div className={styles.loading}><Spinner /></div>
       ) : (
         <div className={styles.tableContainer}>
           <table className={styles.table}>
@@ -77,14 +79,12 @@ export default function AdminUsuariosPage() {
                   <td>{u.cedula}</td>
                   <td>{u.whatsapp}</td>
                   <td>
-                    <span className={styles.ticketsBadge}>
-                      {u.tickets_balance}
-                    </span>
+                    <Badge color="#39ff14">{u.tickets_balance}</Badge>
                   </td>
                   <td>
-                    <span className={u.role === 'admin' ? styles.roleAdmin : styles.rolePlayer}>
+                    <Badge size="sm" color={u.role === 'admin' ? '#ff6b9d' : '#00f5ff'}>
                       {u.role === 'admin' ? 'Admin' : 'Jugador'}
-                    </span>
+                    </Badge>
                   </td>
                 </tr>
               ))}

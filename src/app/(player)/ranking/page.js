@@ -2,8 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
+import Spinner from '@/components/ui/Spinner';
 import styles from './ranking.module.css';
+
+function formatTime(ms) {
+  if (ms == null) return '--:--';
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
 
 export default function RankingPage() {
   const router = useRouter();
@@ -101,7 +111,7 @@ export default function RankingPage() {
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
-        <div className={styles.spinner}></div>
+        <Spinner />
         <p>Cargando posiciones...</p>
       </div>
     );
@@ -138,8 +148,8 @@ export default function RankingPage() {
               <div className={styles.myName}>Tú</div>
             </div>
             <div className={styles.myRankScore}>
-              <div className={styles.scoreValue}>{myPosition.best_streak}</div>
-              <div className={styles.scoreLabel}>racha</div>
+              <div className={styles.scoreValue}>{myPosition.pairs_matched}</div>
+              <div className={styles.scoreLabel}>pares · {formatTime(myPosition.best_time_ms)}</div>
             </div>
           </div>
         </div>
@@ -149,12 +159,15 @@ export default function RankingPage() {
         <div className={styles.listHeader}>
           <span>Pos</span>
           <span>Jugador</span>
-          <span className={styles.scoreCol}>Racha</span>
+          <span className={styles.scoreCol}>Pares</span>
+          <span className={styles.scoreCol}>Tiempo</span>
         </div>
 
         {rankings.map((r) => (
-          <div 
-            key={r.user_id} 
+          <motion.div
+            key={r.user_id}
+            layout
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className={`${styles.rankItem} ${r.user_id === profile?.id ? styles.isMe : ''} ${r.posicion <= 3 ? styles.topThree : ''}`}
           >
             <div className={`${styles.pos} ${r.posicion === 1 ? styles.gold : r.posicion === 2 ? styles.silver : r.posicion === 3 ? styles.bronze : ''}`}>
@@ -167,9 +180,12 @@ export default function RankingPage() {
               </div>
             </div>
             <div className={styles.score}>
-              {r.best_streak}
+              {r.pairs_matched}
             </div>
-          </div>
+            <div className={styles.timeScore}>
+              {formatTime(r.best_time_ms)}
+            </div>
+          </motion.div>
         ))}
 
         {rankings.length === 0 && (

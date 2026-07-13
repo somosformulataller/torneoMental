@@ -4,14 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import styles from './login.module.css';
+import AuthCard from '@/components/ui/AuthCard';
+import FormInput from '@/components/ui/FormInput';
+import Button from '@/components/ui/Button';
+import styles from '@/components/ui/authCard.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -36,11 +38,7 @@ export default function LoginPage() {
           .eq('id', data.user.id)
           .single();
 
-        if (profile?.role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/home');
-        }
+        router.push(profile?.role === 'admin' ? '/admin' : '/home');
       }
     } catch (err) {
       setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : err.message);
@@ -51,58 +49,63 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
+      <div className={styles.backgroundOverlay}></div>
+      
+      <div className={styles.heroSection}>
+        <h1 className={styles.mainTitle}>Torneo Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>
+      </div>
+
       <div className={styles.card}>
-        <div className={styles.logoContainer}>
-          <span className={styles.logoIcon}>🧠🎴</span>
-          <h1 className={styles.title}>TORNEO MENTAL</h1>
-          <p className={styles.subtitle}>Juego de Memoria por Torneos</p>
+        <div className={styles.header}>
+          <div className={styles.logoIcon}>🔮</div>
+          <h2 className={styles.loginTitle}>Inicia Sesión</h2>
         </div>
 
-        <form onSubmit={handleLogin} className={styles.form}>
-          {error && <div className={styles.error}>{error}</div>}
+        {error && <div className={styles.error}>{error}</div>}
 
+        <form onSubmit={handleLogin} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label htmlFor="email">Correo Electrónico</label>
+            <label>Correo Electrónico</label>
             <input
-              id="email"
               type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@correo.com"
-              required
               className={styles.input}
+              placeholder="tu@email.com"
             />
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="password">Contraseña</label>
+            <label>Contraseña</label>
             <div className={styles.passwordWrapper}>
               <input
-                id="password"
                 type={showPassword ? 'text' : 'password'}
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
                 className={styles.input}
+                placeholder="••••••••"
               />
               <button
                 type="button"
-                className={styles.togglePassword}
+                className={styles.eyeBtn}
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                {showPassword ? '👁️' : '🙈'}
               </button>
             </div>
           </div>
 
           <button type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? 'Iniciando...' : 'Iniciar Sesión'}
+            {loading ? 'Iniciando...' : 'Entrar al Torneo'}
           </button>
         </form>
 
         <div className={styles.footer}>
-          <p>¿No tienes cuenta? <Link href="/registro" className={styles.link}>Regístrate aquí</Link></p>
+          <Link href="/registro" className={styles.link}>
+            ¿No tienes cuenta? <span className={styles.linkHighlight}>Regístrate aquí</span>
+          </Link>
         </div>
       </div>
     </div>
