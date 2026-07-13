@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-export async function middleware(request) {
+export async function proxy(request) {
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -51,19 +51,28 @@ export async function middleware(request) {
   }
 
   if (user) {
+    let role = null
+    if (isAuthRoute || isAdminRoute) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      role = profile?.role ?? 'player'
+    }
+
     if (isAuthRoute) {
-      // Redirect authenticated users away from login/register
-      // We need to check their role to know where to send them
-      // But we can't easily query profiles in middleware efficiently for every request
-      // So we'll just redirect to /home, and the home layout/page can redirect admins to /admin
+      // Redirect authenticated users away from login/register based on role
       const url = request.nextUrl.clone()
-      url.pathname = '/home'
+      url.pathname = role === 'admin' ? '/admin' : '/home'
       return NextResponse.redirect(url)
     }
 
-    if (isAdminRoute) {
-      // Basic check, proper check should be done in the layout or page
-      // by querying the profiles table
+    if (isAdminRoute && role !== 'admin') {
+      // Non-admins can't access /admin routes even if authenticated
+      const url = request.nextUrl.clone()
+      url.pathname = '/home'
+      return NextResponse.redirect(url)
     }
   }
 

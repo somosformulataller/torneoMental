@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { requestTicketsAction } from '@/actions/tickets';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import Modal from '@/components/ui/Modal';
 import styles from './home.module.css';
@@ -18,6 +19,7 @@ export default function HomePage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
+  const [buyError, setBuyError] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -55,24 +57,24 @@ export default function HomePage() {
   async function handleBuyTickets() {
     if (!paymentRef.trim()) return;
     setBuying(true);
+    setBuyError(null);
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .insert({
-          user_id: profile.id,
-          tournament_id: activeTournament?.id || null,
-          quantity: ticketQuantity,
-          amount_usd: ticketQuantity * 1.00,
-          payment_reference: paymentRef,
-          payment_status: 'pendiente',
-        });
+      const { error } = await requestTicketsAction({
+        tournamentId: activeTournament?.id || null,
+        quantity: ticketQuantity,
+        paymentReference: paymentRef,
+      });
 
-      if (error) throw error;
+      if (error) {
+        setBuyError(error);
+        return;
+      }
       setShowPaymentModal(false);
       setShowConfirmModal(true);
       setPaymentRef('');
     } catch (err) {
       console.error('Error buying tickets:', err);
+      setBuyError('No se pudo enviar la solicitud. Intenta de nuevo.');
     } finally {
       setBuying(false);
     }
@@ -206,6 +208,7 @@ export default function HomePage() {
           <p className={styles.paymentInfo}>
             Transfiere <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong> y coloca la referencia del pago
           </p>
+          {buyError && <div className={styles.error || ''}>{buyError}</div>}
           <div className={styles.formGroup}>
             <label>Referencia de pago</label>
             <input

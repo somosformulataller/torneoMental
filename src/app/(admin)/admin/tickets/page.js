@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { approveTicketAction, rejectTicketAction } from '@/actions/tickets';
 import { PAYMENT_STATUSES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import styles from './tickets.module.css';
@@ -49,31 +50,11 @@ export default function AdminTicketsPage() {
 
   async function handleApprove(ticket) {
     if (!window.confirm(`¿Aprobar recarga de ${ticket.quantity} tickets para ${ticket.profiles.nombre}?`)) return;
-    
+
     setProcessing(true);
     try {
-      // 1. Update ticket status
-      const { error: ticketError } = await supabase
-        .from('tickets')
-        .update({ payment_status: 'aprobado' })
-        .eq('id', ticket.id);
-
-      if (ticketError) throw ticketError;
-
-      // 2. Add tickets to user balance
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('tickets_balance')
-        .eq('id', ticket.user_id)
-        .single();
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ tickets_balance: profile.tickets_balance + ticket.quantity })
-        .eq('id', ticket.user_id);
-
-      if (profileError) throw profileError;
-
+      const { error } = await approveTicketAction(ticket.id);
+      if (error) throw new Error(error);
       loadTickets();
     } catch (err) {
       console.error('Error approving ticket:', err);
@@ -91,15 +72,8 @@ export default function AdminTicketsPage() {
 
     setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .update({ 
-          payment_status: 'rechazado',
-          notes: rejectReason
-        })
-        .eq('id', selectedTicket.id);
-
-      if (error) throw error;
+      const { error } = await rejectTicketAction(selectedTicket.id, rejectReason);
+      if (error) throw new Error(error);
 
       setShowRejectModal(false);
       setRejectReason('');

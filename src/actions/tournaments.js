@@ -1,0 +1,57 @@
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+
+function validateTournamentData(data) {
+  if (!data.nombre?.trim()) {
+    return 'El nombre del torneo es obligatorio';
+  }
+  if (!Number.isInteger(data.card_count) || data.card_count < 14 || data.card_count % 2 !== 0) {
+    return 'La cantidad de cartas debe ser un número par de al menos 14';
+  }
+  if (!Number.isInteger(data.streak_target) || data.streak_target < 1) {
+    return 'El objetivo de racha debe ser mayor a 0';
+  }
+  if (!data.start_time || Number.isNaN(new Date(data.start_time).getTime())) {
+    return 'La fecha de inicio es inválida';
+  }
+  if (!Number.isInteger(data.duration_minutes) || data.duration_minutes < 1) {
+    return 'La duración debe ser mayor a 0 minutos';
+  }
+  return null;
+}
+
+export async function createTournamentAction(data) {
+  const validationError = validateTournamentData(data);
+  if (validationError) return { error: validationError };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: row, error } = await supabase
+    .from('tournaments')
+    .insert({ ...data, created_by: user?.id })
+    .select()
+    .single();
+
+  if (error) return { error: error.message };
+  return { tournament: row };
+}
+
+export async function updateTournamentAction(id, data) {
+  const validationError = validateTournamentData(data);
+  if (validationError) return { error: validationError };
+
+  const supabase = await createClient();
+  const { data: row, error } = await supabase
+    .from('tournaments')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) return { error: error.message };
+  return { tournament: row };
+}

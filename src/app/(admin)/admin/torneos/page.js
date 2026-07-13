@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { createTournamentAction, updateTournamentAction } from '@/actions/tournaments';
 import { TOURNAMENT_STATUSES, THEMES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import styles from './torneos.module.css';
@@ -22,10 +23,12 @@ export default function AdminTorneosPage() {
     nombre: '',
     card_theme: 'aleatorio',
     card_count: 14,
+    streak_target: 5,
     start_time: '',
     duration_minutes: 60,
     status: 'programado'
   });
+  const [formError, setFormError] = useState(null);
 
   useEffect(() => {
     loadTournaments();
@@ -60,6 +63,7 @@ export default function AdminTorneosPage() {
         nombre: tournament.nombre,
         card_theme: tournament.card_theme,
         card_count: tournament.card_count,
+        streak_target: tournament.streak_target,
         start_time: date.toISOString().slice(0, 16),
         duration_minutes: tournament.duration_minutes,
         status: tournament.status
@@ -71,46 +75,46 @@ export default function AdminTorneosPage() {
         nombre: '',
         card_theme: 'aleatorio',
         card_count: 14,
+        streak_target: 5,
         start_time: '',
         duration_minutes: 60,
         status: 'programado'
       });
     }
+    setFormError(null);
     setShowModal(true);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setProcessing(true);
+    setFormError(null);
 
     try {
       const dataToSave = {
         nombre: formData.nombre,
         card_theme: formData.card_theme,
         card_count: Number(formData.card_count),
+        streak_target: Number(formData.streak_target),
         start_time: new Date(formData.start_time).toISOString(),
         duration_minutes: Number(formData.duration_minutes),
         status: formData.status
       };
 
-      if (isEditing) {
-        const { error } = await supabase
-          .from('tournaments')
-          .update(dataToSave)
-          .eq('id', formData.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('tournaments')
-          .insert(dataToSave);
-        if (error) throw error;
+      const { error } = isEditing
+        ? await updateTournamentAction(formData.id, dataToSave)
+        : await createTournamentAction(dataToSave);
+
+      if (error) {
+        setFormError(error);
+        return;
       }
 
       setShowModal(false);
       loadTournaments();
     } catch (err) {
       console.error('Error saving tournament:', err);
-      alert('Error al guardar: ' + err.message);
+      setFormError('Error al guardar el torneo.');
     } finally {
       setProcessing(false);
     }
@@ -177,6 +181,10 @@ export default function AdminTorneosPage() {
                   <span className={styles.detailLabel}>Cartas</span>
                   <span className={styles.detailValue}>{t.card_count}</span>
                 </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Objetivo de racha</span>
+                  <span className={styles.detailValue}>{t.streak_target}</span>
+                </div>
               </div>
             </div>
           ))}
@@ -190,6 +198,7 @@ export default function AdminTorneosPage() {
         title={isEditing ? 'Editar Torneo' : 'Nuevo Torneo'}
       >
         <form onSubmit={handleSubmit} className={styles.form}>
+          {formError && <div className={styles.error || ''}>{formError}</div>}
           <div className={styles.inputGroup}>
             <label>Nombre del Torneo</label>
             <input
@@ -253,6 +262,18 @@ export default function AdminTorneosPage() {
                 className={styles.input}
               />
             </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label>Objetivo de Racha (pares seguidos para ganar sin perder ticket)</label>
+            <input
+              type="number"
+              required
+              min="1"
+              value={formData.streak_target}
+              onChange={(e) => setFormData({...formData, streak_target: e.target.value})}
+              className={styles.input}
+            />
           </div>
 
           {isEditing && (

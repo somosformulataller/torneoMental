@@ -113,6 +113,21 @@
   border-radius: 6px;
 }
 
+.cardImagePlaceholder {
+  width: 85%;
+  height: 70%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 245, 255, 0.08), rgba(57, 255, 20, 0.08));
+  border: 1px dashed rgba(0, 245, 255, 0.3);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent-cyan, #00f5ff);
+  text-transform: uppercase;
+}
+
 .cardName {
   font-size: 0.55rem;
   color: var(--text-secondary, #7a7a9e);

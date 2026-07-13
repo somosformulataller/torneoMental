@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { startGameAction, endGameAction } from '@/actions/games';
 import { generateCardPairs, getNextTheme } from '@/lib/gameLogic';
 import Card from '@/components/game/Card';
 import GameResultModal from '@/components/game/GameResultModal';
@@ -23,12 +24,14 @@ export default function GamePage() {
   const [bestStreak, setBestStreak] = useState(0);
   const [position, setPosition] = useState(null);
   const [gameStatus, setGameStatus] = useState('loading'); // loading, no_tickets, waiting, playing, won, lost
-  const [resultType, setResultType] = useState(null); // 'match', 'no_match', null
+  const [resultType, setResultType] = useState(null); // 'match', 'no_match', 'target', null
   const [currentTheme, setCurrentTheme] = useState(null);
   const [boardsCompleted, setBoardsCompleted] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [totalPairsMatched, setTotalPairsMatched] = useState(0);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [endReason, setEndReason] = useState(null);
 
   useEffect(() => {
     initGame();
@@ -62,7 +65,7 @@ export default function GamePage() {
       const activeTournament = tournaments[0];
       setTournament(activeTournament);
 
-      if (profileData.tickets_balance <= 0) {
+      if (!profileData || profileData.tickets_balance <= 0) {
         setGameStatus('no_tickets');
         return;
       }
@@ -93,30 +96,26 @@ export default function GamePage() {
       }
 
       // Start the game
-      await startGame(profileData, activeTournament);
+      await startGame(activeTournament);
     } catch (err) {
       console.error('Error initializing game:', err);
+      setErrorMsg('No se pudo iniciar el juego. Intenta de nuevo.');
     }
   }
 
-  async function startGame(profileData, tournamentData) {
-    const prof = profileData || profile;
+  async function startGame(tournamentData) {
     const tourn = tournamentData || tournament;
+    setErrorMsg(null);
 
-    // Consume ticket
-    const { error: ticketError } = await supabase
-      .from('profiles')
-      .update({ tickets_balance: prof.tickets_balance - 1 })
-      .eq('id', prof.id);
+    const { game, error } = await startGameAction(tourn.id);
 
-    if (ticketError) {
-      console.error('Error consuming ticket:', ticketError);
+    if (error || !game) {
+      console.error('Error starting game:', error);
+      setErrorMsg(error || 'No se pudo iniciar la partida.');
+      setGameStatus('no_tickets');
       return;
     }
 
-    setProfile(prev => ({ ...prev, tickets_balance: prev.tickets_balance - 1 }));
-
-    // Create game record
     const theme = tourn.card_theme === 'aleatorio'
       ? ['tecnologia', 'naturaleza', 'animales'][Math.floor(Math.random() * 3)]
       : tourn.card_theme;
@@ -125,25 +124,7 @@ export default function GamePage() {
     const cardPairs = generateCardPairs(theme, tourn.card_count);
     setCards(cardPairs);
 
-    const { data: gameData, error: gameError } = await supabase
-      .from('games')
-      .insert({
-        user_id: prof.id,
-        tournament_id: tourn.id,
-        best_streak: 0,
-        total_pairs_matched: 0,
-        status: 'en_curso',
-        card_layout: { theme, cards: cardPairs.map(c => c.id) },
-      })
-      .select()
-      .single();
-
-    if (gameError) {
-      console.error('Error creating game:', gameError);
-      return;
-    }
-
-    setGameId(gameData.id);
+    setGameId(game.id);
     setStreak(0);
     setMatchedPairs([]);
     setFlippedCards([]);
@@ -172,12 +153,28 @@ export default function GamePage() {
         // MATCH!
         setTimeout(() => {
           const newMatched = [...matchedPairs, card1.pairId];
+          const newStreak = streak + 1;
+          const newTotalPairs = totalPairsMatched + 1;
+
           setMatchedPairs(newMatched);
-          setStreak(prev => prev + 1);
-          setTotalPairsMatched(prev => prev + 1);
+          setStreak(newStreak);
+          setTotalPairsMatched(newTotalPairs);
           setResultType('match');
           setFlippedCards([]);
           setIsProcessing(false);
+
+          const target = tournament?.streak_target || Infinity;
+          if (newStreak >= target) {
+            // Objetivo de racha alcanzado: gana sin perder ticket
+            setTimeout(() => {
+              setResultType('target');
+              setTimeout(() => {
+                setEndReason('target');
+                endGame('completado', newStreak, newTotalPairs);
+              }, 1000);
+            }, 400);
+            return;
+          }
 
           // Check if all pairs matched - generate new board
           const totalPairsInBoard = cards.length / 2;
@@ -195,12 +192,12 @@ export default function GamePage() {
         setTimeout(() => {
           setResultType('no_match');
           setTimeout(() => {
-            endGame('perdido');
+            endGame('perdido', streak, totalPairsMatched);
           }, 1200);
         }, 800);
       }
     }
-  }, [flippedCards, matchedPairs, cards, isProcessing, gameStatus]);
+  }, [flippedCards, matchedPairs, cards, isProcessing, gameStatus, streak, totalPairsMatched, tournament]);
 
   function generateNextBoard() {
     const nextTheme = getNextTheme(currentTheme);
@@ -214,45 +211,47 @@ export default function GamePage() {
     setResultType(null);
   }
 
-  async function endGame(status) {
-    const timeMs = Date.now() - gameStartTime.current;
+  async function endGame(status, finalStreak, finalTotalPairs) {
+    if (!gameId) return;
+    const timeMs = gameStartTime.current ? Date.now() - gameStartTime.current : null;
 
-    const finalStreak = status === 'perdido' ? streak : streak;
-    const newBest = Math.max(bestStreak, finalStreak);
+    const { game, profile: updatedProfile, error } = await endGameAction({
+      gameId,
+      finalStreak,
+      totalPairs: finalTotalPairs,
+      timeMs,
+      status,
+    });
 
-    // Update game record
-    if (gameId) {
-      await supabase
-        .from('games')
-        .update({
-          best_streak: finalStreak,
-          total_pairs_matched: totalPairsMatched,
-          total_time_ms: timeMs,
-          status: status,
-          ended_at: new Date().toISOString(),
-        })
-        .eq('id', gameId);
+    if (error) {
+      console.error('Error ending game:', error);
+      setErrorMsg(error);
     }
 
-    setBestStreak(newBest);
+    if (updatedProfile) setProfile(updatedProfile);
+    const registeredStreak = game?.best_streak ?? finalStreak;
+    setBestStreak(prev => Math.max(prev, registeredStreak));
+    setStreak(registeredStreak);
     setGameStatus(status === 'perdido' ? 'lost' : 'won');
     setShowResult(true);
   }
 
   function handleTournamentEnd() {
     if (gameStatus === 'playing') {
-      endGame('completado');
+      setEndReason('timeout');
+      endGame('completado', streak, totalPairsMatched);
     }
   }
 
   async function handlePlayAgain() {
-    if (!profile || profile.tickets_balance <= 0) {
+    if (!profile || profile.tickets_balance <= 0 || !tournament) {
       router.push('/home');
       return;
     }
     setShowResult(false);
     setResultType(null);
-    await startGame();
+    setEndReason(null);
+    await startGame(tournament);
   }
 
   function getTournamentEndTime() {
@@ -294,7 +293,7 @@ export default function GamePage() {
           ¡Cada par encontrado suma a tu racha!
         </p>
         <div className={styles.alertBox}>
-          ⚠️ No te quedan tickets. ¡Compra más!
+          {errorMsg || '⚠️ No te quedan tickets. ¡Compra más!'}
         </div>
         <button className={styles.backBtn} onClick={() => router.push('/home')}>Volver</button>
       </div>
@@ -334,6 +333,11 @@ export default function GamePage() {
         >
           {streak}
         </span>
+        {tournament?.streak_target && (
+          <span className={styles.streakLabel} style={{ opacity: 0.6 }}>
+            objetivo: {tournament.streak_target}
+          </span>
+        )}
       </div>
 
       {/* Result Indicator */}
@@ -342,6 +346,9 @@ export default function GamePage() {
       )}
       {resultType === 'no_match' && (
         <div className={styles.resultNoMatch}>PERDISTE</div>
+      )}
+      {resultType === 'target' && (
+        <div className={styles.resultMatch}>¡OBJETIVO ALCANZADO!</div>
       )}
 
       {/* Revealed Cards Zone */}
@@ -352,6 +359,7 @@ export default function GamePage() {
               src={cards[flippedCards[0]].image}
               alt={cards[flippedCards[0]].name}
               className={styles.revealImage}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           )}
         </div>
@@ -362,6 +370,7 @@ export default function GamePage() {
               src={cards[flippedCards[1]].image}
               alt={cards[flippedCards[1]].name}
               className={styles.revealImage}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           )}
         </div>
@@ -406,6 +415,7 @@ export default function GamePage() {
         onGoBack={() => router.push('/home')}
         ticketsRemaining={profile?.tickets_balance || 0}
         gameStatus={gameStatus}
+        reason={endReason}
       />
     </div>
   );

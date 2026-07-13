@@ -9,10 +9,6 @@ export default function AdminUsuariosPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
   async function loadUsers() {
     try {
       const { data, error } = await supabase
@@ -28,6 +24,12 @@ export default function AdminUsuariosPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('es-VE', {

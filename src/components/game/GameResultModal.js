@@ -10,16 +10,18 @@ export default function GameResultModal({
   onGoBack,
   ticketsRemaining,
   gameStatus,
+  reason,
 }) {
   if (!isOpen) return null;
 
   const isWin = gameStatus === 'won';
+  const winTitle = reason === 'target' ? '¡Objetivo alcanzado!' : '¡Tiempo terminado!';
 
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <h2 className={isWin ? styles.titleWin : styles.titleLose}>
-          {isWin ? '¡Tiempo terminado!' : 'Perdiste'}
+          {isWin ? winTitle : 'Perdiste'}
         </h2>
 
         <div className={styles.streakSection}>

@@ -14,27 +14,6 @@ export default function RankingPage() {
   const [loading, setLoading] = useState(true);
   const [myPosition, setMyPosition] = useState(null);
 
-  useEffect(() => {
-    loadRanking();
-
-    // Set up Realtime subscription for live ranking updates
-    const channel = supabase
-      .channel('ranking_updates')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'tournament_rankings' 
-      }, () => {
-        // Reload ranking when there's a change
-        loadRanking(false);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   async function loadRanking(showLoader = true) {
     if (showLoader) setLoading(true);
     try {
@@ -88,6 +67,29 @@ export default function RankingPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadRanking();
+
+    // Set up Realtime subscription for live ranking updates
+    const channel = supabase
+      .channel('ranking_updates')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tournament_rankings'
+      }, () => {
+        // Reload ranking when there's a change
+        loadRanking(false);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function getMedal(pos) {
     if (pos === 1) return '🥇';

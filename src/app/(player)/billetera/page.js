@@ -13,10 +13,6 @@ export default function BilleteraPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   async function loadData() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -37,7 +33,7 @@ export default function BilleteraPage() {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      
+
       setTickets(ticketsData || []);
     } catch (err) {
       console.error('Error loading tickets:', err);
@@ -45,6 +41,12 @@ export default function BilleteraPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('es-VE', {
