@@ -1,4 +1,4 @@
-# 🃏 Torneo Mental — Plan de Implementación
+# 🃏 Copa Mental — Plan de Implementación
 
 Web app PWA de torneos de juego de memoria con cartas temáticas. Los jugadores compiten para lograr la mayor racha de matches consecutivos. Incluye sistema de tickets, ranking en tiempo real, y panel de administración.
 
@@ -307,8 +307,8 @@ CREATE POLICY "games_update" ON public.games FOR UPDATE USING (auth.uid() = user
 **manifest.json:**
 ```json
 {
-  "name": "Torneo Mental - Juego de Memoria",
-  "short_name": "Torneo Mental",
+  "name": "Copa Mental - Juego de Memoria",
+  "short_name": "Copa Mental",
   "description": "Compite en torneos de memoria con cartas temáticas",
   "start_url": "/home",
   "display": "standalone",

@@ -383,6 +383,19 @@
   color: var(--accent-gold);
 }
 
+.priceBs {
+  font-weight: 600;
+  font-size: 0.82em;
+  color: var(--text-secondary);
+}
+
+.bcvNote {
+  margin-top: 6px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
 /* Payment Modal */
 .paymentForm {
   display: flex;

@@ -1,4 +1,4 @@
-# Rediseño: Torneo Mental Espiritual 🌌
+# Rediseño: Copa Mental Espiritual 🌌
 
 El objetivo de este plan es transformar la estética de la aplicación, pasando de un estilo "gamer/ciberpunk" a una **experiencia espiritual, realista y profunda**. El nuevo diseño debe evocar la idea de conectar la mente, despertar la memoria y entrar en un estado de alta concentración cognitiva.
 

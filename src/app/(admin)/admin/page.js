@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Panel de Control</h1>
-      <p className={styles.subtitle}>Resumen del Torneo Mental</p>
+      <p className={styles.subtitle}>Resumen de Copa Mental</p>
 
       <div className={styles.grid}>
         {STAT_CARDS.map((s, i) => (

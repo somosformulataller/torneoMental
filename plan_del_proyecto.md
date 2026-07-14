@@ -1,7 +1,7 @@
-# Torneo Mental - Plan del Proyecto
+# Copa Mental - Plan del Proyecto
 
 ## 1. Visión General del Producto
-**Torneo Mental** es una aplicación web progresiva (PWA) de juego de memoria competitivo basado en torneos. Los jugadores invierten "tickets" (comprados previamente) para participar en torneos activos y el objetivo es encontrar todos los pares de cartas correspondientes en el menor tiempo posible y sin equivocarse. La racha más larga sin fallos determina el ranking de los jugadores para llevarse la victoria.
+**Copa Mental** es una aplicación web progresiva (PWA) de juego de memoria competitivo basado en torneos. Los jugadores invierten "tickets" (comprados previamente) para participar en torneos activos y el objetivo es encontrar todos los pares de cartas correspondientes en el menor tiempo posible y sin equivocarse. La racha más larga sin fallos determina el ranking de los jugadores para llevarse la victoria.
 
 ## 2. Pila Tecnológica (Tech Stack)
 - **Frontend Framework:** Next.js 15 (App Router)

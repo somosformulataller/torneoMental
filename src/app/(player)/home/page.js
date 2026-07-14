@@ -26,6 +26,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState(null);
+  const [bcvRate, setBcvRate] = useState(null);
+  const [bcvRateDate, setBcvRateDate] = useState(null);
 
   async function loadData() {
     try {
@@ -60,6 +62,16 @@ export default function HomePage() {
     if (initRef.current) return;
     initRef.current = true;
     loadData();
+
+    fetch('/api/exchange-rate')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.rate) {
+          setBcvRate(data.rate);
+          setBcvRateDate(data.updatedAt);
+        }
+      })
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -87,6 +99,14 @@ export default function HomePage() {
     } finally {
       setBuying(false);
     }
+  }
+
+  function formatBs(usdAmount) {
+    if (!bcvRate) return null;
+    return (usdAmount * bcvRate).toLocaleString('es-VE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   function handlePlay() {
@@ -198,7 +218,9 @@ export default function HomePage() {
           <div className={styles.priceBreakdown}>
             <div className={styles.priceRow}>
               <span>Precio unitario</span>
-              <span>$1.00</span>
+              <span>
+                $1.00{bcvRate && <span className={styles.priceBs}> (Bs. {formatBs(1)})</span>}
+              </span>
             </div>
             <div className={styles.priceRow}>
               <span>Cantidad</span>
@@ -207,12 +229,22 @@ export default function HomePage() {
             <div className={styles.priceDivider} />
             <div className={styles.priceTotal}>
               <span>Total</span>
-              <span>${(ticketQuantity * 1.00).toFixed(2)}</span>
+              <span>
+                ${(ticketQuantity * 1.00).toFixed(2)}
+                {bcvRate && <span className={styles.priceBs}> (Bs. {formatBs(ticketQuantity)})</span>}
+              </span>
             </div>
+            {bcvRate && (
+              <p className={styles.bcvNote}>
+                Tasa BCV: Bs. {formatBs(1)} / USD
+                {bcvRateDate && ` — actualizada el ${new Date(bcvRateDate).toLocaleDateString('es-VE')}`}
+              </p>
+            )}
           </div>
 
           <p className={styles.paymentInfo}>
-            Transfiere <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong> y coloca la referencia del pago
+            Transfiere <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong>
+            {bcvRate && <> (<strong>Bs. {formatBs(ticketQuantity)}</strong>)</>} y coloca la referencia del pago
           </p>
           {buyError && <div className={styles.error}>{buyError}</div>}
           <FormInput

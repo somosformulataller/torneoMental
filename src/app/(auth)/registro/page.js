@@ -66,13 +66,13 @@ export default function RegisterPage() {
       <ParticleBackground />
 
       <div className={styles.heroSection}>
-        <h1 className={styles.mainTitle}>Torneo Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>
+        <h1 className={styles.mainTitle}>Copa Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>
       </div>
 
       <div className={styles.card}>
         <div className={styles.header}>
-          <div className={styles.logoIcon}>🔮</div>
-          <h2 className={styles.loginTitle}>Crear Cuenta</h2>
+          <div className={styles.logoIcon}>🏆</div>
+          <h2 className={styles.loginTitle}>Crea tu Cuenta</h2>
         </div>
 
         {error && <div className={styles.error}>{error}</div>}

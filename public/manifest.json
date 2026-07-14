@@ -1,6 +1,6 @@
 {
-  "name": "Torneo Mental",
-  "short_name": "Torneo Mental",
+  "name": "Copa Mental",
+  "short_name": "Copa Mental",
   "description": "Juego de memoria competitivo por torneos",
   "start_url": "/home",
   "display": "standalone",

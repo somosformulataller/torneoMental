@@ -1,4 +1,4 @@
-# Credenciales de Torneo Mental 🔐
+# Credenciales de Copa Mental 🔐
 
 Aquí tienes los accesos para las cuentas de prueba creadas.
 

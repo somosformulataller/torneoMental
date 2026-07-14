@@ -1,27 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;700;800&family=Orbitron:wght@600;700;800;900&family=Outfit:wght@300;400;600;700;800;900&display=swap');
 
 :root {
-  /* Spiritual Mental Theme */
-  --bg-primary: #0B001A;
-  --bg-secondary: #1A0B2E;
-  --bg-card: rgba(26, 11, 46, 0.7);
-  --bg-card-hover: rgba(43, 20, 77, 0.85);
+  /* Copa Mental - Youthful Esports Theme */
+  --bg-primary: #0F172A; /* Slate 900 */
+  --bg-secondary: #1E293B; /* Slate 800 */
+  --bg-card: rgba(30, 41, 59, 0.8);
+  --bg-card-hover: rgba(51, 65, 85, 0.9);
 
   /* Acentos neón */
-  --accent-cyan: #00f5ff;
-  --accent-green: #00ffaa;
-  --accent-orange: #ffd700;
-  --accent-red: #ff3860;
-  --accent-gold: #ffd700;
-  --accent-silver: #c0c0c0;
-  --accent-bronze: #cd7f32;
-  --accent-pink: #d869ff;
+  --accent-cyan: #06B6D4; /* Cyan 500 */
+  --accent-green: #10B981; /* Emerald 500 */
+  --accent-orange: #F97316; /* Orange 500 */
+  --accent-red: #EF4444; /* Red 500 */
+  --accent-gold: #F59E0B; /* Amber 500 */
+  --accent-silver: #94A3B8; /* Slate 400 */
+  --accent-bronze: #B45309; /* Amber 700 */
+  --accent-pink: #EC4899; /* Pink 500 */
   --accent-violet: #7c3aed;
 
   /* Texto */
-  --text-primary: #ffffff;
-  --text-secondary: #b39ddb;
-  --text-muted: #674c8c;
+  --text-primary: #F8FAFC; /* Slate 50 */
+  --text-secondary: #CBD5E1; /* Slate 300 */
+  --text-muted: #64748B; /* Slate 500 */
 
   /* Tipografía */
   --font-primary: 'Outfit', sans-serif;
@@ -30,15 +30,13 @@
 
   /* Radios */
   --radius-sm: 8px;
-  --radius-md: 12px;
+  --radius-md: 16px;
   --radius-lg: 24px;
   --radius-xl: 28px;
 
   /* Sombras / glow */
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.55);
-  --glow-cyan: 0 0 24px rgba(0, 245, 255, 0.35);
-  --glow-green: 0 0 24px rgba(57, 255, 20, 0.35);
   --glow-gold: 0 0 24px rgba(255, 215, 0, 0.35);
   --glow-pink: 0 0 24px rgba(216, 105, 255, 0.35);
   --glow-violet: 0 0 24px rgba(124, 58, 237, 0.35);

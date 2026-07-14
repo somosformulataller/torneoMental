@@ -52,12 +52,12 @@ export default function LoginPage() {
       <ParticleBackground />
 
       <div className={styles.heroSection}>
-        <h1 className={styles.mainTitle}>Torneo Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>
+        <h1 className={styles.mainTitle}>Copa Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>
       </div>
 
       <div className={styles.card}>
         <div className={styles.header}>
-          <div className={styles.logoIcon}>🔮</div>
+          <div className={styles.logoIcon}>🏆</div>
           <h2 className={styles.loginTitle}>Inicia Sesión</h2>
         </div>
 
