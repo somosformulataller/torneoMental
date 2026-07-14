@@ -3,10 +3,14 @@
 import { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
+import { CARD_BACKS } from '@/lib/cardThemes';
 import styles from './card.module.css';
 
-export default function Card({ card, index = 0, isFlipped, isMatched, onClick, disabled }) {
+const NO_SCATTER = { rotate: 0, x: 0, marginBottom: 12 };
+
+export default function Card({ card, index = 0, isFlipped, isMatched, onClick, disabled, scatter = NO_SCATTER }) {
   const [imageError, setImageError] = useState(false);
+  const [backImageError, setBackImageError] = useState(false);
   const sceneRef = useRef(null);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50, active: false });
 
@@ -38,8 +42,9 @@ export default function Card({ card, index = 0, isFlipped, isMatched, onClick, d
   return (
     <motion.div
       className={styles.entrance}
-      initial={{ opacity: 0, y: 24, scale: 0.85 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      style={{ marginBottom: scatter.marginBottom }}
+      initial={{ opacity: 0, y: 24, x: 0, scale: 0.85, rotate: 0 }}
+      animate={{ opacity: 1, y: 0, x: scatter.x, scale: 1, rotate: scatter.rotate }}
       transition={{ delay: Math.min(index, 20) * 0.035, type: 'spring', stiffness: 260, damping: 22 }}
     >
       <div
@@ -60,28 +65,42 @@ export default function Card({ card, index = 0, isFlipped, isMatched, onClick, d
         >
           {/* Card Back (face down) */}
           <div className={styles.cardFace + ' ' + styles.cardBack}>
-            <div className={styles.cardBackDesign}>
-              <span className={styles.cardBackLogo}>TM</span>
-              <div className={styles.cardBackPattern}></div>
-            </div>
+            {backImageError ? (
+              <div className={styles.cardBackDesign}>
+                <span className={styles.cardBackLogo}>TM</span>
+                <div className={styles.cardBackPattern}></div>
+              </div>
+            ) : (
+              <Image
+                src={CARD_BACKS[card.theme] || CARD_BACKS.tecnologia}
+                alt="Reverso"
+                width={400}
+                height={400}
+                className={styles.cardArt}
+                loading="lazy"
+                onError={() => setBackImageError(true)}
+              />
+            )}
           </div>
 
           {/* Card Front (face up - shows the image) */}
           <div className={styles.cardFace + ' ' + styles.cardFront}>
             {imageError ? (
-              <div className={styles.cardImagePlaceholder}>{card.name?.charAt(0)}</div>
+              <div className={styles.cardImagePlaceholder}>
+                <span>{card.name?.charAt(0)}</span>
+                <span className={styles.cardName}>{card.name}</span>
+              </div>
             ) : (
               <Image
                 src={card.image}
                 alt={card.name}
-                width={200}
-                height={200}
-                className={styles.cardImage}
+                width={400}
+                height={400}
+                className={styles.cardArt}
                 loading="lazy"
                 onError={() => setImageError(true)}
               />
             )}
-            <span className={styles.cardName}>{card.name}</span>
           </div>
         </motion.div>
 

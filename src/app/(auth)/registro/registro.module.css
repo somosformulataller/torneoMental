@@ -67,7 +67,7 @@
 
 .card {
   width: 90%;
-  max-width: 400px;
+  max-width: 460px;
   background: var(--bg-card);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -103,6 +103,22 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.row > * {
+  flex: 1;
+}
+
+@media (max-width: 420px) {
+  .row {
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 
 .inputGroup {

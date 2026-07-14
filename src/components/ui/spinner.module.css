@@ -1,7 +1,7 @@
 .spinner {
   border-style: solid;
   border-color: var(--bg-card);
-  border-top-color: var(--accent-cyan);
+  border-top-color: var(--accent-pink);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

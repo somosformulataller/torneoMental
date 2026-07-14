@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { playTick } from '@/lib/sfx';
 import styles from './countdown.module.css';
 
-export default function CountdownTimer({ endTime, label, onComplete }) {
+export default function CountdownTimer({ endTime, label, onComplete, tickSound = false }) {
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
     minutes: 0,
@@ -11,6 +12,7 @@ export default function CountdownTimer({ endTime, label, onComplete }) {
     isDanger: false,
     isOver: false,
   });
+  const lastTickSecond = useRef(null);
 
   useEffect(() => {
     if (!endTime) return;
@@ -33,11 +35,16 @@ export default function CountdownTimer({ endTime, label, onComplete }) {
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
       const isDanger = distance <= 60000; // Último minuto en rojo
 
+      if (tickSound && isDanger && seconds !== lastTickSecond.current) {
+        lastTickSecond.current = seconds;
+        playTick();
+      }
+
       setTimeLeft({ hours, minutes, seconds, isDanger, isOver: false });
     }, 100); // 100ms update for smooth feeling
 
     return () => clearInterval(interval);
-  }, [endTime, onComplete]);
+  }, [endTime, onComplete, tickSound]);
 
   if (timeLeft.isOver) {
     return (

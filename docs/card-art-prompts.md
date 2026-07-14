@@ -1,118 +1,55 @@
 # Kit de prompts — arte de cartas (IA)
 
-Este documento tiene los 60 prompts listos para generar las imágenes de las cartas del juego de memoria. Cada carta debe generarse por separado (una imagen por prompt) para máxima calidad y consistencia.
+Cada carta es un render completo tipo "carta coleccionable espiritual", con su propio marco ornamentado, fondo temático y pieza central luminosa — no un ícono aislado. `src/lib/cardThemes.js` usa **9 cartas únicas por temática** (7 se reparten por defecto en cada partida, `tournaments.card_count` default 14 = 7 parejas; tener 9 en la librería da variedad entre partidas).
 
-No genero las imágenes yo mismo — este es el kit para que las produzcas con la herramienta que prefieras: **Bing Image Creator / Microsoft Copilot** (gratis, con límites diarios), **ChatGPT/DALL·E**, **Midjourney** o **Stable Diffusion** (de pago o autoalojado). El mismo prompt base funciona en cualquiera de ellas.
+## Estado: completo ✅
 
-## Especificación de salida (obligatoria para que la app las reconozca)
+- **Tecnología**: 9/9 (`tech_cpu`, `tech_robot`, `tech_drone`, `tech_vr`, `tech_satellite`, `tech_smartwatch`, `tech_server`, `tech_chip`, `tech_rocket`)
+- **Naturaleza**: 9/9 (`nat_leaf`, `nat_lotus`, `nat_oak`, `nat_mountain`, `nat_river`, `nat_sun`, `nat_butterfly`, `nat_cloud`, `nat_waterfall`) — nota: se generó `nat_cloud` en vez de la `nat_moon` originalmente propuesta en este documento; `cardThemes.js` ya refleja ese cambio.
+- **Animales**: 9/9 (`anim_lion`, `anim_eagle`, `anim_dolphin`, `anim_fox`, `anim_owl`, `anim_wolf`, `anim_tiger`, `anim_bear`, `anim_turtle`) — nota: se generaron `anim_bear`/`anim_turtle` en vez de `anim_panda`/`anim_elephant` originalmente propuestos; `cardThemes.js` ya refleja ese cambio.
+- **Reversos** (`back_tecnologia.png`, `back_naturaleza.png`, `back_animales.png`): completos, conectados en `Card.js`.
 
-- **Formato**: PNG con **fondo transparente**.
-- **Resolución mínima**: 512×512 px (cuadrada). Si la herramienta no genera fondo transparente nativo, quita el fondo después con una herramienta gratuita como remove.bg o el editor de Bing.
-- **Ruta y nombre de archivo**: deben coincidir EXACTO con lo ya definido en `src/lib/cardThemes.js`. Guarda cada imagen en:
-  ```
-  public/cards/<tema>/<id>.png
-  ```
-  Ejemplo: la carta "Laptop" del tema tecnología va en `public/cards/tecnologia/tech_laptop.png`.
-- Mientras una imagen no exista, la app muestra automáticamente un placeholder con la inicial del nombre — no rompe nada, así que puedes ir subiendo las 60 de a poco.
+Todas las imágenes viven en `public/cards/<tema>/<id>.png`, coincidiendo exacto con las rutas de `src/lib/cardThemes.js`.
 
-## Prompt base (estilo consistente para las 60 cartas)
+## Si en el futuro hace falta regenerar o agregar una carta
 
-Usa esta plantilla, reemplazando `[SUJETO]` por el sujeto de cada carta (ver listas abajo). Mantén el resto del texto igual en las 60 generaciones para que todas las cartas se vean como parte del mismo mazo.
+Usa el mismo estilo por temática para que combine con el resto del mazo:
 
+- **Formato**: PNG, sin necesidad de transparencia (render de carta completo con su propio fondo y marco).
+- **Resolución**: cuadrada, mínimo 1024×1024 px.
+- **Ruta**: `public/cards/<tema>/<id>.png`, coincidiendo con el `id`/`image` que le des en `CARD_DATA` dentro de `src/lib/cardThemes.js`.
+
+Composición común: marco ornamentado en los 4 bordes con medallones circulares de geometría sagrada (Flor de la Vida, Cubo de Metatrón, Sri Yantra, espirales), fondo atmosférico de la temática, y un elemento central luminoso con halo de luz. El texto (título/subtítulo) es opcional — varias cartas existentes no llevan texto, solo el arte.
+
+### Tecnología
+Marco metálico dorado con motivos de circuitos grabados. Fondo de nebulosa/galaxia estrellada. Elemento central con brillo cian-blanco eléctrico y rayos de luz.
+
+### Naturaleza
+Marco de bronce/madera tallada con nudos celtas y roleos de geometría sagrada. Fondo de bosque místico nocturno con musgo, helechos y niebla azul-violeta. Elemento central con halo dorado/violeta suave.
+
+**Prompt base (español):**
 ```
-Icono aislado de [SUJETO], estilo isométrico neón-glass, iluminación de borde
-cian (#00f5ff) y verde neón (#39ff14), fondo completamente transparente,
-composición centrada, sin texto, sin marco, sin sombra proyectada en el
-suelo, alto contraste, superficies pulidas tipo cristal oscuro con brillos
-de neón, look futurista premium, renderizado 3D limpio tipo videojuego,
-diseño simétrico, 512x512, PNG con fondo transparente.
+Carta coleccionable mística "Spiritual Memory Card", formato cuadrado 1024x1024,
+marco ornamentado de bronce tallado con nudos celtas y medallones circulares de
+geometría sagrada (flor de la vida, espirales) en las cuatro esquinas, esquinas
+redondeadas, fondo de bosque místico nocturno con musgo, helechos y niebla
+azul-violeta, [SUJETO] como elemento central luminoso con halo de luz dorado y
+violeta suave, iluminación cinematográfica, alto nivel de detalle, sin texto,
+estilo idéntico a una carta de tarot fantástica premium.
 ```
 
-En inglés (mejor resultado en la mayoría de herramientas):
+### Animales
+Marco plateado/obsidiana con motivos tribales de geometría sagrada. Fondo de sabana/cielo crepuscular con aurora sutil. El sujeto representado como un espíritu animal luminoso con halo de energía y partículas brillantes.
 
+**Prompt base (español):**
 ```
-Isolated icon of a [SUBJECT], isometric neon-glass style, cyan (#00f5ff)
-and neon green (#39ff14) rim lighting, fully transparent background,
-centered composition, no text, no frame, no ground shadow, high contrast,
-dark glass surfaces with neon glow accents, premium futuristic look, clean
-3D game-icon render, symmetrical design, 512x512, transparent PNG.
+Carta coleccionable mística "Spiritual Memory Card", formato cuadrado 1024x1024,
+marco ornamentado plateado/obsidiana con motivos tribales tallados y medallones
+circulares de geometría sagrada en las cuatro esquinas, esquinas redondeadas,
+fondo de sabana/cielo crepuscular con aurora sutil, [SUJETO] representado como
+un espíritu animal luminoso con halo de energía y partículas brillantes
+alrededor, iluminación cinematográfica, alto nivel de detalle, sin texto,
+estilo idéntico a una carta de tarot fantástica premium.
 ```
 
-## Tema: Tecnología (`public/cards/tecnologia/`)
-
-| Archivo | Sujeto a reemplazar |
-|---|---|
-| tech_laptop.png | a laptop computer |
-| tech_smartphone.png | a smartphone |
-| tech_cpu.png | a computer CPU chip |
-| tech_robot.png | a small robot |
-| tech_drone.png | a flying drone |
-| tech_vr.png | a VR headset |
-| tech_satellite.png | a satellite |
-| tech_smartwatch.png | a smartwatch |
-| tech_server.png | a server rack |
-| tech_chip.png | a microchip |
-| tech_rocket.png | a rocket ship |
-| tech_hologram.png | a floating hologram projection |
-| tech_ai_brain.png | a glowing artificial-intelligence brain |
-| tech_circuit.png | a circuit board pattern icon |
-| tech_antenna.png | a signal antenna |
-| tech_camera.png | a digital camera |
-| tech_printer3d.png | a 3D printer |
-| tech_code.png | a floating code/brackets symbol |
-| tech_gamepad.png | a game controller |
-| tech_headphones.png | over-ear headphones |
-
-## Tema: Naturaleza (`public/cards/naturaleza/`)
-
-| Archivo | Sujeto a reemplazar |
-|---|---|
-| nat_leaf.png | a single leaf |
-| nat_lotus.png | a lotus flower |
-| nat_oak.png | an oak tree |
-| nat_mountain.png | a mountain peak |
-| nat_river.png | a winding river |
-| nat_sun.png | a sun |
-| nat_butterfly.png | a butterfly |
-| nat_cloud.png | a cloud |
-| nat_waterfall.png | a waterfall |
-| nat_cactus.png | a cactus |
-| nat_coral.png | a coral reef branch |
-| nat_moss.png | a patch of moss |
-| nat_waterdrop.png | a water droplet |
-| nat_moon.png | a crescent moon |
-| nat_volcano.png | a volcano |
-| nat_rainbow.png | a rainbow |
-| nat_star.png | a shining star |
-| nat_crystal.png | a crystal gem |
-| nat_mushroom.png | a mushroom |
-| nat_feather.png | a feather |
-
-## Tema: Animales (`public/cards/animales/`)
-
-| Archivo | Sujeto a reemplazar |
-|---|---|
-| anim_lion.png | a lion head |
-| anim_eagle.png | an eagle |
-| anim_dolphin.png | a dolphin |
-| anim_fox.png | a fox |
-| anim_owl.png | an owl |
-| anim_wolf.png | a wolf head |
-| anim_turtle.png | a turtle |
-| anim_hummingbird.png | a hummingbird |
-| anim_tiger.png | a tiger head |
-| anim_bear.png | a bear |
-| anim_snake.png | a coiled snake |
-| anim_horse.png | a horse head |
-| anim_panda.png | a panda |
-| anim_elephant.png | an elephant |
-| anim_shark.png | a shark |
-| anim_chameleon.png | a chameleon |
-| anim_penguin.png | a penguin |
-| anim_octopus.png | an octopus |
-| anim_phoenix.png | a mythical phoenix bird |
-| anim_parrot.png | a parrot |
-
-## Reverso de carta (opcional)
-
-El reverso actual ya está resuelto con CSS (logo "TM" + patrón geométrico animado, sin necesitar imagen). Si más adelante quieres reemplazarlo por una imagen, usa el mismo prompt base con `[SUJETO]` = *"an abstract letter 'TM' monogram emblem"* y guárdalo aparte; avísame y lo conecto en `Card.js`.
+Si generas con una herramienta que soporte imagen de referencia (img2img), sube una carta existente de la misma temática además del prompt de texto — ayuda a mantener consistencia.

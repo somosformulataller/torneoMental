@@ -2,31 +2,32 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { HomeIcon, PlayCardIcon, TrophyIcon, WalletIcon } from './NavIcons';
 import styles from './navbar.module.css';
+
+const navItems = [
+  { href: '/home', label: 'Inicio', Icon: HomeIcon },
+  { href: '/jugar', label: 'Jugar', Icon: PlayCardIcon },
+  { href: '/ranking', label: 'Ranking', Icon: TrophyIcon },
+  { href: '/billetera', label: 'Billetera', Icon: WalletIcon },
+];
 
 export default function Navbar() {
   const pathname = usePathname();
 
-  const navItems = [
-    { href: '/home', label: 'Inicio', icon: '🏠' },
-    { href: '/jugar', label: 'Jugar', icon: '🎮' },
-    { href: '/ranking', label: 'Ranking', icon: '🏆' },
-    { href: '/billetera', label: 'Billetera', icon: '💰' },
-  ];
-
   return (
     <nav className={styles.navbar}>
       <div className={styles.navContainer}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
+        {navItems.map(({ href, label, Icon }) => {
+          const isActive = pathname === href;
           return (
-            <Link 
-              key={item.href} 
-              href={item.href}
+            <Link
+              key={href}
+              href={href}
               className={`${styles.navItem} ${isActive ? styles.active : ''}`}
             >
-              <span className={styles.icon}>{item.icon}</span>
-              <span className={styles.label}>{item.label}</span>
+              <Icon className={styles.icon} />
+              <span className={styles.label}>{label}</span>
               {isActive && <div className={styles.activeIndicator} />}
             </Link>
           );

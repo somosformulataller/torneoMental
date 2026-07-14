@@ -2,42 +2,100 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { startGameAction, endGameAction } from '@/actions/games';
 import { generateCardPairs } from '@/lib/gameLogic';
+import { playFlip, playMatch, playMismatch } from '@/lib/sfx';
+import { vibrateMatch, vibrateMismatch } from '@/lib/haptics';
 import Card from '@/components/game/Card';
+import ScorePopup from '@/components/game/ScorePopup';
 import GameResultModal from '@/components/game/GameResultModal';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import Spinner from '@/components/ui/Spinner';
+import ParticleBackground from '@/components/ui/ParticleBackground';
 import styles from './jugar.module.css';
+
+// Deterministic per-card jitter. marginBottom is what actually breaks the
+// "rows" look: cards flow into masonry columns (see .cardGrid), so a taller
+// gap under one card pushes everything below it down that column — some
+// cards end up sitting noticeably higher/lower than their neighbors instead
+// of lining up on a shared row baseline.
+const SCATTER_VARIANTS = [
+  { rotate: -7, x: -4, marginBottom: 4 },
+  { rotate: 5, x: 5, marginBottom: 48 },
+  { rotate: -9, x: -6, marginBottom: 22 },
+  { rotate: 8, x: 3, marginBottom: 60 },
+  { rotate: -4, x: 6, marginBottom: 10 },
+  { rotate: 6, x: -5, marginBottom: 36 },
+  { rotate: -6, x: 2, marginBottom: 52 },
+  { rotate: 9, x: -3, marginBottom: 6 },
+  { rotate: -3, x: 4, marginBottom: 44 },
+  { rotate: 4, x: -6, marginBottom: 18 },
+  { rotate: -8, x: 6, marginBottom: 30 },
+  { rotate: 7, x: -2, marginBottom: 56 },
+];
+
+function getScatter(index) {
+  return SCATTER_VARIANTS[index % SCATTER_VARIANTS.length];
+}
+
+function formatStopwatch(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
 
 export default function GamePage() {
   const router = useRouter();
   const supabase = createClient();
   const gameStartTime = useRef(null);
+  const initRef = useRef(false);
   const [profile, setProfile] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [gameId, setGameId] = useState(null);
   const [cards, setCards] = useState([]);
   const [flippedCards, setFlippedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
-  const [bestPairs, setBestPairs] = useState(0);
-  const [position, setPosition] = useState(null);
   const [gameStatus, setGameStatus] = useState('loading'); // loading, no_tournament, no_tickets, playing, finished
   const [resultType, setResultType] = useState(null); // 'match', 'no_match', null
-  const [currentTheme, setCurrentTheme] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [finishReason, setFinishReason] = useState(null); // 'completed' | 'timeout'
   const [finishedTimeMs, setFinishedTimeMs] = useState(null);
   const [finishedPairs, setFinishedPairs] = useState(0);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [shake, setShake] = useState(false);
+  const [popup, setPopup] = useState(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   useEffect(() => {
+    // Guard against React Strict Mode's dev-only double-invoke: initGame()
+    // calls startGameAction(), which consumes a ticket and creates a game
+    // row — it must never run twice for a single page visit.
+    if (initRef.current) return;
+    initRef.current = true;
     initGame();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!popup) return;
+    const t = setTimeout(() => setPopup(null), 900);
+    return () => clearTimeout(t);
+  }, [popup]);
+
+  useEffect(() => {
+    if (gameStatus !== 'playing') return;
+    const interval = setInterval(() => {
+      if (gameStartTime.current) {
+        setElapsedMs(Date.now() - gameStartTime.current);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [gameStatus]);
 
   async function initGame() {
     try {
@@ -72,32 +130,6 @@ export default function GamePage() {
         return;
       }
 
-      // Get personal best (pairs matched) for this tournament
-      const { data: games } = await supabase
-        .from('games')
-        .select('pairs_matched')
-        .eq('user_id', user.id)
-        .eq('tournament_id', activeTournament.id)
-        .eq('status', 'completado')
-        .order('pairs_matched', { ascending: false })
-        .limit(1);
-
-      if (games?.length > 0) {
-        setBestPairs(games[0].pairs_matched);
-      }
-
-      // Get position
-      const { data: ranking } = await supabase
-        .from('tournament_rankings')
-        .select('posicion')
-        .eq('tournament_id', activeTournament.id)
-        .eq('user_id', user.id)
-        .single();
-
-      if (ranking) {
-        setPosition(ranking.posicion);
-      }
-
       // Start the game
       await startGame(activeTournament);
     } catch (err) {
@@ -125,13 +157,15 @@ export default function GamePage() {
       ? ['tecnologia', 'naturaleza', 'animales'][Math.floor(Math.random() * 3)]
       : tourn.card_theme;
 
-    setCurrentTheme(theme);
     const cardPairs = generateCardPairs(theme, tourn.card_count);
     setCards(cardPairs);
 
     setGameId(game.id);
     setMatchedPairs([]);
     setFlippedCards([]);
+    setStreak(0);
+    setBestStreak(0);
+    setElapsedMs(0);
     gameStartTime.current = Date.now();
     setGameStatus('playing');
   }
@@ -144,6 +178,7 @@ export default function GamePage() {
 
     const newFlipped = [...flippedCards, index];
     setFlippedCards(newFlipped);
+    playFlip();
 
     if (newFlipped.length === 2) {
       setIsProcessing(true);
@@ -161,6 +196,18 @@ export default function GamePage() {
           setIsProcessing(false);
           setTimeout(() => setResultType(null), 900);
 
+          playMatch();
+          vibrateMatch();
+          setStreak((s) => {
+            const next = s + 1;
+            setBestStreak((best) => Math.max(best, next));
+            setPopup({
+              id: `${Date.now()}-${newMatched.length}`,
+              text: next >= 2 ? `+10 🔥 Racha x${next}` : '+10',
+            });
+            return next;
+          });
+
           const totalPairsInBoard = cards.length / 2;
           if (newMatched.length >= totalPairsInBoard) {
             setTimeout(() => finishGame('completed', newMatched.length), 500);
@@ -170,6 +217,11 @@ export default function GamePage() {
         // NO MATCH: se voltean de nuevo, puede seguir intentando
         setTimeout(() => {
           setResultType('no_match');
+          playMismatch();
+          vibrateMismatch();
+          setStreak(0);
+          setShake(true);
+          setTimeout(() => setShake(false), 400);
           setTimeout(() => {
             setFlippedCards([]);
             setIsProcessing(false);
@@ -196,7 +248,6 @@ export default function GamePage() {
     }
 
     const registeredPairs = game?.pairs_matched ?? pairsMatched;
-    setBestPairs(prev => Math.max(prev, registeredPairs));
     setFinishReason(reason);
     setFinishedTimeMs(game?.total_time_ms ?? timeMs);
     setFinishedPairs(registeredPairs);
@@ -269,80 +320,22 @@ export default function GamePage() {
   const totalPairs = cards.length / 2;
 
   return (
-    <div className={styles.container}>
-      {/* Game Stats Bar */}
-      <div className={styles.gameStats}>
-        <div className={styles.gameStat}>
-          <span className={styles.gameStatLabel}>MEJOR MARCA</span>
-          <span className={styles.gameStatValue} style={{ color: 'var(--accent-cyan)' }}>
-            {bestPairs}
-          </span>
-        </div>
-        <div className={styles.gameStat}>
-          <span className={styles.gameStatLabel}>POSICIÓN</span>
-          <span className={styles.gameStatValue} style={{ color: 'var(--accent-orange)' }}>
-            #{position || '-'}
-          </span>
-        </div>
-        <div className={styles.gameStat}>
-          <span className={styles.gameStatLabel}>TICKETS</span>
-          <span className={styles.gameStatValue} style={{ color: 'var(--accent-green)' }}>
-            {profile?.tickets_balance || 0}
-          </span>
-        </div>
-      </div>
+    <div className={`${styles.container} ${shake ? styles.shake : ''}`}>
+      <ParticleBackground />
+      <ScorePopup popup={popup} />
 
-      {/* Pairs Progress */}
-      <div className={styles.streakSection}>
-        <span className={styles.streakLabel}>PARES ENCONTRADOS</span>
+      {/* Small elapsed-time stopwatch */}
+      <div className={styles.stopwatch}>⏱ {formatStopwatch(elapsedMs)}</div>
+
+      {/* Small pairs-found counter */}
+      <div className={styles.pairsChip}>
+        🃏{' '}
         <span
-          className={`${styles.streakNumber} ${resultType === 'match' ? styles.streakUp : ''}`}
+          className={resultType === 'match' ? styles.pairsBump : ''}
           key={matchedPairs.length}
         >
           {matchedPairs.length}/{totalPairs}
         </span>
-      </div>
-
-      {/* Result Indicator */}
-      {resultType === 'match' && (
-        <div className={styles.resultMatch}>¡PAR ENCONTRADO!</div>
-      )}
-      {resultType === 'no_match' && (
-        <div className={styles.resultNoMatch}>NO ES PAR, SIGUE INTENTANDO</div>
-      )}
-
-      {/* Revealed Cards Zone */}
-      <div className={styles.revealZone}>
-        <div className={`${styles.revealSlot} ${flippedCards.length >= 1 ? styles.revealActive : ''}`}>
-          {flippedCards.length >= 1 && cards[flippedCards[0]] && (
-            <Image
-              src={cards[flippedCards[0]].image}
-              alt={cards[flippedCards[0]].name}
-              width={70}
-              height={90}
-              className={styles.revealImage}
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-          )}
-        </div>
-        <span className={styles.vsText}>VS</span>
-        <div className={`${styles.revealSlot} ${flippedCards.length >= 2 ? styles.revealActive : ''}`}>
-          {flippedCards.length >= 2 && cards[flippedCards[1]] && (
-            <Image
-              src={cards[flippedCards[1]].image}
-              alt={cards[flippedCards[1]].name}
-              width={70}
-              height={90}
-              className={styles.revealImage}
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Theme indicator */}
-      <div className={styles.themeIndicator}>
-        🎴 {currentTheme}
       </div>
 
       {/* Card Grid */}
@@ -356,17 +349,20 @@ export default function GamePage() {
             isMatched={matchedPairs.includes(card.pairId)}
             onClick={() => handleCardClick(index)}
             disabled={isProcessing || gameStatus !== 'playing'}
+            scatter={getScatter(index)}
           />
         ))}
       </div>
 
-      {/* Tournament Countdown */}
+      {/* Tournament countdown — kept mounted only to auto-finish the game
+          when the tournament ends (onComplete). No visible box on screen
+          so it doesn't crowd the scattered board or the stopwatch. */}
       {getTournamentEndTime() && (
-        <div className={styles.countdownSection}>
+        <div className={styles.countdownHidden}>
           <CountdownTimer
             endTime={getTournamentEndTime()}
-            label="TERMINA EN"
             onComplete={handleTournamentEnd}
+            tickSound
           />
         </div>
       )}
@@ -381,6 +377,7 @@ export default function GamePage() {
         onGoBack={() => router.push('/home')}
         ticketsRemaining={profile?.tickets_balance || 0}
         reason={finishReason}
+        maxStreak={bestStreak}
       />
     </div>
   );

@@ -1,10 +1,87 @@
 .container {
-  min-height: 100vh;
-  padding: 12px 12px 100px;
-  background: var(--bg-primary);
+  /* A definite (not min-) height is required: .cardGrid below needs a hard
+     boundary to wrap against, otherwise flex-wrap never kicks in and every
+     card stacks in one endless column instead of splitting into several. */
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 60px 12px 130px;
   color: var(--text-primary);
-  max-width: 480px;
+  max-width: none;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.pairsChip {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  font-family: var(--font-display, var(--font-mono, monospace));
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px;
+  padding: 6px 12px;
+  box-shadow: var(--shadow-card);
+  color: var(--accent-green);
+  border: 1px solid rgba(57, 255, 20, 0.25);
+}
+
+/* Sits just above the fixed bottom nav (70px tall) so the card grid can use
+   the entire rest of the viewport for the scattered layout. */
+.stopwatch {
+  position: fixed;
+  bottom: calc(70px + env(safe-area-inset-bottom) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  font-family: var(--font-display, var(--font-mono, monospace));
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px;
+  padding: 6px 12px;
+  box-shadow: var(--shadow-card);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 245, 255, 0.25);
+}
+
+.pairsBump {
+  display: inline-block;
+  animation: pairsBump 0.5s ease;
+}
+
+@keyframes pairsBump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.shake {
+  animation: shakeScreen 0.4s ease;
+}
+
+@keyframes shakeScreen {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shake {
+    animation: none;
+  }
 }
 
 /* Loading / Message Screens */
@@ -52,183 +129,71 @@
   border-color: var(--accent-cyan);
 }
 
-/* Game Stats Bar */
-.gameStats {
-  display: flex;
-  background: var(--bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 12px 8px;
-  margin-bottom: 16px;
-  backdrop-filter: blur(10px);
-}
-
-.gameStat {
-  flex: 1;
+/* Card Grid — a wrapping column-direction flexbox instead of a real grid.
+   flex-wrap breaks cards into independent vertical "columns" (no shared
+   row baseline), and `justify-content: space-evenly` forces EACH column to
+   spread its own cards across the full height of the board — so the board
+   always fills 100% of the available vertical space, whether it holds 14
+   cards or 40. `align-content` does the same for the columns across the
+   width. Card.js's `scatter.marginBottom` jitter adds extra irregularity
+   on top of that even distribution. Still collision-free and fully tappable. */
+.cardGrid {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.gameStatLabel {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-.gameStatValue {
-  font-size: 1.3rem;
-  font-weight: 800;
-  font-family: var(--font-mono, monospace);
-}
-
-/* Streak Section */
-.streakSection {
-  text-align: center;
-  margin: 12px 0 8px;
-}
-
-.streakLabel {
-  display: block;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 4px;
-}
-
-.streakNumber {
-  display: inline-block;
-  font-size: 3.5rem;
-  font-weight: 900;
-  font-family: var(--font-mono, monospace);
-  color: var(--accent-green);
-  text-shadow: 0 0 30px rgba(57, 255, 20, 0.5), 0 0 60px rgba(57, 255, 20, 0.2);
-  transition: transform 0.3s ease;
-}
-
-.streakUp {
-  animation: streakBounce 0.5s ease;
-}
-
-@keyframes streakBounce {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.5); }
-  60% { transform: scale(0.9); }
-  100% { transform: scale(1); }
-}
-
-/* Result Indicators */
-.resultMatch {
-  text-align: center;
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: var(--accent-green);
-  text-shadow: 0 0 20px rgba(57, 255, 20, 0.6), 0 0 40px rgba(57, 255, 20, 0.3);
-  animation: winText 0.6s ease;
-  letter-spacing: 3px;
-  margin: 4px 0;
-}
-
-.resultNoMatch {
-  text-align: center;
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: var(--accent-red);
-  text-shadow: 0 0 20px rgba(255, 56, 96, 0.6), 0 0 40px rgba(255, 56, 96, 0.3);
-  animation: loseText 0.6s ease;
-  letter-spacing: 3px;
-  margin: 4px 0;
-}
-
-@keyframes winText {
-  0% { opacity: 0; transform: scale(0.5); }
-  50% { transform: scale(1.2); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes loseText {
-  0% { opacity: 0; transform: scale(0.5); }
-  50% { transform: scale(1.2); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* Reveal Zone */
-.revealZone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin: 12px 0;
-}
-
-.revealSlot {
-  width: 70px;
-  height: 90px;
-  border-radius: 12px;
-  border: 2px dashed rgba(255, 255, 255, 0.15);
-  background: var(--bg-card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-content: space-evenly;
+  flex: 1;
+  /* Flex items default to min-height:auto, which lets them grow past their
+     flex-grow'd size to fit content — that's what was breaking the wrap
+     into columns (everything grew into one endless column instead). This
+     forces .cardGrid to respect its flex:1 height as a hard boundary. */
+  min-height: 0;
   overflow: hidden;
+  gap: 10px 6px;
+  padding: 10px 6px;
 }
 
-.revealActive {
-  border-style: solid;
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
-}
-
-.revealImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.vsText {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: var(--text-muted);
-  letter-spacing: 2px;
-}
-
-/* Theme Indicator */
-.themeIndicator {
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-  text-transform: capitalize;
-}
-
-/* Card Grid */
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
-  gap: 8px;
-  padding: 4px;
-  margin-bottom: 16px;
+.cardGrid > * {
+  width: 64px;
 }
 
 @media (min-width: 400px) {
   .cardGrid {
-    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
-    gap: 10px;
+    gap: 12px 8px;
+  }
+  .cardGrid > * {
+    width: 72px;
   }
 }
 
-/* Countdown Section */
-.countdownSection {
-  text-align: center;
-  margin-top: 12px;
-  padding: 12px;
-  background: var(--bg-card);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+@media (min-width: 600px) {
+  .cardGrid {
+    gap: 20px 14px;
+    padding: 20px;
+  }
+  .cardGrid > * {
+    width: 90px;
+  }
+}
+
+@media (min-width: 900px) {
+  .cardGrid {
+    gap: 24px 18px;
+    padding: 24px 40px;
+  }
+  .cardGrid > * {
+    width: 110px;
+  }
+}
+
+/* Tournament countdown stays mounted (drives auto-finish) but renders
+   with no visible footprint — see comment at the call site in page.js. */
+.countdownHidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }

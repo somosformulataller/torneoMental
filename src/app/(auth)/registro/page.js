@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import AuthCard from '@/components/ui/AuthCard';
-import FormInput from '@/components/ui/FormInput';
-import Button from '@/components/ui/Button';
-import styles from '@/components/ui/authCard.module.css';
+import ParticleBackground from '@/components/ui/ParticleBackground';
+import styles from './registro.module.css';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,12 +19,10 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -65,73 +61,47 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthCard icon="🧠" title="CREAR CUENTA" subtitle="Únete al Torneo Mental" maxWidth={500}>
-      <form onSubmit={handleRegister} className={styles.form}>
+    <div className={styles.container}>
+      <div className={styles.backgroundOverlay}></div>
+      <ParticleBackground />
+
+      <div className={styles.heroSection}>
+        <h1 className={styles.mainTitle}>Torneo Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>
+      </div>
+
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <div className={styles.logoIcon}>🔮</div>
+          <h2 className={styles.loginTitle}>Crear Cuenta</h2>
+        </div>
+
         {error && <div className={styles.error}>{error}</div>}
 
-        <div className={styles.row}>
-          <FormInput id="nombre" label="Nombre" value={formData.nombre} onChange={handleChange} required />
-          <FormInput id="apellido" label="Apellido" value={formData.apellido} onChange={handleChange} required />
-        </div>
-
-        <FormInput
-          id="email"
-          label="Correo Electrónico"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-
-        <div className={styles.row}>
-          <FormInput
-            id="whatsapp"
-            label="WhatsApp"
-            type="tel"
-            value={formData.whatsapp}
-            onChange={handleChange}
-            placeholder="+58"
-            required
-          />
-          <FormInput
-            id="cedula"
-            label="Cédula"
-            value={formData.cedula}
-            onChange={handleChange}
-            placeholder="V-12345678"
-            required
-          />
-        </div>
-
-        <FormInput
-          id="password"
-          label="Contraseña"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
         <form onSubmit={handleRegister} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label>Nombre</label>
-            <input
-              type="text"
-              required
-              value={formData.nombre}
-              onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-              className={styles.input}
-              placeholder="Juan"
-            />
-          </div>
+          <div className={styles.row}>
+            <div className={styles.inputGroup}>
+              <label>Nombre</label>
+              <input
+                type="text"
+                required
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                className={styles.input}
+                placeholder="Juan"
+              />
+            </div>
 
-          <div className={styles.inputGroup}>
-            <label>Apellido</label>
-            <input
-              type="text"
-              required
-              value={formData.apellido}
-              onChange={(e) => setFormData({...formData, apellido: e.target.value})}
-              className={styles.input}
-              placeholder="Pérez"
-            />
+            <div className={styles.inputGroup}>
+              <label>Apellido</label>
+              <input
+                type="text"
+                required
+                value={formData.apellido}
+                onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                className={styles.input}
+                placeholder="Pérez"
+              />
+            </div>
           </div>
 
           <div className={styles.inputGroup}>
@@ -140,34 +110,36 @@ export default function RegisterPage() {
               type="email"
               required
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className={styles.input}
               placeholder="tu@email.com"
             />
           </div>
 
-          <div className={styles.inputGroup}>
-            <label>WhatsApp</label>
-            <input
-              type="tel"
-              required
-              value={formData.whatsapp}
-              onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-              className={styles.input}
-              placeholder="+584141234567"
-            />
-          </div>
+          <div className={styles.row}>
+            <div className={styles.inputGroup}>
+              <label>WhatsApp</label>
+              <input
+                type="tel"
+                required
+                value={formData.whatsapp}
+                onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                className={styles.input}
+                placeholder="+584141234567"
+              />
+            </div>
 
-          <div className={styles.inputGroup}>
-            <label>Cédula</label>
-            <input
-              type="text"
-              required
-              value={formData.cedula}
-              onChange={(e) => setFormData({...formData, cedula: e.target.value})}
-              className={styles.input}
-              placeholder="V-12345678"
-            />
+            <div className={styles.inputGroup}>
+              <label>Cédula</label>
+              <input
+                type="text"
+                required
+                value={formData.cedula}
+                onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
+                className={styles.input}
+                placeholder="V-12345678"
+              />
+            </div>
           </div>
 
           <div className={styles.inputGroup}>
@@ -176,8 +148,9 @@ export default function RegisterPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
+                minLength={6}
                 value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className={styles.input}
                 placeholder="••••••••"
               />
@@ -197,8 +170,9 @@ export default function RegisterPage() {
               <input
                 type={showConfirm ? 'text' : 'password'}
                 required
+                minLength={6}
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 className={styles.input}
                 placeholder="••••••••"
               />

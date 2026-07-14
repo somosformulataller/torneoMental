@@ -1,19 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { requestTicketsAction } from '@/actions/tickets';
-import CountdownTimer from '@/components/ui/CountdownTimer';
 import Modal from '@/components/ui/Modal';
 import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
+import ParticleBackground from '@/components/ui/ParticleBackground';
+import { TicketIcon, LogoutIcon } from '@/components/ui/icons';
 import styles from './home.module.css';
 
 export default function HomePage() {
   const router = useRouter();
   const supabase = createClient();
+  const initRef = useRef(false);
   const [profile, setProfile] = useState(null);
   const [activeTournament, setActiveTournament] = useState(null);
   const [ticketQuantity, setTicketQuantity] = useState(1);
@@ -23,10 +26,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   async function loadData() {
     try {
@@ -56,6 +55,13 @@ export default function HomePage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleBuyTickets() {
     if (!paymentRef.trim()) return;
@@ -88,18 +94,9 @@ export default function HomePage() {
     router.push('/jugar');
   }
 
-  function getTournamentTimeLabel() {
-    if (!activeTournament) return null;
-    const now = new Date();
-    const start = new Date(activeTournament.start_time);
-    const end = new Date(start.getTime() + activeTournament.duration_minutes * 60000);
-
-    if (now < start) {
-      return { label: 'INICIA EN', time: start.toISOString() };
-    } else if (now < end) {
-      return { label: 'TERMINA EN', time: end.toISOString() };
-    }
-    return null;
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push('/login');
   }
 
   if (loading) {
@@ -111,116 +108,119 @@ export default function HomePage() {
     );
   }
 
-  const tournamentTime = getTournamentTimeLabel();
-
   return (
     <div className={styles.container}>
-      {/* Header Stats */}
-      <div className={styles.statsBar}>
-        <div className={styles.statItem}>
-          <span className={styles.statLabel}>🎫 Tickets</span>
-          <span className={styles.statValue}>{profile?.tickets_balance || 0}</span>
-        </div>
-        <div className={styles.statItem}>
-          <span className={styles.statLabel}>💰 Saldo</span>
-          <span className={styles.statValue}>${(profile?.tickets_balance * 1.00 || 0).toFixed(2)}</span>
-        </div>
+      <ParticleBackground />
+
+      <div className={styles.content}>
+      {/* Hero */}
+      <div className={styles.hero}>
+        <button
+          className={styles.logoutBtn}
+          onClick={handleLogout}
+          aria-label="Cerrar sesión"
+        >
+          <LogoutIcon className={styles.logoutIcon} />
+        </button>
+        <h1 className={styles.heroTitle}>Bienvenido, {profile?.nombre || 'viajero'}</h1>
       </div>
 
-      {/* Tournament Info */}
-      {activeTournament && (
-        <div className={styles.tournamentCard}>
-          <h3 className={styles.tournamentName}>{activeTournament.nombre}</h3>
-          <div className={styles.tournamentTheme}>
-            🎴 Temática: {activeTournament.card_theme === 'aleatorio' ? '🎲 Aleatorio' : activeTournament.card_theme}
-          </div>
-          {tournamentTime && (
-            <CountdownTimer
-              endTime={tournamentTime.time}
-              label={tournamentTime.label}
-              onComplete={loadData}
+      {/* Play Card — the visual centerpiece, fills the remaining space */}
+      <div className={styles.playCard}>
+        <div className={styles.playCardOrbit} />
+        {activeTournament && (
+          <span className={styles.playCardBadge}>🏆 {activeTournament.nombre}</span>
+        )}
+
+        <button
+          className={`${styles.playCardBtn} ${(!profile || profile.tickets_balance <= 0) ? styles.disabled : ''}`}
+          onClick={handlePlay}
+          disabled={!profile || profile.tickets_balance <= 0}
+        >
+          <div className={styles.playCardArtWrap}>
+            <div className={styles.playCardGlow} />
+            <Image
+              src="/cards/tecnologia/back_tecnologia.png"
+              alt=""
+              width={120}
+              height={160}
+              className={styles.playCardArt}
             />
-          )}
-        </div>
-      )}
-
-      {/* Play Button */}
-      <button
-        className={`${styles.playButton} ${(!profile || profile.tickets_balance <= 0) ? styles.disabled : ''}`}
-        onClick={handlePlay}
-        disabled={!profile || profile.tickets_balance <= 0}
-      >
-        <span className={styles.playIcon}>🎮</span>
-        <span className={styles.playText}>JUGAR</span>
-      </button>
-
-      {profile?.tickets_balance <= 0 && (
-        <p className={styles.noTicketsWarning}>
-          ⚠️ No te quedan tickets. ¡Compra más para jugar!
-        </p>
-      )}
-
-      {/* Quick Actions */}
-      <div className={styles.quickActions}>
-        <button className={styles.actionCard} onClick={() => router.push('/ranking')}>
-          <span className={styles.actionIcon}>🏆</span>
-          <span>Ranking</span>
+          </div>
+          <span className={styles.playCardCta}>▶ JUGAR</span>
         </button>
-        <button className={styles.actionCard} onClick={() => router.push('/billetera')}>
-          <span className={styles.actionIcon}>💳</span>
-          <span>Billetera</span>
-        </button>
+
+        {profile?.tickets_balance <= 0 && (
+          <span className={styles.playCardWarning}>⚠️ Sin tickets — compra para jugar</span>
+        )}
       </div>
 
-      {/* Buy Tickets Section */}
-      <div className={styles.buySection}>
-        <h3 className={styles.sectionTitle}>Comprar Tickets</h3>
-        <p className={styles.priceInfo}>1 ticket = $1.00 USD</p>
-
-        <div className={styles.ticketSelector}>
-          <button
-            className={styles.qtyBtn}
-            onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
-          >−</button>
-          <span className={styles.qtyValue}>{ticketQuantity}</span>
-          <button
-            className={styles.qtyBtn}
-            onClick={() => setTicketQuantity(ticketQuantity + 1)}
-          >+</button>
+      {/* Tickets + Buy, side by side */}
+      <div className={styles.bottomRow}>
+        <div className={styles.ticketsCard}>
+          <div className={styles.ticketsIconWrap}>
+            <TicketIcon className={styles.ticketsIcon} />
+          </div>
+          <div className={styles.ticketsInfo}>
+            <span className={styles.ticketsLabel}>Tickets</span>
+            <span className={styles.ticketsValue}>{profile?.tickets_balance || 0}</span>
+          </div>
         </div>
 
-        <div className={styles.totalPrice}>
-          Total: <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong>
-        </div>
-
-        <Button variant="accent" fullWidth onClick={() => setShowPaymentModal(true)}>
-          Comprar {ticketQuantity} {ticketQuantity === 1 ? 'ticket' : 'tickets'}
+        <Button variant="accent" onClick={() => setShowPaymentModal(true)} className={styles.buyBtn}>
+          <span className={styles.buyBtnContent}>
+            <TicketIcon className={styles.buyBtnIcon} />
+            Comprar
+          </span>
         </Button>
+      </div>
       </div>
 
       {/* Payment Modal */}
       <Modal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        title="Datos de Pago"
+        title="Comprar Tickets"
       >
         <div className={styles.paymentForm}>
+          <div className={styles.ticketSelector}>
+            <button
+              className={styles.qtyBtn}
+              onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
+            >−</button>
+            <span className={styles.qtyValue}>{ticketQuantity}</span>
+            <button
+              className={styles.qtyBtn}
+              onClick={() => setTicketQuantity(ticketQuantity + 1)}
+            >+</button>
+          </div>
+
+          <div className={styles.priceBreakdown}>
+            <div className={styles.priceRow}>
+              <span>Precio unitario</span>
+              <span>$1.00</span>
+            </div>
+            <div className={styles.priceRow}>
+              <span>Cantidad</span>
+              <span>×{ticketQuantity}</span>
+            </div>
+            <div className={styles.priceDivider} />
+            <div className={styles.priceTotal}>
+              <span>Total</span>
+              <span>${(ticketQuantity * 1.00).toFixed(2)}</span>
+            </div>
+          </div>
+
           <p className={styles.paymentInfo}>
             Transfiere <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong> y coloca la referencia del pago
           </p>
-          {buyError && <div className={styles.error || ''}>{buyError}</div>}
+          {buyError && <div className={styles.error}>{buyError}</div>}
           <FormInput
             label="Referencia de pago"
             type="text"
             value={paymentRef}
             onChange={(e) => setPaymentRef(e.target.value)}
             placeholder="Número de referencia o comprobante"
-          />
-          <FormInput
-            label="Cantidad de tickets"
-            type="number"
-            value={ticketQuantity}
-            readOnly
           />
           <Button
             variant="primary"

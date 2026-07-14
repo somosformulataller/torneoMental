@@ -12,6 +12,8 @@
     "@ducanh2912/next-pwa": "^10.2.9",
     "@supabase/ssr": "^0.12.1",
     "@supabase/supabase-js": "^2.110.3",
+    "@tsparticles/react": "^4.3.2",
+    "@tsparticles/slim": "^4.3.2",
     "canvas-confetti": "^1.9.4",
     "motion": "^12.42.2",
     "next": "16.2.10",

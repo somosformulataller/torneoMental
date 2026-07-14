@@ -17,13 +17,13 @@
 .timer {
   font-size: 1.8rem;
   font-weight: 800;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  color: var(--accent-cyan);
-  text-shadow: 0 0 15px rgba(0, 245, 255, 0.4);
+  font-family: var(--font-display, var(--font-mono, monospace));
+  color: var(--accent-gold);
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
   background: rgba(0, 0, 0, 0.2);
   padding: 4px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 245, 255, 0.2);
+  border: 1px solid rgba(255, 215, 0, 0.2);
   min-width: 130px;
   text-align: center;
 }

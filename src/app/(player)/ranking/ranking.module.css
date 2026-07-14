@@ -1,9 +1,10 @@
 .container {
   min-height: 100vh;
   padding: 20px 16px 100px;
-  background: var(--bg-primary);
   max-width: 480px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .header {

@@ -4,16 +4,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import AuthCard from '@/components/ui/AuthCard';
-import FormInput from '@/components/ui/FormInput';
-import Button from '@/components/ui/Button';
-import styles from '@/components/ui/authCard.module.css';
+import ParticleBackground from '@/components/ui/ParticleBackground';
+import styles from './login.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -50,7 +49,8 @@ export default function LoginPage() {
   return (
     <div className={styles.container}>
       <div className={styles.backgroundOverlay}></div>
-      
+      <ParticleBackground />
+
       <div className={styles.heroSection}>
         <h1 className={styles.mainTitle}>Torneo Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>
       </div>

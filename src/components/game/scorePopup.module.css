@@ -1,0 +1,14 @@
+.popup {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--accent-gold);
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  z-index: 60;
+  pointer-events: none;
+}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import Spinner from '@/components/ui/Spinner';
+import ParticleBackground from '@/components/ui/ParticleBackground';
 import styles from './ranking.module.css';
 
 function formatTime(ms) {
@@ -131,6 +132,7 @@ export default function RankingPage() {
 
   return (
     <div className={styles.container}>
+      <ParticleBackground />
       <div className={styles.header}>
         <h1 className={styles.title}>Ranking en Vivo</h1>
         <p className={styles.subtitle}>{activeTournament.nombre}</p>
