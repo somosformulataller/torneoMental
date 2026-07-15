@@ -39,6 +39,15 @@ function getScatter(index) {
   return SCATTER_VARIANTS[index % SCATTER_VARIANTS.length];
 }
 
+// Únicos temas con diseños de carta disponibles. La temática debe cambiar
+// siempre entre partidas para que el jugador nunca memorice las cartas.
+const ALL_THEMES = ['tecnologia', 'naturaleza', 'animales'];
+
+function pickNextTheme(lastTheme) {
+  const candidates = lastTheme ? ALL_THEMES.filter((t) => t !== lastTheme) : ALL_THEMES;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
 function formatStopwatch(ms) {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -51,6 +60,7 @@ export default function GamePage() {
   const supabase = createClient();
   const gameStartTime = useRef(null);
   const initRef = useRef(false);
+  const lastThemeRef = useRef(null);
   const [profile, setProfile] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [gameId, setGameId] = useState(null);
@@ -153,9 +163,8 @@ export default function GamePage() {
 
     if (updatedProfile) setProfile(updatedProfile);
 
-    const theme = tourn.card_theme === 'aleatorio'
-      ? ['tecnologia', 'naturaleza', 'animales'][Math.floor(Math.random() * 3)]
-      : tourn.card_theme;
+    const theme = pickNextTheme(lastThemeRef.current);
+    lastThemeRef.current = theme;
 
     const cardPairs = generateCardPairs(theme, tourn.card_count);
     setCards(cardPairs);

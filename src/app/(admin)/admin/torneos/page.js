@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { createTournamentAction, updateTournamentAction } from '@/actions/tournaments';
-import { TOURNAMENT_STATUSES, THEMES } from '@/lib/constants';
+import { TOURNAMENT_STATUSES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -24,10 +24,11 @@ export default function AdminTorneosPage() {
   const [formData, setFormData] = useState({
     id: null,
     nombre: '',
-    card_theme: 'aleatorio',
     card_count: 14,
     start_time: '',
     duration_minutes: 60,
+    winners_count: 1,
+    prize_usd: 0,
     status: 'programado'
   });
   const [formError, setFormError] = useState(null);
@@ -63,10 +64,11 @@ export default function AdminTorneosPage() {
       setFormData({
         id: tournament.id,
         nombre: tournament.nombre,
-        card_theme: tournament.card_theme,
         card_count: tournament.card_count,
         start_time: date.toISOString().slice(0, 16),
         duration_minutes: tournament.duration_minutes,
+        winners_count: tournament.winners_count,
+        prize_usd: tournament.prize_usd,
         status: tournament.status
       });
     } else {
@@ -74,10 +76,11 @@ export default function AdminTorneosPage() {
       setFormData({
         id: null,
         nombre: '',
-        card_theme: 'aleatorio',
         card_count: 14,
         start_time: '',
         duration_minutes: 60,
+        winners_count: 1,
+        prize_usd: 0,
         status: 'programado'
       });
     }
@@ -93,10 +96,11 @@ export default function AdminTorneosPage() {
     try {
       const dataToSave = {
         nombre: formData.nombre,
-        card_theme: formData.card_theme,
         card_count: Number(formData.card_count),
         start_time: new Date(formData.start_time).toISOString(),
         duration_minutes: Number(formData.duration_minutes),
+        winners_count: Number(formData.winners_count),
+        prize_usd: Number(formData.prize_usd),
         status: formData.status
       };
 
@@ -164,14 +168,16 @@ export default function AdminTorneosPage() {
                   <span className={styles.detailValue}>{t.duration_minutes} min</span>
                 </div>
                 <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Temática</span>
-                  <span className={styles.detailValue} style={{textTransform: 'capitalize'}}>
-                    {t.card_theme}
-                  </span>
-                </div>
-                <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Cartas</span>
                   <span className={styles.detailValue}>{t.card_count}</span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Ganadores</span>
+                  <span className={styles.detailValue}>{t.winners_count}</span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Premio c/u</span>
+                  <span className={styles.detailValue}>${Number(t.prize_usd).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -223,30 +229,44 @@ export default function AdminTorneosPage() {
             </div>
           </div>
 
+          <div className={styles.inputGroup}>
+            <label>Cantidad de Cartas</label>
+            <input
+              type="number"
+              required
+              min="14"
+              step="2"
+              max="40"
+              value={formData.card_count}
+              onChange={(e) => setFormData({...formData, card_count: e.target.value})}
+              className={styles.input}
+            />
+            <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '4px' }}>
+              La temática (tecnología, naturaleza o animales) rota automáticamente en cada partida nueva.
+            </p>
+          </div>
+
           <div className={styles.row}>
             <div className={styles.inputGroup}>
-              <label>Temática de Cartas</label>
-              <select
-                value={formData.card_theme}
-                onChange={(e) => setFormData({...formData, card_theme: e.target.value})}
-                className={styles.select}
-              >
-                <option value="aleatorio">Aleatorio</option>
-                {Object.values(THEMES).map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.inputGroup}>
-              <label>Cantidad de Cartas</label>
+              <label>Cantidad de Ganadores</label>
               <input
                 type="number"
                 required
-                min="14"
-                step="2"
-                max="40"
-                value={formData.card_count}
-                onChange={(e) => setFormData({...formData, card_count: e.target.value})}
+                min="1"
+                value={formData.winners_count}
+                onChange={(e) => setFormData({...formData, winners_count: e.target.value})}
+                className={styles.input}
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Premio por Ganador (USD)</label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="0.01"
+                value={formData.prize_usd}
+                onChange={(e) => setFormData({...formData, prize_usd: e.target.value})}
                 className={styles.input}
               />
             </div>

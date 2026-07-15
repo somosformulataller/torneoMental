@@ -27,6 +27,12 @@
   margin-top: 4px;
 }
 
+.prizeInfo {
+  font-size: 0.8rem;
+  color: var(--accent-gold);
+  margin-top: 6px;
+}
+
 .liveIndicator {
   display: inline-flex;
   align-items: center;
@@ -179,6 +185,17 @@
 .isMe {
   background: rgba(0, 245, 255, 0.05) !important;
   border-left: 3px solid var(--accent-cyan);
+}
+
+.isWinner {
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.winnerTag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin-top: 2px;
 }
 
 .pos {

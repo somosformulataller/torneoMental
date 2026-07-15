@@ -44,7 +44,7 @@ export default function RankingPage() {
       // Get active tournament
       const { data: tournaments } = await supabase
         .from('tournaments')
-        .select('id, nombre')
+        .select('id, nombre, winners_count, prize_usd')
         .eq('status', 'activo')
         .order('start_time', { ascending: true })
         .limit(1);
@@ -136,6 +136,9 @@ export default function RankingPage() {
       <div className={styles.header}>
         <h1 className={styles.title}>Ranking en Vivo</h1>
         <p className={styles.subtitle}>{activeTournament.nombre}</p>
+        <p className={styles.prizeInfo}>
+          🏆 Premio: ${Number(activeTournament.prize_usd).toFixed(2)} c/u para los primeros {activeTournament.winners_count}
+        </p>
         <div className={styles.liveIndicator}>
           <span className={styles.liveDot}></span> EN VIVO
         </div>
@@ -148,6 +151,9 @@ export default function RankingPage() {
             <div className={styles.myRankPos}>{getMedal(myPosition.posicion)}</div>
             <div className={styles.myRankDetails}>
               <div className={styles.myName}>Tú</div>
+              {myPosition.posicion <= activeTournament.winners_count && (
+                <div className={styles.winnerTag}>🏆 Ganando ${Number(activeTournament.prize_usd).toFixed(2)}</div>
+              )}
             </div>
             <div className={styles.myRankScore}>
               <div className={styles.scoreValue}>{myPosition.pairs_matched}</div>
@@ -170,7 +176,7 @@ export default function RankingPage() {
             key={r.user_id}
             layout
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className={`${styles.rankItem} ${r.user_id === profile?.id ? styles.isMe : ''} ${r.posicion <= 3 ? styles.topThree : ''}`}
+            className={`${styles.rankItem} ${r.user_id === profile?.id ? styles.isMe : ''} ${r.posicion <= 3 ? styles.topThree : ''} ${r.posicion <= activeTournament.winners_count ? styles.isWinner : ''}`}
           >
             <div className={`${styles.pos} ${r.posicion === 1 ? styles.gold : r.posicion === 2 ? styles.silver : r.posicion === 3 ? styles.bronze : ''}`}>
               {getMedal(r.posicion)}
@@ -180,6 +186,9 @@ export default function RankingPage() {
                 {r.user_nombre} {r.user_apellido}
                 {r.user_id === profile?.id && ' (Tú)'}
               </div>
+              {r.posicion <= activeTournament.winners_count && (
+                <div className={styles.winnerTag}>🏆 ${Number(activeTournament.prize_usd).toFixed(2)}</div>
+              )}
             </div>
             <div className={styles.score}>
               {r.pairs_matched}

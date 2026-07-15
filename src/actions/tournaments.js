@@ -15,6 +15,12 @@ function validateTournamentData(data) {
   if (!Number.isInteger(data.duration_minutes) || data.duration_minutes < 1) {
     return 'La duración debe ser mayor a 0 minutos';
   }
+  if (!Number.isInteger(data.winners_count) || data.winners_count < 1) {
+    return 'La cantidad de ganadores debe ser al menos 1';
+  }
+  if (typeof data.prize_usd !== 'number' || Number.isNaN(data.prize_usd) || data.prize_usd < 0) {
+    return 'El premio por ganador debe ser un monto válido';
+  }
   return null;
 }
 
