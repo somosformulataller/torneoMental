@@ -28,6 +28,8 @@ export default function HomePage() {
   const [buyError, setBuyError] = useState(null);
   const [bcvRate, setBcvRate] = useState(null);
   const [bcvRateDate, setBcvRateDate] = useState(null);
+  const [proofFile, setProofFile] = useState(null);
+  const [proofPreview, setProofPreview] = useState(null);
 
   async function loadData() {
     try {
@@ -75,15 +77,57 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function handleProofChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setBuyError('El comprobante debe ser una imagen');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setBuyError('La imagen no puede pesar más de 5MB');
+      return;
+    }
+    setBuyError(null);
+    if (proofPreview) URL.revokeObjectURL(proofPreview);
+    setProofFile(file);
+    setProofPreview(URL.createObjectURL(file));
+  }
+
+  function handleRemoveProof() {
+    if (proofPreview) URL.revokeObjectURL(proofPreview);
+    setProofFile(null);
+    setProofPreview(null);
+  }
+
   async function handleBuyTickets() {
     if (!paymentRef.trim()) return;
     setBuying(true);
     setBuyError(null);
     try {
+      let paymentProofPath = null;
+
+      if (proofFile) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { router.push('/login'); return; }
+
+        const path = `${user.id}/${Date.now()}-${proofFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(path, proofFile);
+
+        if (uploadError) {
+          setBuyError('No se pudo subir el comprobante. Intenta de nuevo.');
+          return;
+        }
+        paymentProofPath = path;
+      }
+
       const { error } = await requestTicketsAction({
         tournamentId: activeTournament?.id || null,
         quantity: ticketQuantity,
         paymentReference: paymentRef,
+        paymentProofPath,
       });
 
       if (error) {
@@ -93,6 +137,7 @@ export default function HomePage() {
       setShowPaymentModal(false);
       setShowConfirmModal(true);
       setPaymentRef('');
+      handleRemoveProof();
     } catch (err) {
       console.error('Error buying tickets:', err);
       setBuyError('No se pudo enviar la solicitud. Intenta de nuevo.');
@@ -160,7 +205,7 @@ export default function HomePage() {
           <div className={styles.playCardArtWrap}>
             <div className={styles.playCardGlow} />
             <Image
-              src="/cards/tecnologia/back_tecnologia.png"
+              src="/cards/animales/back_animales.png"
               alt=""
               width={120}
               height={160}
@@ -246,6 +291,27 @@ export default function HomePage() {
             Transfiere <strong>${(ticketQuantity * 1.00).toFixed(2)} USD</strong>
             {bcvRate && <> (<strong>Bs. {formatBs(ticketQuantity)}</strong>)</>} y coloca la referencia del pago
           </p>
+
+          <div className={styles.bankDetails}>
+            <p className={styles.bankDetailsTitle}>Datos para el pago</p>
+            <div className={styles.bankDetailsRow}>
+              <span>Banco</span>
+              <strong>Banco de Venezuela</strong>
+            </div>
+            <div className={styles.bankDetailsRow}>
+              <span>Teléfono</span>
+              <strong>04220165513</strong>
+            </div>
+            <div className={styles.bankDetailsRow}>
+              <span>C.I.</span>
+              <strong>26725053</strong>
+            </div>
+            <div className={styles.bankDetailsRow}>
+              <span>Concepto</span>
+              <strong>Pago</strong>
+            </div>
+          </div>
+
           {buyError && <div className={styles.error}>{buyError}</div>}
           <FormInput
             label="Referencia de pago"
@@ -254,6 +320,29 @@ export default function HomePage() {
             onChange={(e) => setPaymentRef(e.target.value)}
             placeholder="Número de referencia o comprobante"
           />
+
+          <div className={styles.proofGroup}>
+            <label className={styles.proofLabel}>Captura del pago (opcional)</label>
+            {proofPreview ? (
+              <div className={styles.proofPreviewWrap}>
+                <img src={proofPreview} alt="Comprobante" className={styles.proofPreview} />
+                <button type="button" className={styles.proofRemoveBtn} onClick={handleRemoveProof}>
+                  Quitar
+                </button>
+              </div>
+            ) : (
+              <label className={styles.proofUploadBtn}>
+                📎 Adjuntar imagen
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProofChange}
+                  className={styles.proofInput}
+                />
+              </label>
+            )}
+          </div>
+
           <Button
             variant="primary"
             fullWidth

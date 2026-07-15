@@ -413,6 +413,95 @@
   color: var(--accent-gold);
 }
 
+.bankDetails {
+  background: rgba(255, 215, 0, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: var(--radius-md, 12px);
+  padding: 10px 14px;
+}
+
+.bankDetailsTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+  margin-bottom: 6px;
+}
+
+.bankDetailsRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 2px 0;
+}
+
+.bankDetailsRow strong {
+  color: var(--text-primary);
+}
+
+.proofGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proofLabel {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.proofUploadBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm, 10px);
+  padding: 12px 16px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.proofUploadBtn:hover {
+  border-color: var(--accent-pink);
+  color: var(--text-primary);
+}
+
+.proofInput {
+  display: none;
+}
+
+.proofPreviewWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.proofPreview {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.proofRemoveBtn {
+  background: rgba(255, 56, 96, 0.15);
+  border: 1px solid rgba(255, 56, 96, 0.3);
+  color: var(--accent-red);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
 .error {
   background: rgba(255, 56, 96, 0.15);
   color: var(--accent-red);

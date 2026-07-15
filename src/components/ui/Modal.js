@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './modal.module.css';
 
 export default function Modal({ isOpen, onClose, title, children }) {
@@ -24,7 +25,12 @@ export default function Modal({ isOpen, onClose, title, children }) {
 
   if (!isOpen) return null;
 
-  return (
+  // Portal directo a <body>: si el modal se renderizara anidado dentro del
+  // árbol de la página, quedaría atrapado en el contexto de apilamiento de
+  // algún ancestro con z-index bajo (ej. .container de home), perdiendo
+  // frente al navbar inferior (z-index:100) sin importar el z-index propio
+  // del modal.
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
@@ -35,6 +41,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -19,10 +19,7 @@ export default function AdminTicketsPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [processing, setProcessing] = useState(false);
   const [filter, setFilter] = useState('pendiente'); // pendiente, todos
-
-  useEffect(() => {
-    loadTickets();
-  }, [filter]);
+  const [viewingProof, setViewingProof] = useState(null);
 
   async function loadTickets() {
     setLoading(true);
@@ -42,7 +39,7 @@ export default function AdminTicketsPage() {
 
       const { data, error } = await query;
       if (error) throw error;
-      
+
       setTickets(data || []);
     } catch (err) {
       console.error('Error loading tickets:', err);
@@ -50,6 +47,11 @@ export default function AdminTicketsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadTickets();
+  }, [filter]);
 
   async function handleApprove(ticket) {
     if (!window.confirm(`¿Aprobar recarga de ${ticket.quantity} tickets para ${ticket.profiles.nombre}?`)) return;
@@ -87,6 +89,23 @@ export default function AdminTicketsPage() {
       alert('Error al rechazar: ' + err.message);
     } finally {
       setProcessing(false);
+    }
+  }
+
+  async function handleViewProof(ticket) {
+    setViewingProof(ticket.id);
+    try {
+      const { data, error } = await supabase.storage
+        .from('payment-proofs')
+        .createSignedUrl(ticket.payment_proof_path, 60);
+
+      if (error) throw error;
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      console.error('Error viewing proof:', err);
+      alert('No se pudo abrir el comprobante');
+    } finally {
+      setViewingProof(null);
     }
   }
 
@@ -130,6 +149,7 @@ export default function AdminTicketsPage() {
                 <th>Usuario</th>
                 <th>Cédula</th>
                 <th>Referencia</th>
+                <th>Comprobante</th>
                 <th>Monto/Tickets</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -147,6 +167,21 @@ export default function AdminTicketsPage() {
                   </td>
                   <td>{t.profiles?.cedula}</td>
                   <td><code className={styles.ref}>{t.payment_reference}</code></td>
+                  <td>
+                    {t.payment_proof_path ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewProof(t)}
+                        disabled={viewingProof === t.id}
+                        loading={viewingProof === t.id}
+                      >
+                        Ver
+                      </Button>
+                    ) : (
+                      <span className={styles.userEmail}>—</span>
+                    )}
+                  </td>
                   <td>
                     <div className={styles.amountInfo}>
                       <span className={styles.usd}>${t.amount_usd.toFixed(2)}</span>

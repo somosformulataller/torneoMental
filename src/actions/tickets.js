@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { TICKET_PRICE_USD } from '@/lib/constants';
 
-export async function requestTicketsAction({ tournamentId, quantity, paymentReference }) {
+export async function requestTicketsAction({ tournamentId, quantity, paymentReference, paymentProofPath }) {
   const supabase = await createClient();
 
   const {
@@ -18,6 +18,13 @@ export async function requestTicketsAction({ tournamentId, quantity, paymentRefe
   if (!paymentReference?.trim()) {
     return { error: 'Debes indicar la referencia de pago' };
   }
+  // El archivo se sube directo a Storage desde el navegador (política RLS
+  // exige que el path empiece con el uid del usuario autenticado); acá solo
+  // validamos que, si vino uno, sea realmente del usuario que hace la
+  // solicitud antes de guardarlo.
+  if (paymentProofPath && !paymentProofPath.startsWith(`${user.id}/`)) {
+    return { error: 'Comprobante de pago inválido' };
+  }
 
   const { data, error } = await supabase
     .from('tickets')
@@ -27,6 +34,7 @@ export async function requestTicketsAction({ tournamentId, quantity, paymentRefe
       quantity: qty,
       amount_usd: qty * TICKET_PRICE_USD,
       payment_reference: paymentReference.trim(),
+      payment_proof_path: paymentProofPath || null,
       payment_status: 'pendiente',
     })
     .select()
