@@ -205,7 +205,7 @@ export default function HomePage() {
           <div className={styles.playCardArtWrap}>
             <div className={styles.playCardGlow} />
             <Image
-              src="/cards/animales/back_animales.png"
+              src="/cards/animales/anim_fox.png"
               alt=""
               width={120}
               height={160}
