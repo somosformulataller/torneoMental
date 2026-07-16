@@ -7,7 +7,7 @@ import styles from './navbar.module.css';
 
 const navItems = [
   { href: '/home', label: 'Inicio', Icon: HomeIcon },
-  { href: '/jugar', label: 'Jugar', Icon: PlayCardIcon },
+  { href: '/jugar', label: 'Competir', Icon: PlayCardIcon },
   { href: '/ranking', label: 'Ranking', Icon: TrophyIcon },
   { href: '/billetera', label: 'Billetera', Icon: WalletIcon },
 ];

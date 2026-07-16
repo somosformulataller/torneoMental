@@ -212,7 +212,7 @@ export default function HomePage() {
               className={styles.playCardArt}
             />
           </div>
-          <span className={styles.playCardCta}>▶ JUGAR</span>
+          <span className={styles.playCardCta}>▶ COMPETIR</span>
         </button>
 
         {profile?.tickets_balance <= 0 && (
