@@ -135,13 +135,17 @@ export default function RankingPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRanking();
 
-    // Set up Realtime subscription for live ranking updates
+    // Realtime solo puede escuchar tablas reales (logical replication), no
+    // vistas — tournament_rankings es una vista, así que escuchamos la
+    // tabla real games (cualquier partida completada recalcula el
+    // ranking) y le damos un nombre único al canal para evitar choques si
+    // el efecto llega a montarse dos veces con el mismo nombre fijo.
     const channel = supabase
-      .channel('ranking_updates')
+      .channel(`ranking_updates_${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'tournament_rankings'
+        table: 'games'
       }, () => {
         // Reload ranking when there's a change
         loadRanking(false);
