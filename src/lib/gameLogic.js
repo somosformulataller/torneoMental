@@ -10,8 +10,8 @@ export function shuffleArray(array) {
 }
 
 export function generateCardPairs(themeId, count) {
-  // Ensure count is even and >= 14
-  const validCount = Math.max(14, count % 2 === 0 ? count : count + 1);
+  // Ensure count is even and >= 4 (minimum for a playable memory board)
+  const validCount = Math.max(4, count % 2 === 0 ? count : count + 1);
   const themeCards = CARD_DATA[themeId] || CARD_DATA['tecnologia'];
 
   // Never request more pairs than the theme has unique cards for

@@ -234,7 +234,7 @@ export default function AdminTorneosPage() {
             <input
               type="number"
               required
-              min="14"
+              min="6"
               step="2"
               max="40"
               value={formData.card_count}
