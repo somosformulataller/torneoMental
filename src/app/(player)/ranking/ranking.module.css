@@ -33,6 +33,13 @@
   margin-top: 6px;
 }
 
+.rankingNotice {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
 .liveIndicator {
   display: inline-flex;
   align-items: center;

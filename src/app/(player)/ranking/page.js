@@ -178,6 +178,9 @@ export default function RankingPage() {
         <div className={styles.liveIndicator}>
           <span className={styles.liveDot}></span> EN VIVO
         </div>
+        <p className={styles.rankingNotice}>
+          ⚠️ Este ranking puede cambiar en el transcurso de la copa. Estar de primero ahora no garantiza el premio hasta que finalice el torneo.
+        </p>
       </div>
 
       {myPosition && (
