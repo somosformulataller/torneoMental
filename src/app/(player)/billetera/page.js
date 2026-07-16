@@ -22,12 +22,15 @@ export default function BilleteraPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [userId, setUserId] = useState(null);
 
-  async function loadData() {
+  async function loadData(showLoader = true) {
+    if (showLoader) setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) { router.push('/login'); return; }
+      setUserId(user.id);
 
       // Perfil, tickets y premios son independientes entre sí — se piden en
       // paralelo en vez de uno tras otro.
@@ -60,6 +63,34 @@ export default function BilleteraPage() {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    // Para que el saldo de tickets y el estado de cada compra ("Pendiente" →
+    // "Aprobado"/"Rechazado") se actualicen solos apenas el admin los
+    // procesa, sin que el jugador tenga que recargar la página.
+    const channel = supabase
+      .channel(`billetera_updates_${userId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${userId}`,
+      }, () => loadData(false))
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tickets',
+        filter: `user_id=eq.${userId}`,
+      }, () => loadData(false))
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   async function handleDeleteAccount() {
     setDeleting(true);

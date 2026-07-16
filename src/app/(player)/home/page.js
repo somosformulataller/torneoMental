@@ -32,6 +32,7 @@ export default function HomePage() {
   const [proofFile, setProofFile] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
   const [compressingProof, setCompressingProof] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   async function loadData() {
     try {
@@ -42,6 +43,7 @@ export default function HomePage() {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) { router.push('/login'); return; }
+      setUserId(user.id);
 
       const [{ data: profileData }, { data: tournaments }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
@@ -80,6 +82,30 @@ export default function HomePage() {
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    // Para que el saldo de tickets se actualice solo apenas el admin
+    // aprueba/rechaza un pago, sin que el jugador tenga que recargar la
+    // página para enterarse.
+    const channel = supabase
+      .channel(`home_profile_${userId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${userId}`,
+      }, (payload) => {
+        setProfile(payload.new);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   async function handleProofChange(e) {
     const file = e.target.files?.[0];
