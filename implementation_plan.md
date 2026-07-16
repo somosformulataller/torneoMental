@@ -302,6 +302,45 @@ CREATE POLICY "games_update" ON public.games FOR UPDATE USING (auth.uid() = user
 
 ---
 
+## Torneo Recurrente + Billetera de Premios (sistema actual, agregado después del plan original)
+
+> El esquema SQL de la sección anterior es el plan **original**; el mecanismo real de juego terminó
+> siendo por pares encontrados (`pairs_matched`) contra el tiempo del torneo, no por rachas con
+> derrota al primer fallo. Esta sección documenta una pieza de arquitectura agregada después: la
+> automatización de ciclos de torneo.
+
+Hoy existe **un solo torneo que se repite automáticamente** en vez de que un admin cree y cierre cada
+ciclo a mano.
+
+- `tournaments.is_recurring` (boolean) + `tournaments.recurring_gap_minutes` (integer): si es
+  recurrente, cuántos minutos pasan entre que termina un ciclo y arranca el siguiente (0 = inmediato).
+- `profiles.wallet_balance_usd` + tabla `wallet_transactions` (`user_id`, `tournament_id`,
+  `amount_usd`, `position`): billetera de premios acumulados, separada de `tickets_balance`. RLS solo
+  deja ver las propias filas (o al admin ver todas) — para mostrarlas a todos en Ranking existe la
+  vista `tournament_winners` (mismo patrón que `tournament_rankings`: la vista corre con privilegios
+  del dueño, no de las políticas RLS restrictivas de las tablas base).
+- Función SQL `finalize_recurring_tournament(tournament_id)` (**sin** `grant ... to authenticated`,
+  solo alcanzable con la service-role key): paga a los ganadores según `tournament_rankings`, acredita
+  `wallet_balance_usd` + inserta en `wallet_transactions`, pasa el torneo a `finalizado`, y si
+  `is_recurring` es `true` encadena automáticamente el siguiente ciclo con la misma configuración.
+- Función SQL `activate_scheduled_tournaments()` (mismo nivel de acceso restringido): pasa a `activo`
+  cualquier torneo `programado` cuya fecha de inicio ya llegó — aplica también a torneos sueltos no
+  recurrentes.
+- Ruta de servidor `src/app/api/cron/tournament-cycle/route.js`, llamada por **Vercel Cron**
+  (configurado en `vercel.json`, protegida con el header `Authorization: Bearer $CRON_SECRET`): en
+  cada corrida, cierra los torneos `activo` ya vencidos (llamando `finalize_recurring_tournament` uno
+  por uno) y después llama `activate_scheduled_tournaments()`.
+- Admin → **Recurrencia** (`/admin/recurrencia`, item propio en el sidebar): formulario dedicado para
+  configurar el torneo recurrente actual (nombre, cartas, duración de cada ciclo, minutos entre
+  ciclos, ganadores y premios), con cuenta regresiva en vivo. La sección **Torneos** sigue disponible
+  para crear torneos sueltos no recurrentes, con la misma cuenta regresiva y cierre automático al
+  vencer (fecha/hora/duración siempre visibles y editables en su modal).
+- `/ranking` muestra siempre la cuenta regresiva del torneo activo ("Termina en") y, al final de la
+  pantalla, bloques con el historial de ganadores de copas ya finalizadas (el más reciente etiquetado
+  "Ganadores de la copa anterior").
+
+---
+
 ## PWA Configuration
 
 **manifest.json:**

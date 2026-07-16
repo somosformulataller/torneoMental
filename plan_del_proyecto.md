@@ -53,7 +53,19 @@ La base de datos utiliza PostgreSQL con políticas de seguridad (RLS) estrictas 
   - Indicador de estado "En Vivo" simulando una grabación (`pulse`).
 - **Tipografía:** Tipografías importadas modernas sin serifas como `Outfit` y monoespaciadas para los marcadores como `JetBrains Mono`.
 
-## 6. Siguientes Pasos
+## 6. Torneo Recurrente y Billetera de Premios
+Copa Mental opera hoy con **un solo torneo que se repite automáticamente** en vez de requerir que un admin cree y cierre cada torneo a mano.
+
+- **Configuración (`tournaments.is_recurring` + `tournaments.recurring_gap_minutes`):** un torneo marcado `is_recurring = true` indica cuántos minutos deben pasar entre que termina un ciclo y arranca el siguiente (`recurring_gap_minutes`; 0 = arranca de inmediato).
+- **Cron de servidor (`/api/cron/tournament-cycle`, Vercel Cron vía `vercel.json`):** se ejecuta cada pocos minutos con la service-role key y hace, en orden:
+  1. Busca los torneos `activo` cuyo `start_time + duration_minutes` ya pasó y llama a la función `finalize_recurring_tournament(tournament_id)` de cada uno.
+  2. Llama a `activate_scheduled_tournaments()`, que pasa a `activo` cualquier torneo `programado` cuya fecha de inicio ya llegó (aplica tanto a los ciclos recién encadenados como a torneos sueltos no recurrentes).
+- **`finalize_recurring_tournament` (función SQL, solo invocable con la service-role key, nunca desde el navegador):** paga a los ganadores según su posición en `tournament_rankings` (acredita `profiles.wallet_balance_usd` y deja un registro en `wallet_transactions`), pasa el torneo a `finalizado`, y si `is_recurring` es `true`, crea automáticamente la siguiente fila de `tournaments` con la misma configuración (cartas, ganadores, premios, duración), programada `recurring_gap_minutes` después.
+- **Billetera de premios (`profiles.wallet_balance_usd`, `wallet_transactions`):** el dinero ganado en copas anteriores **no se pierde** cuando el ranking se reinicia para el siguiente ciclo — se acumula aparte y se muestra en `/billetera` junto al historial de premios. El retiro real del saldo sigue siendo manual, fuera de la app (igual que las compras de tickets).
+- **Vista `tournament_winners`:** expone nombre/posición/premio de torneos ya `finalizado` a cualquier jugador (mismo patrón de "vista corre con privilegios del dueño" que `tournament_rankings`, ya que `wallet_transactions` por RLS solo deja ver las filas propias). Se usa al final de `/ranking` para mostrar bloques con los ganadores de copas anteriores.
+- **Admin → Recurrencia (`/admin/recurrencia`):** pantalla dedicada para configurar el torneo recurrente actual (nombre, cartas, duración de cada ciclo, minutos entre ciclos, ganadores y premios) y ver su cuenta regresiva en vivo. La sección **Torneos** del menú lateral sigue disponible para crear torneos sueltos no recurrentes (con la misma lógica de cuenta regresiva y de cierre automático al vencer).
+
+## 7. Siguientes Pasos
 - Completar las variables de entorno de Supabase en `.env.local`.
 - Ejecutar el script `supabase_schema.sql` en la consola SQL de Supabase.
 - Generar e incorporar las imágenes restantes de las temáticas faltantes (Animales, Naturaleza, etc) en `/public/images/themes/`.
