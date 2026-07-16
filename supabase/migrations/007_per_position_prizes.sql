@@ -13,7 +13,7 @@ alter table public.tournaments add column if not exists prizes numeric(10,2)[] n
 -- Migra los torneos existentes: repite su prize_usd actual en cada posición,
 -- para no perder el valor que ya tenían configurado.
 update public.tournaments t
-set prizes = (select array_agg(t.prize_usd) from generate_series(1, t.winners_count))
+set prizes = array_fill(t.prize_usd, array[t.winners_count])
 where t.prizes = '{}';
 
 alter table public.tournaments drop column if exists prize_usd;
