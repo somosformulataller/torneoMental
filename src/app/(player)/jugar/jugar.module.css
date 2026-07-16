@@ -145,8 +145,15 @@
    the "montarse un poco encima" look the user asked to keep. The gap is
    intentionally column-heavy (much wider than the row gap) so the 3
    columns read as clearly separate instead of one packed mass.
-   overflow-x: auto is a hard safety net in case 3 columns still don't
-   fit on an unusually narrow screen. */
+   overflow: auto (both axes) is a hard safety net: the tallest column's
+   last card is intentionally taller than its 1fr row slice (that's the
+   overlap), and that slice sits flush against the grid's own bottom edge
+   with no next row to overflow into — so it pokes past the grid box by
+   design. overflow-y: hidden used to silently clip that card off; auto
+   instead makes it reachable via scroll if it doesn't fully fit, so a
+   card can never become permanently invisible again. Card counts that
+   divide evenly by 3 (e.g. 12) need zero scroll since every column has
+   the same row count and nothing pokes out. */
 .cardGrid {
   display: grid;
   grid-auto-flow: column;
@@ -156,8 +163,7 @@
   align-content: safe center;
   flex: 1;
   min-height: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
   gap: 4px 22px;
   padding: 6px 3px;
