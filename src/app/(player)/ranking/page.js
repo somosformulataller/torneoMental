@@ -17,6 +17,35 @@ function formatTime(ms) {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getMedal(pos) {
+  if (pos === 1) return '🥇';
+  if (pos === 2) return '🥈';
+  if (pos === 3) return '🥉';
+  return `#${pos}`;
+}
+
+// Agrupa las filas planas de la vista tournament_winners en bloques por
+// torneo, conservando el orden (más reciente primero) que ya trae la query.
+function groupWinners(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    if (!map.has(r.tournament_id)) {
+      map.set(r.tournament_id, {
+        tournament_id: r.tournament_id,
+        tournament_nombre: r.tournament_nombre,
+        tournament_start_time: r.tournament_start_time,
+        winners: [],
+      });
+    }
+    map.get(r.tournament_id).winners.push(r);
+  }
+  return Array.from(map.values()).slice(0, 5);
+}
+
 export default function RankingPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -24,6 +53,7 @@ export default function RankingPage() {
   const [activeTournament, setActiveTournament] = useState(null);
   const [upcomingTournament, setUpcomingTournament] = useState(null);
   const [rankings, setRankings] = useState([]);
+  const [pastWinners, setPastWinners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [myPosition, setMyPosition] = useState(null);
 
@@ -42,6 +72,16 @@ export default function RankingPage() {
           .single();
         setProfile(profileData);
       }
+
+      // Historial de ganadores de copas ya finalizadas (independiente de si
+      // hay un torneo activo ahora mismo).
+      const { data: winnersData } = await supabase
+        .from('tournament_winners')
+        .select('*')
+        .order('tournament_start_time', { ascending: false })
+        .order('position', { ascending: true })
+        .limit(60);
+      setPastWinners(groupWinners(winnersData || []));
 
       // Get active tournament
       const { data: tournaments } = await supabase
@@ -117,16 +157,32 @@ export default function RankingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function getMedal(pos) {
-    if (pos === 1) return '🥇';
-    if (pos === 2) return '🥈';
-    if (pos === 3) return '🥉';
-    return `#${pos}`;
-  }
-
   function prizeForPosition(pos) {
     return Number(activeTournament?.prizes?.[pos - 1] ?? 0);
   }
+
+  const pastWinnersSection = pastWinners.length > 0 ? (
+    <div className={styles.pastWinnersSection}>
+      <h2 className={styles.pastWinnersTitle}>Historial de Ganadores</h2>
+      {pastWinners.map((block, i) => (
+        <div key={block.tournament_id} className={styles.winnerBlock}>
+          <div className={styles.winnerBlockHeader}>
+            🏆 {i === 0 ? 'Ganadores de la copa anterior' : block.tournament_nombre}
+          </div>
+          <p className={styles.winnerBlockDate}>
+            {i === 0 ? `${block.tournament_nombre} · ` : ''}{formatDate(block.tournament_start_time)}
+          </p>
+          {block.winners.map((w) => (
+            <div key={w.user_id} className={styles.winnerRow}>
+              <span className={styles.winnerMedal}>{getMedal(w.position)}</span>
+              <span className={styles.winnerName}>{w.user_nombre} {w.user_apellido}</span>
+              <span className={styles.winnerAmount}>${Number(w.amount_usd).toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  ) : null;
 
   if (loading) {
     return (
@@ -155,6 +211,7 @@ export default function RankingPage() {
             </>
           )}
         </div>
+        {pastWinnersSection}
       </div>
     );
   }
@@ -244,6 +301,8 @@ export default function RankingPage() {
           </div>
         )}
       </div>
+
+      {pastWinnersSection}
     </div>
   );
 }

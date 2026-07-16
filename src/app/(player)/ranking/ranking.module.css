@@ -261,3 +261,71 @@
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+/* Historial de ganadores de copas anteriores */
+.pastWinnersSection {
+  margin-top: 28px;
+}
+
+.pastWinnersTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.winnerBlock {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.winnerBlockHeader {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+
+.winnerBlockDate {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  margin-bottom: 12px;
+}
+
+.winnerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.winnerRow:first-of-type {
+  border-top: none;
+}
+
+.winnerMedal {
+  width: 32px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.winnerName {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.winnerAmount {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  font-family: var(--font-mono, monospace);
+}
