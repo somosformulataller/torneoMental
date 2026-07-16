@@ -93,7 +93,7 @@ export default function GameResultModal({
           </Button>
         ) : ticketsRemaining > 0 ? (
           <Button variant="accent" fullWidth onClick={onPlayAgain} className={styles.actionBtn}>
-            Jugar de nuevo (tienes {ticketsRemaining})
+            Jugar de nuevo
           </Button>
         ) : (
           <p className={styles.noTickets}>
