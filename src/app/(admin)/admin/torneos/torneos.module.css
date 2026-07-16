@@ -71,6 +71,11 @@
   margin-bottom: 16px;
 }
 
+.cardHeaderActions {
+  display: flex;
+  gap: 8px;
+}
+
 .editBtn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -87,10 +92,35 @@
   color: var(--text-primary);
 }
 
+.deleteBtn {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--accent-red);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
 .tournName {
   font-size: 1.2rem;
   color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.cardCountdown {
   margin-bottom: 16px;
+}
+
+.deleteWarning {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .details {

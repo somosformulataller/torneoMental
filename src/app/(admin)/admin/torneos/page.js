@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { createTournamentAction, updateTournamentAction } from '@/actions/tournaments';
+import { createTournamentAction, updateTournamentAction, deleteTournamentAction } from '@/actions/tournaments';
 import { TOURNAMENT_STATUSES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
+import CountdownTimer from '@/components/ui/CountdownTimer';
 import styles from './torneos.module.css';
 
-// Duración usada para torneos "Activo" recién creados, que no piden fecha ni
-// duración en el formulario: corren de forma indefinida (30 días) hasta que
-// un admin los pase a "Finalizado" manualmente.
-const INDEFINITE_DURATION_MINUTES = 43200;
+// Duración con la que se prellena el formulario de un torneo nuevo — el
+// admin siempre puede ajustarla antes de guardar.
+const DEFAULT_DURATION_MINUTES = 60;
 
 function nowLocalDatetimeString() {
   const date = new Date();
@@ -45,12 +45,17 @@ export default function AdminTorneosPage() {
     nombre: '',
     card_count: 14,
     start_time: nowLocalDatetimeString(),
-    duration_minutes: INDEFINITE_DURATION_MINUTES,
+    duration_minutes: DEFAULT_DURATION_MINUTES,
     winners_count: 1,
     prizes: [0],
     status: 'activo'
   });
   const [formError, setFormError] = useState(null);
+
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     loadTournaments();
@@ -97,7 +102,7 @@ export default function AdminTorneosPage() {
         nombre: '',
         card_count: 14,
         start_time: nowLocalDatetimeString(),
-        duration_minutes: INDEFINITE_DURATION_MINUTES,
+        duration_minutes: DEFAULT_DURATION_MINUTES,
         winners_count: 1,
         prizes: [0],
         status: 'activo'
@@ -149,6 +154,25 @@ export default function AdminTorneosPage() {
     });
   }
 
+  function getEndTime(t) {
+    return new Date(new Date(t.start_time).getTime() + t.duration_minutes * 60000).toISOString();
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const { error } = await deleteTournamentAction(deleteTarget.id);
+    if (error) {
+      setDeleteError(error);
+      setDeleting(false);
+      return;
+    }
+    setDeleting(false);
+    setDeleteTarget(null);
+    loadTournaments();
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -170,13 +194,29 @@ export default function AdminTorneosPage() {
                 <Badge color={TOURNAMENT_STATUSES[t.status]?.color}>
                   {TOURNAMENT_STATUSES[t.status]?.label}
                 </Badge>
-                <button className={styles.editBtn} onClick={() => handleOpenModal(t)}>
-                  Editar
-                </button>
+                <div className={styles.cardHeaderActions}>
+                  <button className={styles.editBtn} onClick={() => handleOpenModal(t)}>
+                    Editar
+                  </button>
+                  <button className={styles.deleteBtn} onClick={() => setDeleteTarget(t)}>
+                    Eliminar
+                  </button>
+                </div>
               </div>
-              
+
               <h3 className={styles.tournName}>{t.nombre}</h3>
-              
+
+              {t.status === 'activo' && (
+                <div className={styles.cardCountdown}>
+                  <CountdownTimer endTime={getEndTime(t)} label="Termina en" />
+                </div>
+              )}
+              {t.status === 'programado' && (
+                <div className={styles.cardCountdown}>
+                  <CountdownTimer endTime={t.start_time} label="Empieza en" />
+                </div>
+              )}
+
               <div className={styles.details}>
                 <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Inicio</span>
@@ -226,31 +266,29 @@ export default function AdminTorneosPage() {
             />
           </div>
 
-          {formData.status === 'programado' && (
-            <div className={styles.row}>
-              <div className={styles.inputGroup}>
-                <label>Fecha y Hora de Inicio</label>
-                <input
-                  type="datetime-local"
-                  required
-                  value={formData.start_time}
-                  onChange={(e) => setFormData({...formData, start_time: e.target.value})}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>Duración (minutos)</label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={formData.duration_minutes}
-                  onChange={(e) => setFormData({...formData, duration_minutes: e.target.value})}
-                  className={styles.input}
-                />
-              </div>
+          <div className={styles.row}>
+            <div className={styles.inputGroup}>
+              <label>Fecha y Hora de Inicio</label>
+              <input
+                type="datetime-local"
+                required
+                value={formData.start_time}
+                onChange={(e) => setFormData({...formData, start_time: e.target.value})}
+                className={styles.input}
+              />
             </div>
-          )}
+            <div className={styles.inputGroup}>
+              <label>Duración (minutos)</label>
+              <input
+                type="number"
+                required
+                min="1"
+                value={formData.duration_minutes}
+                onChange={(e) => setFormData({...formData, duration_minutes: e.target.value})}
+                className={styles.input}
+              />
+            </div>
+          </div>
 
           <div className={styles.inputGroup}>
             <label>Cantidad de Cartas</label>
@@ -325,8 +363,9 @@ export default function AdminTorneosPage() {
             </select>
             <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '4px' }}>
               Debe estar en <strong>Activo</strong> para que los jugadores puedan jugar.
-              {formData.status !== 'programado' && ' Corre de forma indefinida hasta que lo pases a Finalizado.'}
-              {formData.status === 'programado' && ' La fecha de inicio es solo informativa para los jugadores — igual debes pasarlo a Activo manualmente cuando quieras que empiece.'}
+              Al cumplirse la duración indicada, se paga automáticamente a los
+              ganadores y pasa a Finalizado — no hace falta hacerlo a mano.
+              {formData.status === 'programado' && ' Si lo dejas en Programado, se activa solo al llegar la fecha de inicio.'}
             </p>
           </div>
 
@@ -339,6 +378,45 @@ export default function AdminTorneosPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal Confirmar Eliminación */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => { setDeleteTarget(null); setDeleteError(null); }}
+        title="¿Eliminar este torneo?"
+      >
+        <div className={styles.deleteWarning}>
+          <p>
+            Vas a eliminar <strong>{deleteTarget?.nombre}</strong>. Esta acción
+            es permanente y no se puede deshacer. Se eliminarán también todas
+            las partidas jugadas en este torneo (su historial de ranking
+            desaparece); los tickets y premios ya cobrados por los jugadores
+            no se ven afectados.
+          </p>
+        </div>
+        {deleteError && <div className={styles.error}>{deleteError}</div>}
+        <div className={styles.formActions}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={deleting}
+            onClick={() => { setDeleteTarget(null); setDeleteError(null); }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant="dangerSolid"
+            size="sm"
+            loading={deleting}
+            loadingText="Eliminando..."
+            onClick={handleConfirmDelete}
+          >
+            Sí, eliminar torneo
+          </Button>
+        </div>
       </Modal>
     </div>
   );

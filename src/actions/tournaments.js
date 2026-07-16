@@ -53,6 +53,13 @@ export async function createTournamentAction(data) {
   return { tournament: row };
 }
 
+export async function deleteTournamentAction(id) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('tournaments').delete().eq('id', id);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateTournamentAction(id, data) {
   const validationError = validateTournamentData(data);
   if (validationError) return { error: validationError };
