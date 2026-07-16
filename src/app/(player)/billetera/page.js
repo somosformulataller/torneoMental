@@ -9,6 +9,7 @@ import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import InstallAppButton from '@/components/ui/InstallAppButton';
 import styles from './billetera.module.css';
 
 export default function BilleteraPage() {
@@ -138,6 +139,8 @@ export default function BilleteraPage() {
           Se acumula con cada torneo ganado, no se pierde al reiniciarse el ranking.
         </div>
       </div>
+
+      <InstallAppButton />
 
       {/* Prize History */}
       <div className={styles.historySection}>

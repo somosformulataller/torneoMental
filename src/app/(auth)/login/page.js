@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import ParticleBackground from '@/components/ui/ParticleBackground';
+import InstallAppButton from '@/components/ui/InstallAppButton';
 import styles from './login.module.css';
 
 export default function LoginPage() {
@@ -107,6 +108,8 @@ export default function LoginPage() {
             ¿No tienes cuenta? <span className={styles.linkHighlight}>Regístrate aquí</span>
           </Link>
         </div>
+
+        <InstallAppButton />
       </div>
     </div>
   );
