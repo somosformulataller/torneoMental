@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { startGameAction, endGameAction, recordMatchAction } from '@/actions/games';
 import { generateCardPairs } from '@/lib/gameLogic';
-import { playFlip, playMatch, playMismatch } from '@/lib/sfx';
+import { playFlip, playMatch, playMismatch, startBgMusic, stopBgMusic } from '@/lib/sfx';
 import { vibrateMatch, vibrateMismatch } from '@/lib/haptics';
 import Card from '@/components/game/Card';
 import ScorePopup from '@/components/game/ScorePopup';
@@ -127,6 +127,15 @@ function GamePageInner() {
       }
     }, 1000);
     return () => clearInterval(interval);
+  }, [gameStatus]);
+
+  useEffect(() => {
+    if (gameStatus === 'playing') {
+      startBgMusic();
+    } else {
+      stopBgMusic();
+    }
+    return () => stopBgMusic();
   }, [gameStatus]);
 
   async function initGame() {

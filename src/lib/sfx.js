@@ -69,6 +69,40 @@ export function playTick() {
   tone({ freq: 900, duration: 0.05, type: 'square', gain: 0.1 });
 }
 
+let bgMusicTimer = null;
+const BG_MUSIC_LOOP_MS = 3200;
+
+/** One loop cycle of a simple 8-bit background track: a 4-note bassline
+ * plus an 8-note arpeggio on top, both looping every 3.2s. */
+function scheduleBgMusicLoop() {
+  if (muted) return;
+
+  const bassline = [130.81, 130.81, 164.81, 146.83]; // C3, C3, E3, D3
+  bassline.forEach((freq, i) => {
+    tone({ freq, duration: 0.5, type: 'triangle', gain: 0.05, delay: i * 0.8 });
+  });
+
+  const arpeggio = [523.25, 659.25, 783.99, 659.25, 523.25, 659.25, 783.99, 987.77];
+  arpeggio.forEach((freq, i) => {
+    tone({ freq, duration: 0.16, type: 'square', gain: 0.03, delay: i * 0.4 });
+  });
+}
+
+/** Starts the looping background music. Safe to call repeatedly — a second
+ * call while already playing is a no-op. */
+export function startBgMusic() {
+  if (bgMusicTimer) return;
+  scheduleBgMusicLoop();
+  bgMusicTimer = setInterval(scheduleBgMusicLoop, BG_MUSIC_LOOP_MS);
+}
+
+export function stopBgMusic() {
+  if (bgMusicTimer) {
+    clearInterval(bgMusicTimer);
+    bgMusicTimer = null;
+  }
+}
+
 export function isSfxMuted() {
   return muted;
 }
