@@ -1,0 +1,155 @@
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 60px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md, 12px);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border-radius: var(--radius-md, 12px);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.statusCard {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.statusNote {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.error {
+  background: rgba(255, 56, 96, 0.15);
+  color: var(--accent-red);
+  padding: 12px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid rgba(255, 56, 96, 0.3);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.success {
+  background: rgba(57, 255, 20, 0.12);
+  color: var(--accent-green);
+  padding: 12px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.row .inputGroup {
+  flex: 1;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputGroup label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.prizesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.prizeInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prizeInputLabel {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  width: 24px;
+}

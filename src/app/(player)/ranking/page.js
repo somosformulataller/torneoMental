@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import Spinner from '@/components/ui/Spinner';
 import ParticleBackground from '@/components/ui/ParticleBackground';
+import CountdownTimer from '@/components/ui/CountdownTimer';
 import styles from './ranking.module.css';
 
 function formatTime(ms) {
@@ -21,6 +22,7 @@ export default function RankingPage() {
   const supabase = createClient();
   const [profile, setProfile] = useState(null);
   const [activeTournament, setActiveTournament] = useState(null);
+  const [upcomingTournament, setUpcomingTournament] = useState(null);
   const [rankings, setRankings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [myPosition, setMyPosition] = useState(null);
@@ -44,16 +46,29 @@ export default function RankingPage() {
       // Get active tournament
       const { data: tournaments } = await supabase
         .from('tournaments')
-        .select('id, nombre, winners_count, prizes')
+        .select('id, nombre, winners_count, prizes, start_time, duration_minutes')
         .eq('status', 'activo')
         .order('start_time', { ascending: true })
         .limit(1);
 
       if (!tournaments?.length) {
+        setActiveTournament(null);
+
+        // Sin torneo activo: si hay uno Programado, mostramos cuándo arranca
+        // en vez del empty state genérico.
+        const { data: upcoming } = await supabase
+          .from('tournaments')
+          .select('id, nombre, start_time')
+          .eq('status', 'programado')
+          .order('start_time', { ascending: true })
+          .limit(1);
+        setUpcomingTournament(upcoming?.length ? upcoming[0] : null);
+
         setLoading(false);
         return;
       }
 
+      setUpcomingTournament(null);
       setActiveTournament(tournaments[0]);
 
       // Get rankings using the DB view
@@ -127,8 +142,18 @@ export default function RankingPage() {
       <div className={styles.container}>
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>🏆</div>
-          <h2>Sin Torneo Activo</h2>
-          <p>No hay ningún torneo activo en este momento. El ranking aparecerá aquí cuando inicie uno.</p>
+          {upcomingTournament ? (
+            <>
+              <h2>El nuevo torneo inicia en:</h2>
+              <CountdownTimer endTime={upcomingTournament.start_time} />
+              <p>{upcomingTournament.nombre}</p>
+            </>
+          ) : (
+            <>
+              <h2>Sin Torneo Activo</h2>
+              <p>No hay ningún torneo activo en este momento. El ranking aparecerá aquí cuando inicie uno.</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -143,6 +168,13 @@ export default function RankingPage() {
         <p className={styles.prizeInfo}>
           🏆 Premios: {(activeTournament.prizes || []).map((p, i) => `${i + 1}° $${Number(p).toFixed(2)}`).join(' · ')}
         </p>
+        <CountdownTimer
+          endTime={new Date(
+            new Date(activeTournament.start_time).getTime() + activeTournament.duration_minutes * 60000
+          ).toISOString()}
+          label="Termina en"
+          onComplete={() => loadRanking(false)}
+        />
         <div className={styles.liveIndicator}>
           <span className={styles.liveDot}></span> EN VIVO
         </div>

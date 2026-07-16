@@ -25,6 +25,12 @@ function validateTournamentData(data) {
   ) {
     return 'Debes indicar un premio válido (mayor o igual a 0) para cada ganador';
   }
+  if (
+    data.is_recurring &&
+    (!Number.isInteger(data.recurring_gap_minutes) || data.recurring_gap_minutes < 0)
+  ) {
+    return 'Debes indicar cuántos minutos pasan entre un ciclo y el siguiente';
+  }
   return null;
 }
 

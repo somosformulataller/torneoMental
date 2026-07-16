@@ -13,6 +13,7 @@ export default function AdminSidebar() {
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: '📊' },
     { href: '/admin/torneos', label: 'Torneos', icon: '🏆' },
+    { href: '/admin/recurrencia', label: 'Recurrencia', icon: '🔁' },
     { href: '/admin/usuarios', label: 'Usuarios', icon: '👥' },
     { href: '/admin/tickets', label: 'Tickets', icon: '🎫' },
   ];

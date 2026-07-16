@@ -91,6 +91,41 @@
   z-index: 1;
 }
 
+/* Prize Wallet Card */
+.prizeCard {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.02));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: var(--radius-lg, 24px);
+  padding: 28px 24px;
+  margin-bottom: 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+}
+
+.prizeCard::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.prizeValue {
+  font-size: 4rem;
+  font-weight: 900;
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-gold, #ffd700);
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
 /* History Section */
 .sectionTitle {
   font-size: 1.2rem;
