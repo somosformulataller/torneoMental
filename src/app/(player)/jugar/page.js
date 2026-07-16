@@ -43,7 +43,9 @@ function getScatter(index) {
 // siempre entre partidas para que el jugador nunca memorice las cartas.
 const ALL_THEMES = ['tecnologia', 'naturaleza', 'animales'];
 
-// Tamaño de tablero para el modo práctica — no depende de ningún torneo.
+// Tamaño de tablero para el modo práctica cuando no hay ningún torneo
+// activo del cual tomar el card_count (si lo hay, se usa ese en su lugar,
+// para que el tablero de práctica coincida con el del torneo real).
 const PRACTICE_CARD_COUNT = 14;
 
 function pickNextTheme(lastTheme) {
@@ -79,6 +81,7 @@ function GamePageInner() {
   const gameStartTime = useRef(null);
   const initRef = useRef(false);
   const lastThemeRef = useRef(null);
+  const practiceCardCountRef = useRef(null);
   const [profile, setProfile] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [gameId, setGameId] = useState(null);
@@ -137,12 +140,8 @@ function GamePageInner() {
         .single();
       setProfile(profileData);
 
-      if (isPractice) {
-        startPracticeGame();
-        return;
-      }
-
-      // Get active tournament
+      // Get active tournament (también se usa en modo práctica, para que el
+      // tablero coincida con el card_count del torneo real).
       const { data: tournaments } = await supabase
         .from('tournaments')
         .select('*')
@@ -150,12 +149,19 @@ function GamePageInner() {
         .order('start_time', { ascending: true })
         .limit(1);
 
-      if (!tournaments?.length) {
+      const activeTournament = tournaments?.length ? tournaments[0] : null;
+
+      if (isPractice) {
+        practiceCardCountRef.current = activeTournament?.card_count || null;
+        startPracticeGame(practiceCardCountRef.current);
+        return;
+      }
+
+      if (!activeTournament) {
         setGameStatus('no_tournament');
         return;
       }
 
-      const activeTournament = tournaments[0];
       setTournament(activeTournament);
 
       if (!profileData || profileData.tickets_balance <= 0) {
@@ -171,13 +177,13 @@ function GamePageInner() {
     }
   }
 
-  function startPracticeGame() {
+  function startPracticeGame(cardCount) {
     setErrorMsg(null);
 
     const theme = pickNextTheme(lastThemeRef.current);
     lastThemeRef.current = theme;
 
-    const cardPairs = generateCardPairs(theme, PRACTICE_CARD_COUNT);
+    const cardPairs = generateCardPairs(theme, cardCount || PRACTICE_CARD_COUNT);
     setCards(cardPairs);
 
     setGameId(null);
@@ -341,7 +347,7 @@ function GamePageInner() {
     if (isPractice) {
       setShowResult(false);
       setFinishReason(null);
-      startPracticeGame();
+      startPracticeGame(practiceCardCountRef.current);
       return;
     }
     if (!profile || profile.tickets_balance <= 0 || !tournament) {
