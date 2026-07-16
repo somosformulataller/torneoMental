@@ -15,24 +15,24 @@ import Spinner from '@/components/ui/Spinner';
 import ParticleBackground from '@/components/ui/ParticleBackground';
 import styles from './jugar.module.css';
 
-// Deterministic per-card jitter. marginBottom is what actually breaks the
-// "rows" look: cards flow into masonry columns (see .cardGrid), so a taller
-// gap under one card pushes everything below it down that column — some
-// cards end up sitting noticeably higher/lower than their neighbors instead
-// of lining up on a shared row baseline.
+// Deterministic per-card jitter — purely a `transform` (rotate/x/y), never
+// layout (margin/size). The board's column count comes entirely from
+// .cardGrid's CSS Grid math (see jugar.module.css), so this jitter can
+// visually break up the "rows" look without ever risking pushing a card
+// into an extra column that overflows the screen.
 const SCATTER_VARIANTS = [
-  { rotate: -7, x: -4, marginBottom: 4 },
-  { rotate: 5, x: 5, marginBottom: 48 },
-  { rotate: -9, x: -6, marginBottom: 22 },
-  { rotate: 8, x: 3, marginBottom: 60 },
-  { rotate: -4, x: 6, marginBottom: 10 },
-  { rotate: 6, x: -5, marginBottom: 36 },
-  { rotate: -6, x: 2, marginBottom: 52 },
-  { rotate: 9, x: -3, marginBottom: 6 },
-  { rotate: -3, x: 4, marginBottom: 44 },
-  { rotate: 4, x: -6, marginBottom: 18 },
-  { rotate: -8, x: 6, marginBottom: 30 },
-  { rotate: 7, x: -2, marginBottom: 56 },
+  { rotate: -7, x: -4, y: -8 },
+  { rotate: 5, x: 5, y: 6 },
+  { rotate: -9, x: -6, y: -5 },
+  { rotate: 8, x: 3, y: 9 },
+  { rotate: -4, x: 6, y: -7 },
+  { rotate: 6, x: -5, y: 4 },
+  { rotate: -6, x: 2, y: -9 },
+  { rotate: 9, x: -3, y: 7 },
+  { rotate: -3, x: 4, y: -4 },
+  { rotate: 4, x: -6, y: 8 },
+  { rotate: -8, x: 6, y: -6 },
+  { rotate: 7, x: -2, y: 5 },
 ];
 
 function getScatter(index) {

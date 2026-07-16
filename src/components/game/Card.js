@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { CARD_BACKS } from '@/lib/cardThemes';
 import styles from './card.module.css';
 
-const NO_SCATTER = { rotate: 0, x: 0, marginBottom: 12 };
+const NO_SCATTER = { rotate: 0, x: 0, y: 0 };
 
 export default function Card({ card, index = 0, isFlipped, isMatched, onClick, disabled, scatter = NO_SCATTER }) {
   const [imageError, setImageError] = useState(false);
@@ -42,9 +42,8 @@ export default function Card({ card, index = 0, isFlipped, isMatched, onClick, d
   return (
     <motion.div
       className={styles.entrance}
-      style={{ marginBottom: scatter.marginBottom }}
       initial={{ opacity: 0, y: 24, x: 0, scale: 0.85, rotate: 0 }}
-      animate={{ opacity: 1, y: 0, x: scatter.x, scale: 1, rotate: scatter.rotate }}
+      animate={{ opacity: 1, y: scatter.y, x: scatter.x, scale: 1, rotate: scatter.rotate }}
       transition={{ delay: Math.min(index, 20) * 0.035, type: 'spring', stiffness: 260, damping: 22 }}
     >
       <div
