@@ -1,4 +1,5 @@
 import './globals.css';
+import ServiceWorkerReload from '@/components/ui/ServiceWorkerReload';
 
 export const metadata = {
   title: 'Copa Mental - Juego de Memoria',
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body suppressHydrationWarning>
+        <ServiceWorkerReload />
         {children}
       </body>
     </html>
