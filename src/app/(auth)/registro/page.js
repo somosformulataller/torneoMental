@@ -54,7 +54,13 @@ export default function RegisterPage() {
       // Registration successful, redirect to login with message
       router.push('/login?registered=true');
     } catch (err) {
-      setError(err.message);
+      if (err.message?.includes('profiles_cedula_key')) {
+        setError('Ya existe una cuenta registrada con esa cédula.');
+      } else if (err.message?.includes('profiles_email_key') || err.message?.includes('User already registered')) {
+        setError('Ya existe una cuenta registrada con ese correo.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
