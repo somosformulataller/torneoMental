@@ -25,36 +25,28 @@ export default function BilleteraPage() {
 
   async function loadData() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) { router.push('/login'); return; }
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // Perfil, tickets y premios son independientes entre sí — se piden en
+      // paralelo en vez de uno tras otro.
+      const [{ data: profileData }, { data: ticketsData }, { data: prizesData }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase
+          .from('tickets')
+          .select(`*, tournaments ( nombre )`)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('wallet_transactions')
+          .select(`*, tournaments ( nombre )`)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+      ]);
+
       setProfile(profileData);
-
-      const { data: ticketsData } = await supabase
-        .from('tickets')
-        .select(`
-          *,
-          tournaments ( nombre )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
       setTickets(ticketsData || []);
-
-      const { data: prizesData } = await supabase
-        .from('wallet_transactions')
-        .select(`
-          *,
-          tournaments ( nombre )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
       setPrizes(prizesData || []);
     } catch (err) {
       console.error('Error loading tickets:', err);

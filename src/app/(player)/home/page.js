@@ -33,22 +33,24 @@ export default function HomePage() {
 
   async function loadData() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // getSession() lee la sesión ya guardada localmente (sin red); el
+      // middleware ya validó con getUser() que hay una sesión real antes de
+      // dejar entrar a esta ruta, así que revalidar de nuevo acá solo suma
+      // otro viaje de red innecesario en cada navegación.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) { router.push('/login'); return; }
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const [{ data: profileData }, { data: tournaments }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase
+          .from('tournaments')
+          .select('*')
+          .in('status', ['programado', 'activo'])
+          .order('start_time', { ascending: true })
+          .limit(1),
+      ]);
       setProfile(profileData);
-
-      const { data: tournaments } = await supabase
-        .from('tournaments')
-        .select('*')
-        .in('status', ['programado', 'activo'])
-        .order('start_time', { ascending: true })
-        .limit(1);
 
       if (tournaments?.length > 0) {
         setActiveTournament(tournaments[0]);

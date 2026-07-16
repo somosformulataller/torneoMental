@@ -60,36 +60,33 @@ export default function RankingPage() {
   async function loadRanking(showLoader = true) {
     if (showLoader) setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) { router.push('/login'); return; }
 
-      // Get profile
-      if (!profile) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('id, nombre, apellido')
-          .eq('id', user.id)
-          .single();
-        setProfile(profileData);
-      }
+      // Perfil (si hace falta), historial de ganadores, y torneo activo son
+      // independientes entre sí — se piden todos en paralelo.
+      const [profileResult, winnersResult, tournamentsResult] = await Promise.all([
+        profile
+          ? Promise.resolve({ data: profile })
+          : supabase.from('profiles').select('id, nombre, apellido').eq('id', user.id).single(),
+        supabase
+          .from('tournament_winners')
+          .select('*')
+          .order('tournament_start_time', { ascending: false })
+          .order('position', { ascending: true })
+          .limit(60),
+        supabase
+          .from('tournaments')
+          .select('id, nombre, winners_count, prizes, start_time, duration_minutes')
+          .eq('status', 'activo')
+          .order('start_time', { ascending: true })
+          .limit(1),
+      ]);
 
-      // Historial de ganadores de copas ya finalizadas (independiente de si
-      // hay un torneo activo ahora mismo).
-      const { data: winnersData } = await supabase
-        .from('tournament_winners')
-        .select('*')
-        .order('tournament_start_time', { ascending: false })
-        .order('position', { ascending: true })
-        .limit(60);
-      setPastWinners(groupWinners(winnersData || []));
-
-      // Get active tournament
-      const { data: tournaments } = await supabase
-        .from('tournaments')
-        .select('id, nombre, winners_count, prizes, start_time, duration_minutes')
-        .eq('status', 'activo')
-        .order('start_time', { ascending: true })
-        .limit(1);
+      if (!profile) setProfile(profileResult.data);
+      setPastWinners(groupWinners(winnersResult.data || []));
+      const tournaments = tournamentsResult.data;
 
       if (!tournaments?.length) {
         setActiveTournament(null);

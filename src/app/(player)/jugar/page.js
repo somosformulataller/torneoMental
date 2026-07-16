@@ -140,24 +140,25 @@ function GamePageInner() {
 
   async function initGame() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // getSession() no hace red (el middleware ya validó la sesión con
+      // getUser() antes de dejar cargar esta ruta).
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) { router.push('/login'); return; }
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // Perfil y torneo activo son independientes entre sí — se piden en
+      // paralelo (también se usa en modo práctica, para que el tablero
+      // coincida con el card_count del torneo real).
+      const [{ data: profileData }, { data: tournaments }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase
+          .from('tournaments')
+          .select('*')
+          .eq('status', 'activo')
+          .order('start_time', { ascending: true })
+          .limit(1),
+      ]);
       setProfile(profileData);
-
-      // Get active tournament (también se usa en modo práctica, para que el
-      // tablero coincida con el card_count del torneo real).
-      const { data: tournaments } = await supabase
-        .from('tournaments')
-        .select('*')
-        .eq('status', 'activo')
-        .order('start_time', { ascending: true })
-        .limit(1);
 
       const activeTournament = tournaments?.length ? tournaments[0] : null;
 
