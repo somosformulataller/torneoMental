@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
 import ParticleBackground from '@/components/ui/ParticleBackground';
 import { TicketIcon, LogoutIcon } from '@/components/ui/icons';
+import { compressImage } from '@/lib/image';
 import styles from './home.module.css';
 
 export default function HomePage() {
@@ -30,6 +31,7 @@ export default function HomePage() {
   const [bcvRateDate, setBcvRateDate] = useState(null);
   const [proofFile, setProofFile] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
+  const [compressingProof, setCompressingProof] = useState(false);
 
   async function loadData() {
     try {
@@ -79,7 +81,7 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleProofChange(e) {
+  async function handleProofChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -91,9 +93,13 @@ export default function HomePage() {
       return;
     }
     setBuyError(null);
+    setCompressingProof(true);
+    const compressed = await compressImage(file);
+    setCompressingProof(false);
+
     if (proofPreview) URL.revokeObjectURL(proofPreview);
-    setProofFile(file);
-    setProofPreview(URL.createObjectURL(file));
+    setProofFile(compressed);
+    setProofPreview(URL.createObjectURL(compressed));
   }
 
   function handleRemoveProof() {
@@ -337,7 +343,9 @@ export default function HomePage() {
 
           <div className={styles.proofGroup}>
             <label className={styles.proofLabel}>Captura del pago (opcional)</label>
-            {proofPreview ? (
+            {compressingProof ? (
+              <div className={styles.proofUploadBtn}>Comprimiendo imagen...</div>
+            ) : proofPreview ? (
               <div className={styles.proofPreviewWrap}>
                 <img src={proofPreview} alt="Comprobante" className={styles.proofPreview} />
                 <button type="button" className={styles.proofRemoveBtn} onClick={handleRemoveProof}>
@@ -361,7 +369,7 @@ export default function HomePage() {
             variant="primary"
             fullWidth
             onClick={handleBuyTickets}
-            disabled={buying || !paymentRef.trim()}
+            disabled={buying || compressingProof || !paymentRef.trim()}
             loading={buying}
             loadingText="Enviando..."
           >
