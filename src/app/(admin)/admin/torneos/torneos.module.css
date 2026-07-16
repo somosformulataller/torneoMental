@@ -3,6 +3,16 @@
   margin: 0 auto;
 }
 
+.error {
+  background: rgba(255, 56, 96, 0.15);
+  color: var(--accent-red);
+  padding: 12px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid rgba(255, 56, 96, 0.3);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 .header {
   display: flex;
   justify-content: space-between;

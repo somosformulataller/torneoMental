@@ -6,8 +6,8 @@ function validateTournamentData(data) {
   if (!data.nombre?.trim()) {
     return 'El nombre del torneo es obligatorio';
   }
-  if (!Number.isInteger(data.card_count) || data.card_count < 14 || data.card_count % 2 !== 0) {
-    return 'La cantidad de cartas debe ser un número par de al menos 14';
+  if (!Number.isInteger(data.card_count) || data.card_count < 4 || data.card_count % 2 !== 0) {
+    return 'La cantidad de cartas debe ser un número par de al menos 4';
   }
   if (!data.start_time || Number.isNaN(new Date(data.start_time).getTime())) {
     return 'La fecha de inicio es inválida';
