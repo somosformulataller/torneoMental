@@ -44,7 +44,7 @@ export default function RankingPage() {
       // Get active tournament
       const { data: tournaments } = await supabase
         .from('tournaments')
-        .select('id, nombre, winners_count, prize_usd')
+        .select('id, nombre, winners_count, prizes')
         .eq('status', 'activo')
         .order('start_time', { ascending: true })
         .limit(1);
@@ -109,6 +109,10 @@ export default function RankingPage() {
     return `#${pos}`;
   }
 
+  function prizeForPosition(pos) {
+    return Number(activeTournament?.prizes?.[pos - 1] ?? 0);
+  }
+
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
@@ -137,7 +141,7 @@ export default function RankingPage() {
         <h1 className={styles.title}>Ranking en Vivo</h1>
         <p className={styles.subtitle}>{activeTournament.nombre}</p>
         <p className={styles.prizeInfo}>
-          🏆 Premio: ${Number(activeTournament.prize_usd).toFixed(2)} c/u para los primeros {activeTournament.winners_count}
+          🏆 Premios: {(activeTournament.prizes || []).map((p, i) => `${i + 1}° $${Number(p).toFixed(2)}`).join(' · ')}
         </p>
         <div className={styles.liveIndicator}>
           <span className={styles.liveDot}></span> EN VIVO
@@ -152,7 +156,7 @@ export default function RankingPage() {
             <div className={styles.myRankDetails}>
               <div className={styles.myName}>Tú</div>
               {myPosition.posicion <= activeTournament.winners_count && (
-                <div className={styles.winnerTag}>🏆 Ganando ${Number(activeTournament.prize_usd).toFixed(2)}</div>
+                <div className={styles.winnerTag}>🏆 Ganando ${prizeForPosition(myPosition.posicion).toFixed(2)}</div>
               )}
             </div>
             <div className={styles.myRankScore}>
@@ -187,7 +191,7 @@ export default function RankingPage() {
                 {r.user_id === profile?.id && ' (Tú)'}
               </div>
               {r.posicion <= activeTournament.winners_count && (
-                <div className={styles.winnerTag}>🏆 ${Number(activeTournament.prize_usd).toFixed(2)}</div>
+                <div className={styles.winnerTag}>🏆 ${prizeForPosition(r.posicion).toFixed(2)}</div>
               )}
             </div>
             <div className={styles.score}>

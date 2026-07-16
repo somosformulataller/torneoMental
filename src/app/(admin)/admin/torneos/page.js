@@ -21,6 +21,14 @@ function nowLocalDatetimeString() {
   return date.toISOString().slice(0, 16);
 }
 
+// Ajusta el arreglo de premios al cambiar la cantidad de ganadores,
+// preservando los montos ya ingresados en las posiciones que se mantienen.
+function resizePrizes(prizes, count) {
+  const next = prizes.slice(0, count);
+  while (next.length < count) next.push(0);
+  return next;
+}
+
 export default function AdminTorneosPage() {
   const supabase = createClient();
   const [tournaments, setTournaments] = useState([]);
@@ -39,7 +47,7 @@ export default function AdminTorneosPage() {
     start_time: nowLocalDatetimeString(),
     duration_minutes: INDEFINITE_DURATION_MINUTES,
     winners_count: 1,
-    prize_usd: 0,
+    prizes: [0],
     status: 'activo'
   });
   const [formError, setFormError] = useState(null);
@@ -79,7 +87,7 @@ export default function AdminTorneosPage() {
         start_time: date.toISOString().slice(0, 16),
         duration_minutes: tournament.duration_minutes,
         winners_count: tournament.winners_count,
-        prize_usd: tournament.prize_usd,
+        prizes: resizePrizes(tournament.prizes || [], tournament.winners_count),
         status: tournament.status
       });
     } else {
@@ -91,7 +99,7 @@ export default function AdminTorneosPage() {
         start_time: nowLocalDatetimeString(),
         duration_minutes: INDEFINITE_DURATION_MINUTES,
         winners_count: 1,
-        prize_usd: 0,
+        prizes: [0],
         status: 'activo'
       });
     }
@@ -111,7 +119,7 @@ export default function AdminTorneosPage() {
         start_time: new Date(formData.start_time).toISOString(),
         duration_minutes: Number(formData.duration_minutes),
         winners_count: Number(formData.winners_count),
-        prize_usd: Number(formData.prize_usd),
+        prizes: formData.prizes.map(Number),
         status: formData.status
       };
 
@@ -187,8 +195,10 @@ export default function AdminTorneosPage() {
                   <span className={styles.detailValue}>{t.winners_count}</span>
                 </div>
                 <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Premio c/u</span>
-                  <span className={styles.detailValue}>${Number(t.prize_usd).toFixed(2)}</span>
+                  <span className={styles.detailLabel}>Premios</span>
+                  <span className={styles.detailValue}>
+                    {(t.prizes || []).map((p) => `$${Number(p).toFixed(2)}`).join(' · ')}
+                  </span>
                 </div>
               </div>
             </div>
@@ -259,29 +269,46 @@ export default function AdminTorneosPage() {
             </p>
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.inputGroup}>
-              <label>Cantidad de Ganadores</label>
-              <input
-                type="number"
-                required
-                min="1"
-                value={formData.winners_count}
-                onChange={(e) => setFormData({...formData, winners_count: e.target.value})}
-                className={styles.input}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <label>Premio por Ganador (USD)</label>
-              <input
-                type="number"
-                required
-                min="0"
-                step="0.01"
-                value={formData.prize_usd}
-                onChange={(e) => setFormData({...formData, prize_usd: e.target.value})}
-                className={styles.input}
-              />
+          <div className={styles.inputGroup}>
+            <label>Cantidad de Ganadores</label>
+            <input
+              type="number"
+              required
+              min="1"
+              value={formData.winners_count}
+              onChange={(e) => {
+                const count = Math.max(1, Number(e.target.value) || 1);
+                setFormData({
+                  ...formData,
+                  winners_count: e.target.value,
+                  prizes: resizePrizes(formData.prizes, count),
+                });
+              }}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label>Premio por Posición (USD)</label>
+            <div className={styles.prizesGrid}>
+              {formData.prizes.map((prize, i) => (
+                <div key={i} className={styles.prizeInputWrap}>
+                  <span className={styles.prizeInputLabel}>{i + 1}°</span>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={prize}
+                    onChange={(e) => {
+                      const next = [...formData.prizes];
+                      next[i] = e.target.value;
+                      setFormData({...formData, prizes: next});
+                    }}
+                    className={styles.input}
+                  />
+                </div>
+              ))}
             </div>
           </div>
 

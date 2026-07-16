@@ -161,6 +161,26 @@
   border-color: var(--accent-cyan);
 }
 
+.prizesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.prizeInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prizeInputLabel {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  width: 24px;
+}
+
 .formActions {
   display: flex;
   justify-content: flex-end;

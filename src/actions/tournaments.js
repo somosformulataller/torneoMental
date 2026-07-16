@@ -18,8 +18,12 @@ function validateTournamentData(data) {
   if (!Number.isInteger(data.winners_count) || data.winners_count < 1) {
     return 'La cantidad de ganadores debe ser al menos 1';
   }
-  if (typeof data.prize_usd !== 'number' || Number.isNaN(data.prize_usd) || data.prize_usd < 0) {
-    return 'El premio por ganador debe ser un monto válido';
+  if (
+    !Array.isArray(data.prizes) ||
+    data.prizes.length !== data.winners_count ||
+    data.prizes.some((p) => typeof p !== 'number' || Number.isNaN(p) || p < 0)
+  ) {
+    return 'Debes indicar un premio válido (mayor o igual a 0) para cada ganador';
   }
   return null;
 }
