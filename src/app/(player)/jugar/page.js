@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { startGameAction, endGameAction } from '@/actions/games';
 import { generateCardPairs } from '@/lib/gameLogic';
@@ -43,6 +43,9 @@ function getScatter(index) {
 // siempre entre partidas para que el jugador nunca memorice las cartas.
 const ALL_THEMES = ['tecnologia', 'naturaleza', 'animales'];
 
+// Tamaño de tablero para el modo práctica — no depende de ningún torneo.
+const PRACTICE_CARD_COUNT = 14;
+
 function pickNextTheme(lastTheme) {
   const candidates = lastTheme ? ALL_THEMES.filter((t) => t !== lastTheme) : ALL_THEMES;
   return candidates[Math.floor(Math.random() * candidates.length)];
@@ -56,7 +59,22 @@ function formatStopwatch(ms) {
 }
 
 export default function GamePage() {
+  return (
+    <Suspense fallback={
+      <div className={styles.loadingScreen}>
+        <Spinner size={48} />
+        <p>Preparando el juego...</p>
+      </div>
+    }>
+      <GamePageInner />
+    </Suspense>
+  );
+}
+
+function GamePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPractice = searchParams.get('modo') === 'practica';
   const supabase = createClient();
   const gameStartTime = useRef(null);
   const initRef = useRef(false);
@@ -119,6 +137,11 @@ export default function GamePage() {
         .single();
       setProfile(profileData);
 
+      if (isPractice) {
+        startPracticeGame();
+        return;
+      }
+
       // Get active tournament
       const { data: tournaments } = await supabase
         .from('tournaments')
@@ -146,6 +169,25 @@ export default function GamePage() {
       console.error('Error initializing game:', err);
       setErrorMsg('No se pudo iniciar el juego. Intenta de nuevo.');
     }
+  }
+
+  function startPracticeGame() {
+    setErrorMsg(null);
+
+    const theme = pickNextTheme(lastThemeRef.current);
+    lastThemeRef.current = theme;
+
+    const cardPairs = generateCardPairs(theme, PRACTICE_CARD_COUNT);
+    setCards(cardPairs);
+
+    setGameId(null);
+    setMatchedPairs([]);
+    setFlippedCards([]);
+    setStreak(0);
+    setBestStreak(0);
+    setElapsedMs(0);
+    gameStartTime.current = Date.now();
+    setGameStatus('playing');
   }
 
   async function startGame(tournamentData) {
@@ -242,8 +284,18 @@ export default function GamePage() {
   }, [flippedCards, matchedPairs, cards, isProcessing, gameStatus]);
 
   async function finishGame(reason, pairsMatched) {
-    if (!gameId) return;
     const timeMs = gameStartTime.current ? Date.now() - gameStartTime.current : null;
+
+    if (isPractice) {
+      setFinishReason(reason);
+      setFinishedTimeMs(timeMs);
+      setFinishedPairs(pairsMatched);
+      setGameStatus('finished');
+      setShowResult(true);
+      return;
+    }
+
+    if (!gameId) return;
 
     const { game, error } = await endGameAction({
       gameId,
@@ -271,6 +323,12 @@ export default function GamePage() {
   }
 
   async function handlePlayAgain() {
+    if (isPractice) {
+      setShowResult(false);
+      setFinishReason(null);
+      startPracticeGame();
+      return;
+    }
     if (!profile || profile.tickets_balance <= 0 || !tournament) {
       router.push('/home');
       return;
@@ -390,6 +448,7 @@ export default function GamePage() {
         ticketsRemaining={profile?.tickets_balance || 0}
         reason={finishReason}
         maxStreak={bestStreak}
+        isPractice={isPractice}
       />
     </div>
   );

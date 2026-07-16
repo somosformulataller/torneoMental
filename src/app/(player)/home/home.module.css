@@ -291,6 +291,29 @@
   transform: translateY(-2px);
 }
 
+/* Same pill shape/size as .playCardCta, but deliberately muted (no glow,
+   no gradient, no gold) so it reads as a secondary action. */
+.practiceBtn {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display, var(--font-mono, monospace));
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--text-secondary);
+  padding: 9px 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.practiceBtn:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+}
+
 .playCardWarning {
   position: relative;
   z-index: 1;

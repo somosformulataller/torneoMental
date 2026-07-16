@@ -26,6 +26,7 @@ export default function GameResultModal({
   ticketsRemaining,
   reason,
   maxStreak = 0,
+  isPractice = false,
 }) {
   const completed = reason === 'completed';
 
@@ -81,10 +82,16 @@ export default function GameResultModal({
         )}
 
         <p className={styles.rankingNote}>
-          Tu resultado quedó registrado en el ranking del torneo.
+          {isPractice
+            ? 'Modo práctica: este resultado no cuenta para el ranking ni gasta tickets.'
+            : 'Tu resultado quedó registrado en el ranking del torneo.'}
         </p>
 
-        {ticketsRemaining > 0 ? (
+        {isPractice ? (
+          <Button variant="accent" fullWidth onClick={onPlayAgain} className={styles.actionBtn}>
+            Practicar de nuevo
+          </Button>
+        ) : ticketsRemaining > 0 ? (
           <Button variant="accent" fullWidth onClick={onPlayAgain} className={styles.actionBtn}>
             Jugar de nuevo (tienes {ticketsRemaining})
           </Button>

@@ -159,6 +159,10 @@ export default function HomePage() {
     router.push('/jugar');
   }
 
+  function handlePractice() {
+    router.push('/jugar?modo=practica');
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push('/login');
@@ -218,6 +222,10 @@ export default function HomePage() {
         {profile?.tickets_balance <= 0 && (
           <span className={styles.playCardWarning}>⚠️ Sin tickets — compra para jugar</span>
         )}
+
+        <button className={styles.practiceBtn} onClick={handlePractice}>
+          PRACTICAR
+        </button>
       </div>
 
       {/* Tickets + Buy, side by side */}
