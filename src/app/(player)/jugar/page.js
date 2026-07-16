@@ -347,8 +347,11 @@ export default function GamePage() {
         </span>
       </div>
 
-      {/* Card Grid */}
-      <div className={styles.cardGrid}>
+      {/* Card Grid — forced to exactly 3 columns; see .cardGrid comment. */}
+      <div
+        className={styles.cardGrid}
+        style={{ '--card-rows': Math.ceil(cards.length / 3) || 1 }}
+      >
         {cards.map((card, index) => (
           <Card
             key={`${card.id}-${index}`}
