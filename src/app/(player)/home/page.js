@@ -88,9 +88,15 @@ export default function HomePage() {
 
     // Para que el saldo de tickets se actualice solo apenas el admin
     // aprueba/rechaza un pago, sin que el jugador tenga que recargar la
-    // página para enterarse.
+    // página para enterarse. El nombre del canal lleva un sufijo aleatorio
+    // (no solo el userId) para que nunca choque con una suscripción
+    // anterior del mismo usuario que todavía no haya terminado de
+    // limpiarse (remount rápido, navegación de ida y vuelta) — si dos
+    // efectos usan el mismo nombre de canal, supabase-js reutiliza el
+    // objeto ya suscrito y el segundo .on() revienta con "cannot add
+    // postgres_changes callbacks ... after subscribe()".
     const channel = supabase
-      .channel(`home_profile_${userId}`)
+      .channel(`home_profile_${userId}_${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',

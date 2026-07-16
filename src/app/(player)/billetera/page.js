@@ -69,9 +69,13 @@ export default function BilleteraPage() {
 
     // Para que el saldo de tickets y el estado de cada compra ("Pendiente" →
     // "Aprobado"/"Rechazado") se actualicen solos apenas el admin los
-    // procesa, sin que el jugador tenga que recargar la página.
+    // procesa, sin que el jugador tenga que recargar la página. Sufijo
+    // aleatorio en el nombre del canal (no solo el userId): evita el choque
+    // "cannot add postgres_changes callbacks ... after subscribe()" si el
+    // efecto se reinicia rápido y reutiliza el mismo nombre de canal antes
+    // de que la suscripción anterior termine de limpiarse.
     const channel = supabase
-      .channel(`billetera_updates_${userId}`)
+      .channel(`billetera_updates_${userId}_${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
