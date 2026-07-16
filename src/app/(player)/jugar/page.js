@@ -13,6 +13,7 @@ import GameResultModal from '@/components/game/GameResultModal';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import Spinner from '@/components/ui/Spinner';
 import ParticleBackground from '@/components/ui/ParticleBackground';
+import { TicketIcon } from '@/components/ui/icons';
 import styles from './jugar.module.css';
 
 // Deterministic per-card jitter — purely a `transform` (rotate/x/y), never
@@ -391,7 +392,7 @@ function GamePageInner() {
   if (gameStatus === 'no_tickets') {
     return (
       <div className={styles.messageScreen}>
-        <div className={styles.messageIcon}>🎫</div>
+        <TicketIcon className={styles.messageIconTicket} />
         <h2>Juego de Memoria</h2>
         <p className={styles.gameRule}>
           Voltea cartas y encuentra los pares iguales.<br />
