@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { startGameAction, endGameAction } from '@/actions/games';
+import { startGameAction, endGameAction, recordMatchAction } from '@/actions/games';
 import { generateCardPairs } from '@/lib/gameLogic';
 import { playFlip, playMatch, playMismatch } from '@/lib/sfx';
 import { vibrateMatch, vibrateMismatch } from '@/lib/haptics';
@@ -194,7 +194,12 @@ function GamePageInner() {
     const tourn = tournamentData || tournament;
     setErrorMsg(null);
 
-    const { game, profile: updatedProfile, error } = await startGameAction(tourn.id);
+    // Se genera un tablero por si hace falta una partida NUEVA — start_game()
+    // lo descarta y devuelve el guardado si ya había una en_curso (resume).
+    const theme = pickNextTheme(lastThemeRef.current);
+    const freshLayout = generateCardPairs(theme, tourn.card_count);
+
+    const { game, profile: updatedProfile, error } = await startGameAction(tourn.id, freshLayout);
 
     if (error || !game) {
       console.error('Error starting game:', error);
@@ -205,19 +210,22 @@ function GamePageInner() {
 
     if (updatedProfile) setProfile(updatedProfile);
 
-    const theme = pickNextTheme(lastThemeRef.current);
-    lastThemeRef.current = theme;
-
-    const cardPairs = generateCardPairs(theme, tourn.card_count);
+    // El tablero real siempre viene del servidor: en una partida nueva es el
+    // recién barajado de arriba; si se retoma una en_curso, es el guardado.
+    const cardPairs = game.card_layout || freshLayout;
+    lastThemeRef.current = cardPairs[0]?.theme || theme;
     setCards(cardPairs);
 
     setGameId(game.id);
-    setMatchedPairs([]);
+    setMatchedPairs(game.matched_pair_ids || []);
     setFlippedCards([]);
     setStreak(0);
     setBestStreak(0);
-    setElapsedMs(0);
-    gameStartTime.current = Date.now();
+    // El cronómetro arranca en la fecha real de creación de la partida, así
+    // que si se retoma una en_curso el tiempo transcurrido sigue corriendo
+    // (es una competencia por tiempo, no se "pausa" saliendo de la app).
+    gameStartTime.current = new Date(game.created_at).getTime();
+    setElapsedMs(Date.now() - gameStartTime.current);
     setGameStatus('playing');
   }
 
@@ -242,6 +250,13 @@ function GamePageInner() {
         setTimeout(() => {
           const newMatched = [...matchedPairs, card1.pairId];
           setMatchedPairs(newMatched);
+          if (!isPractice && gameId) {
+            // Se guarda en segundo plano — si falla, no bloquea el juego;
+            // en el peor caso ese par no sobrevive un cierre de la app.
+            recordMatchAction(gameId, card1.pairId).catch((err) => {
+              console.error('Error recording match:', err);
+            });
+          }
           setResultType('match');
           setFlippedCards([]);
           setIsProcessing(false);
@@ -281,7 +296,7 @@ function GamePageInner() {
         }, 500);
       }
     }
-  }, [flippedCards, matchedPairs, cards, isProcessing, gameStatus]);
+  }, [flippedCards, matchedPairs, cards, isProcessing, gameStatus, isPractice, gameId]);
 
   async function finishGame(reason, pairsMatched) {
     const timeMs = gameStartTime.current ? Date.now() - gameStartTime.current : null;
