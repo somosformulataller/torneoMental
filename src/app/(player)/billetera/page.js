@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PAYMENT_STATUSES } from '@/lib/constants';
+import { deleteAccountAction } from '@/actions/account';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import styles from './billetera.module.css';
 
 export default function BilleteraPage() {
@@ -16,6 +18,9 @@ export default function BilleteraPage() {
   const [tickets, setTickets] = useState([]);
   const [prizes, setPrizes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   async function loadData() {
     try {
@@ -62,6 +67,24 @@ export default function BilleteraPage() {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    setDeleteError(null);
+
+    const { error, success } = await deleteAccountAction();
+
+    if (error) {
+      setDeleteError(error);
+      setDeleting(false);
+      return;
+    }
+
+    if (success) {
+      await supabase.auth.signOut();
+      router.push('/login');
+    }
+  }
 
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('es-VE', {
@@ -197,6 +220,55 @@ export default function BilleteraPage() {
           </div>
         )}
       </div>
+
+      <div className={styles.dangerZone}>
+        <Button
+          variant="danger"
+          size="sm"
+          className={styles.deleteAccountBtn}
+          onClick={() => setShowDeleteModal(true)}
+        >
+          Eliminar cuenta
+        </Button>
+      </div>
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setDeleteError(null); }}
+        title="¿Eliminar tu cuenta?"
+      >
+        <div className={styles.deleteWarning}>
+          <p>Esta acción es permanente y no se puede deshacer. Se eliminará:</p>
+          <ul>
+            <li>Tu cuenta y datos de perfil</li>
+            <li>Tus tickets disponibles</li>
+            <li>Tu historial de partidas</li>
+            <li>Tu saldo y historial de premios en la billetera</li>
+          </ul>
+        </div>
+
+        {deleteError && <div className={styles.deleteError}>{deleteError}</div>}
+
+        <div className={styles.deleteActions}>
+          <Button
+            variant="dangerSolid"
+            fullWidth
+            loading={deleting}
+            loadingText="Eliminando..."
+            onClick={handleDeleteAccount}
+          >
+            Sí, eliminar mi cuenta
+          </Button>
+          <Button
+            variant="ghost"
+            fullWidth
+            disabled={deleting}
+            onClick={() => { setShowDeleteModal(false); setDeleteError(null); }}
+          >
+            Cancelar
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

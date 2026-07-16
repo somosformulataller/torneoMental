@@ -227,3 +227,44 @@
   color: var(--accent-pink);
   line-height: 1.4;
 }
+
+/* Delete account */
+.dangerZone {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.deleteAccountBtn {
+  display: inline-block;
+  width: auto;
+}
+
+.deleteWarning {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.deleteWarning ul {
+  text-align: left;
+  margin: 12px 0;
+  padding-left: 20px;
+  color: var(--text-primary);
+}
+
+.deleteWarning li {
+  margin-bottom: 6px;
+}
+
+.deleteActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deleteError {
+  color: var(--accent-red);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
