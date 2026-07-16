@@ -163,7 +163,7 @@ export default function RankingPage() {
     <div className={styles.container}>
       <ParticleBackground />
       <div className={styles.header}>
-        <h1 className={styles.title}>Ranking en Vivo</h1>
+        <h1 className={styles.title}>Ranking</h1>
         <p className={styles.subtitle}>{activeTournament.nombre}</p>
         <p className={styles.prizeInfo}>
           🏆 Premios: {(activeTournament.prizes || []).map((p, i) => `${i + 1}° $${Number(p).toFixed(2)}`).join(' · ')}
