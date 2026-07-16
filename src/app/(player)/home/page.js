@@ -155,7 +155,11 @@ export default function HomePage() {
   }
 
   function handlePlay() {
-    if (!profile || profile.tickets_balance <= 0) return;
+    // No bloqueamos por tickets_balance <= 0 acá: el jugador puede tener una
+    // partida en_curso ya pagada esperando por retomar (ej. gastó su último
+    // ticket y salió sin terminarla) — es /jugar quien le pregunta al
+    // servidor y decide si hay que cobrar, retomar gratis, o mostrar que de
+    // verdad no quedan tickets.
     router.push('/jugar');
   }
 
@@ -202,9 +206,9 @@ export default function HomePage() {
         )}
 
         <button
-          className={`${styles.playCardBtn} ${(!profile || profile.tickets_balance <= 0) ? styles.disabled : ''}`}
+          className={styles.playCardBtn}
           onClick={handlePlay}
-          disabled={!profile || profile.tickets_balance <= 0}
+          disabled={!profile}
         >
           <div className={styles.playCardArtWrap}>
             <div className={styles.playCardGlow} />

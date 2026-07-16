@@ -174,12 +174,12 @@ function GamePageInner() {
 
       setTournament(activeTournament);
 
-      if (!profileData || profileData.tickets_balance <= 0) {
-        setGameStatus('no_tickets');
-        return;
-      }
-
-      // Start the game
+      // No cortamos acá por tickets_balance <= 0: puede que el jugador ya
+      // tenga una partida en_curso pagada (ej. gastó su último ticket,
+      // salió a Inicio sin terminarla) que start_game() debe retomar GRATIS.
+      // Es el servidor quien decide si hay que cobrar o no; si de verdad no
+      // hay tickets ni partida para retomar, startGame() abajo cae al
+      // mensaje de "no_tickets" con el error real que devuelve la RPC.
       await startGame(activeTournament);
     } catch (err) {
       console.error('Error initializing game:', err);
