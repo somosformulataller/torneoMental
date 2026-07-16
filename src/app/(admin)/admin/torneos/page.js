@@ -10,26 +10,37 @@ import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import styles from './torneos.module.css';
 
+// Duración usada para torneos "Activo" recién creados, que no piden fecha ni
+// duración en el formulario: corren de forma indefinida (30 días) hasta que
+// un admin los pase a "Finalizado" manualmente.
+const INDEFINITE_DURATION_MINUTES = 43200;
+
+function nowLocalDatetimeString() {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 16);
+}
+
 export default function AdminTorneosPage() {
   const supabase = createClient();
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [processing, setProcessing] = useState(false);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     id: null,
     nombre: '',
     card_count: 14,
-    start_time: '',
-    duration_minutes: 60,
+    start_time: nowLocalDatetimeString(),
+    duration_minutes: INDEFINITE_DURATION_MINUTES,
     winners_count: 1,
     prize_usd: 0,
-    status: 'programado'
+    status: 'activo'
   });
   const [formError, setFormError] = useState(null);
 
@@ -77,11 +88,11 @@ export default function AdminTorneosPage() {
         id: null,
         nombre: '',
         card_count: 14,
-        start_time: '',
-        duration_minutes: 60,
+        start_time: nowLocalDatetimeString(),
+        duration_minutes: INDEFINITE_DURATION_MINUTES,
         winners_count: 1,
         prize_usd: 0,
-        status: 'programado'
+        status: 'activo'
       });
     }
     setFormError(null);
@@ -205,29 +216,31 @@ export default function AdminTorneosPage() {
             />
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.inputGroup}>
-              <label>Fecha y Hora de Inicio</label>
-              <input
-                type="datetime-local"
-                required
-                value={formData.start_time}
-                onChange={(e) => setFormData({...formData, start_time: e.target.value})}
-                className={styles.input}
-              />
+          {formData.status === 'programado' && (
+            <div className={styles.row}>
+              <div className={styles.inputGroup}>
+                <label>Fecha y Hora de Inicio</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={formData.start_time}
+                  onChange={(e) => setFormData({...formData, start_time: e.target.value})}
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>Duración (minutos)</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={formData.duration_minutes}
+                  onChange={(e) => setFormData({...formData, duration_minutes: e.target.value})}
+                  className={styles.input}
+                />
+              </div>
             </div>
-            <div className={styles.inputGroup}>
-              <label>Duración (minutos)</label>
-              <input
-                type="number"
-                required
-                min="1"
-                value={formData.duration_minutes}
-                onChange={(e) => setFormData({...formData, duration_minutes: e.target.value})}
-                className={styles.input}
-              />
-            </div>
-          </div>
+          )}
 
           <div className={styles.inputGroup}>
             <label>Cantidad de Cartas</label>
@@ -285,6 +298,8 @@ export default function AdminTorneosPage() {
             </select>
             <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '4px' }}>
               Debe estar en <strong>Activo</strong> para que los jugadores puedan jugar.
+              {formData.status !== 'programado' && ' Corre de forma indefinida hasta que lo pases a Finalizado.'}
+              {formData.status === 'programado' && ' La fecha de inicio es solo informativa para los jugadores — igual debes pasarlo a Activo manualmente cuando quieras que empiece.'}
             </p>
           </div>
 
