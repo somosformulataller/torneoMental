@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { createTournamentAction, updateTournamentAction } from '@/actions/tournaments';
+import { createTournamentAction, updateRecurringTournamentAction } from '@/actions/tournaments';
 import { TOURNAMENT_STATUSES } from '@/lib/constants';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import Badge from '@/components/ui/Badge';
@@ -27,6 +27,57 @@ const EMPTY_FORM = {
   recurring_gap_minutes: 10,
 };
 
+// A qué aplican los cambios al guardar (ver updateRecurringTournamentAction).
+const APPLY_OPTIONS = [
+  {
+    value: 'ambos',
+    label: 'Al torneo actual y a los siguientes',
+    saved: 'Guardado — aplicado al torneo actual y a los siguientes ciclos.',
+  },
+  {
+    value: 'actual',
+    label: 'Solo al torneo actual',
+    saved: 'Guardado — aplicado solo al torneo actual; los siguientes ciclos mantienen su configuración.',
+  },
+  {
+    value: 'siguiente',
+    label: 'Solo a partir del siguiente torneo',
+    saved: 'Guardado — el torneo actual queda igual; los cambios se aplicarán desde el siguiente ciclo.',
+  },
+];
+
+// Resume, solo con lo que difiere del ciclo en curso, los cambios pendientes
+// guardados en next_cycle_settings (se aplican al crear el siguiente ciclo).
+function pendingChangesSummary(pending, current) {
+  if (!pending) return null;
+  const parts = [];
+  if (pending.nombre != null && pending.nombre !== current.nombre) {
+    parts.push(`nombre «${pending.nombre}»`);
+  }
+  if (pending.card_count != null && pending.card_count !== current.card_count) {
+    parts.push(`${pending.card_count} cartas`);
+  }
+  if (pending.duration_minutes != null && pending.duration_minutes !== current.duration_minutes) {
+    parts.push(`${pending.duration_minutes} min de duración`);
+  }
+  if (pending.winners_count != null && pending.winners_count !== current.winners_count) {
+    parts.push(`${pending.winners_count} ganador(es)`);
+  }
+  if (
+    pending.prizes &&
+    JSON.stringify(pending.prizes.map(Number)) !== JSON.stringify((current.prizes || []).map(Number))
+  ) {
+    parts.push(`premios ${pending.prizes.map((p) => `$${Number(p).toFixed(2)}`).join(' · ')}`);
+  }
+  if (
+    pending.recurring_gap_minutes != null &&
+    pending.recurring_gap_minutes !== (current.recurring_gap_minutes ?? 10)
+  ) {
+    parts.push(`${pending.recurring_gap_minutes} min entre ciclos`);
+  }
+  return parts.length ? parts.join(', ') : null;
+}
+
 export default function AdminRecurrenciaPage() {
   const supabase = createClient();
   // Fila más reciente con is_recurring = true: por ahora solo existe un
@@ -34,9 +85,10 @@ export default function AdminRecurrenciaPage() {
   const [current, setCurrent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [applyTo, setApplyTo] = useState('ambos');
   const [processing, setProcessing] = useState(false);
   const [formError, setFormError] = useState(null);
-  const [savedMsg, setSavedMsg] = useState(false);
+  const [savedMsg, setSavedMsg] = useState(null);
 
   async function loadCurrent() {
     setLoading(true);
@@ -78,30 +130,36 @@ export default function AdminRecurrenciaPage() {
     e.preventDefault();
     setProcessing(true);
     setFormError(null);
-    setSavedMsg(false);
+    setSavedMsg(null);
 
     try {
-      const dataToSave = {
+      const settings = {
         nombre: formData.nombre,
         card_count: Number(formData.card_count),
         duration_minutes: Number(formData.duration_minutes),
         winners_count: Number(formData.winners_count),
         prizes: formData.prizes.map(Number),
-        is_recurring: true,
         recurring_gap_minutes: Number(formData.recurring_gap_minutes),
-        start_time: current ? current.start_time : new Date().toISOString(),
-        status: current ? current.status : 'activo',
       };
 
       const { error } = current
-        ? await updateTournamentAction(current.id, dataToSave)
-        : await createTournamentAction(dataToSave);
+        ? await updateRecurringTournamentAction(current.id, settings, applyTo)
+        : await createTournamentAction({
+            ...settings,
+            is_recurring: true,
+            start_time: new Date().toISOString(),
+            status: 'activo',
+          });
 
       if (error) {
         setFormError(error);
         return;
       }
-      setSavedMsg(true);
+      setSavedMsg(
+        current
+          ? APPLY_OPTIONS.find((o) => o.value === applyTo)?.saved || 'Guardado.'
+          : 'Guardado.'
+      );
       await loadCurrent();
     } catch (err) {
       console.error('Error saving recurring tournament:', err);
@@ -155,6 +213,13 @@ export default function AdminRecurrenciaPage() {
             . Esto lo hace una tarea programada del servidor, no hace falta
             que entres a activarlo manualmente.
           </p>
+          {pendingChangesSummary(current.next_cycle_settings, current) && (
+            <p className={styles.pendingNote}>
+              📋 Cambios pendientes para el siguiente ciclo:{' '}
+              {pendingChangesSummary(current.next_cycle_settings, current)}. El torneo
+              actual sigue con su configuración de siempre.
+            </p>
+          )}
         </div>
       ) : (
         <div className={styles.emptyState}>
@@ -167,9 +232,7 @@ export default function AdminRecurrenciaPage() {
       <form onSubmit={handleSubmit} className={styles.form}>
         {formError && <div className={styles.error}>{formError}</div>}
         {savedMsg && !formError && (
-          <div className={styles.success}>
-            Guardado{current ? ' — esto también actualiza el ciclo en curso, no solo los futuros' : ''}.
-          </div>
+          <div className={styles.success}>{savedMsg}</div>
         )}
 
         <div className={styles.inputGroup}>
@@ -268,6 +331,30 @@ export default function AdminRecurrenciaPage() {
             Se acredita a la billetera de premios del ganador (no se pierde al reiniciarse el ranking).
           </p>
         </div>
+
+        {current && (
+          <div className={styles.inputGroup}>
+            <label>¿A qué se aplican los cambios?</label>
+            <div className={styles.applyOptions}>
+              {APPLY_OPTIONS.map((opt) => (
+                <label key={opt.value} className={styles.applyOption}>
+                  <input
+                    type="radio"
+                    name="applyTo"
+                    value={opt.value}
+                    checked={applyTo === opt.value}
+                    onChange={() => setApplyTo(opt.value)}
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+            <p className={styles.hint}>
+              Si el torneo actual ya está en curso, las partidas que ya empezaron no
+              cambian — la configuración nueva aplica a las partidas siguientes.
+            </p>
+          </div>
+        )}
 
         <Button type="submit" variant="primary" loading={processing} loadingText="Guardando...">
           {current ? 'Guardar Cambios' : 'Iniciar Ciclo Recurrente'}

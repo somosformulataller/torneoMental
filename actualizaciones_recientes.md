@@ -106,3 +106,19 @@ Qué quedó y por qué, vista por vista:
 Cuando no hay torneo activo, la pantalla de Competir mostraba solo "No hay torneo activo. Espera a que se inicie un torneo para jugar", mientras que Ranking sí mostraba el cronómetro de "El nuevo torneo inicia en:". Ahora Competir usa el mismo patrón: `jugar/page.js` (que ya consultaba los torneos `programado` para el tamaño del tablero de práctica) pasa el próximo torneo programado como prop `initialUpcomingTournament`, y `JugarClient` renderiza el `CountdownTimer` con el nombre del torneo en la pantalla de "sin torneo". Si no hay ni activo ni programado, se mantiene el mensaje genérico.
 
 **Verificado** (build de producción local + navegador real con sesión de jugadora): `/jugar` sin torneo activo muestra "El nuevo torneo inicia en:" con el conteo avanzando en vivo y el nombre "Copa Mental"; el HTML sigue **sin** tablero (`cardGrid`) en Competir — el cobro del ticket sigue siendo acción del cliente. `lint` y `build` en verde.
+
+## Aplicabilidad de los cambios del torneo recurrente (2026-07-17)
+
+**Contexto**: en el modelo recurrente cada ciclo es una fila de `tournaments`, y al terminar un ciclo `finalize_recurring_tournament` clonaba esa fila tal cual para crear el siguiente. Consecuencia: guardar en Admin → Recurrencia aplicaba SIEMPRE al ciclo en curso y a los siguientes a la vez, sin poder separarlos. Estefania pidió poder elegir.
+
+**Qué se hizo**:
+- **Migración `018_recurring_apply_scope.sql`** (aplicada en producción el 2026-07-17): columna nueva `tournaments.next_cycle_settings` (jsonb) con la configuración destinada al próximo ciclo, y `finalize_recurring_tournament` ahora toma cada campo de ahí si está presente (si no, de la fila que termina). El ciclo nuevo nace con la columna en null.
+- **Acción nueva `updateRecurringTournamentAction(id, data, applyTo)`** en `src/actions/tournaments.js`:
+  - `ambos`: actualiza la fila y limpia `next_cycle_settings` (comportamiento de siempre).
+  - `actual`: actualiza la fila, pero preserva en `next_cycle_settings` la configuración que ya estaba destinada a los siguientes (la pendiente si había, o la anterior de la fila).
+  - `siguiente`: no toca la fila; guarda los valores como pendientes.
+- **Pantalla Admin → Recurrencia**: selector "¿A qué se aplican los cambios?" con las 3 opciones (por defecto "Al torneo actual y a los siguientes"), mensaje de guardado específico por opción, y un aviso azul "Cambios pendientes para el siguiente ciclo: ..." (solo los campos que difieren del actual) mientras exista un pendiente.
+
+**Verificado** (build de producción local + navegador real con la sesión admin, contra la base real, restaurando todo al terminar): "siguiente" deja la fila intacta y guarda el pendiente (el aviso azul aparece); "actual" actualiza la fila y preserva la config previa para los siguientes; "ambos" actualiza y limpia el pendiente. `lint` y `build` en verde.
+
+**Dato útil descubierto en el camino**: la actualización que Estefania hizo antes de este cambio SÍ se aplicó al torneo en curso (duración 2880 min, 3 ganadores, $50/$30/$20) — el comportamiento viejo siempre fue "ambos".
