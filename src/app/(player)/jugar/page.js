@@ -26,25 +26,29 @@ export default async function JugarPage({ searchParams }) {
   const user = session?.user;
   if (!user) redirect('/login');
 
-  // Perfil y torneo activo son independientes entre sí — se piden en
-  // paralelo (también en modo práctica, para que el tablero coincida con el
-  // card_count del torneo real).
+  // Perfil y torneo son independientes entre sí — se piden en paralelo.
+  // Se incluyen los "programado" además de los "activo": entre ciclos del
+  // torneo recurrente no hay ninguno activo, pero el tablero de práctica
+  // igual debe usar el card_count del próximo torneo, no el default.
   const [{ data: profile }, { data: tournaments }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase
       .from('tournaments')
       .select('*')
-      .eq('status', 'activo')
+      .in('status', ['activo', 'programado'])
       .order('start_time', { ascending: true })
-      .limit(1),
+      .limit(5),
   ]);
 
-  const activeTournament = tournaments?.length ? tournaments[0] : null;
+  // Competir exige un torneo ACTIVO; para el tamaño del tablero de práctica
+  // sirve también el próximo programado.
+  const activeTournament = tournaments?.find((t) => t.status === 'activo') || null;
+  const boardTournament = activeTournament || (tournaments?.length ? tournaments[0] : null);
 
   let initialPracticeBoard = null;
   if (isPractice) {
     initialPracticeBoard = generatePracticeBoard(
-      activeTournament?.card_count || PRACTICE_CARD_COUNT
+      boardTournament?.card_count || PRACTICE_CARD_COUNT
     );
   }
 

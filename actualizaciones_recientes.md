@@ -14,6 +14,12 @@ Reportado tras el deploy de la carga instantánea: al hacer click en cualquier v
 - **Verificado**: con la config completa de producción (PWA + proxy), 4 clicks consecutivos entre vistas = 4 navegaciones suaves, URLs correctas, cero recargas, cero clicks perdidos (antes: el primer click causaba recarga y se perdía).
 - **Nota para el teléfono**: si tras el deploy el flash persiste en un dispositivo, es el service worker *anterior* aún en control — cerrar todas las pestañas/la app de Copa Mental y volver a abrirla lo entrega al nuevo.
 
+### Practicar mostraba 14 cartas en vez de las 12 del torneo, y el tablero podía requerir scroll
+
+- **Causa 1**: el tamaño del tablero de práctica solo miraba torneos `activo`. Entre ciclos del torneo recurrente el torneo está `programado`, así que caía al default de 14 cartas. Ahora considera también el próximo `programado` (Competir sigue exigiendo uno `activo`).
+- **Causa 2**: las cartas tenían ancho fijo por breakpoint; con más filas de las que caben en la pantalla, el tablero hacía scroll. Ahora el ancho de columna es `min(tamaño fijo, tamaño que hace caber todas las filas en el viewport)` — con pocas cartas se ven igual que siempre, con más cartas encogen lo justo para que el tablero completo entre sin scroll. También se amplió el padding vertical del grid para absorber el jitter decorativo (rotate/x/y) que asomaba ~9px y creaba un mini-scroll.
+- **Verificado** (navegador real, 4 tamaños de pantalla: 430x900, 430x660, 360x640, 800x700): 12 cartas siempre, cero scroll en grid y en body, captura visual del tablero correcta.
+
 Un segundo rebote (menor) que quedaba después del fix anterior: `PageTransition` usaba `AnimatePresence` con animación de salida. En App Router, `children` es el LayoutRouter — un elemento estable que siempre pinta la vista *actual* — así que el "clon saliente" renderizaba la vista nueva **duplicada**: dos páginas apiladas durante ~150ms, la altura del documento se duplicaba (medido: 900px → 2496px) y el layout saltaba en cada navegación. Se quitó `AnimatePresence`/exit y quedó solo el fade-in de entrada (sin animación en el primer render, para que el HTML del servidor llegue visible). Verificado: una sola vista montada en todo momento, navegación suave intacta.
 
 ### "This page couldn't load" al navegar entre vistas

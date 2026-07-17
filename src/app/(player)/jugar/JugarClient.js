@@ -138,7 +138,11 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
   async function initGame() {
     try {
       if (isPractice) {
-        practiceCardCountRef.current = initialTournament?.card_count || null;
+        // "Jugar de nuevo" regenera el tablero con el mismo tamaño que el
+        // que armó el servidor (que ya consideró torneos activos Y
+        // programados); initialTournament solo trae los activos.
+        practiceCardCountRef.current =
+          initialPracticeBoard?.length || initialTournament?.card_count || null;
         if (initialPracticeBoard?.length) {
           // El tablero ya vino renderizado desde el servidor; solo falta
           // arrancar el cronómetro y recordar el tema para la próxima.

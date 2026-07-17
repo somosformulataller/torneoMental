@@ -159,15 +159,44 @@
   display: grid;
   grid-auto-flow: column;
   grid-template-rows: repeat(var(--card-rows, 5), 1fr);
-  grid-auto-columns: 84px;
+  /* El ancho de columna (= ancho de carta) es el MENOR entre el tamaño fijo
+     de siempre (--card-max-w) y el que hace que TODAS las filas quepan en
+     la altura del viewport (--fit-card-w): con pocas cartas se ven del
+     tamaño normal, y al subir el número de cartas encogen lo justo para
+     que el tablero completo entre en pantalla sin scroll. --fit-card-w
+     sale de: (alto de viewport - espacio reservado para HUD/paddings -
+     gaps entre filas) / filas = alto de carta disponible, × 3/4 (las
+     cartas son aspect-ratio 3/4 en card.module.css) = ancho de carta. */
+  --row-gap: 4px;
+  --col-gap: 22px;
+  --card-max-w: 84px;
+  /* 52px padding-top + 118px padding-bottom del .container, más el padding
+     vertical propio del grid y holgura para el jitter (transform) de las
+     cartas, que también cuenta para el área de scroll. */
+  --reserved-v: 200px;
+  --vp-h: 100vh;
+  --fit-card-w: calc(
+    (var(--vp-h) - var(--reserved-v) - (var(--card-rows, 5) - 1) * var(--row-gap)) /
+    var(--card-rows, 5) * 3 / 4
+  );
+  grid-auto-columns: min(var(--card-max-w), var(--fit-card-w));
   justify-content: safe center;
   align-content: safe center;
   flex: 1;
   min-height: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  gap: 4px 22px;
-  padding: 6px 3px;
+  gap: var(--row-gap) var(--col-gap);
+  /* Padding vertical generoso: el jitter decorativo (rotate/x/y en Card.js)
+     agranda la caja visual de las cartas y sin este colchón asomaba ~9px
+     por el borde, creando un mini-scroll interno. */
+  padding: 14px 3px;
+}
+
+@supports (height: 100dvh) {
+  .cardGrid {
+    --vp-h: 100dvh;
+  }
 }
 
 .cardGrid > * {
@@ -176,23 +205,28 @@
 
 @media (min-width: 400px) {
   .cardGrid {
-    grid-auto-columns: 95px;
-    gap: 6px 26px;
+    --card-max-w: 95px;
+    --row-gap: 6px;
+    --col-gap: 26px;
   }
 }
 
 @media (min-width: 600px) {
   .cardGrid {
-    grid-auto-columns: 110px;
-    gap: 12px 32px;
+    --card-max-w: 110px;
+    --row-gap: 12px;
+    --col-gap: 32px;
+    --reserved-v: 220px;
     padding: 16px;
   }
 }
 
 @media (min-width: 900px) {
   .cardGrid {
-    grid-auto-columns: 128px;
-    gap: 16px 40px;
+    --card-max-w: 128px;
+    --row-gap: 16px;
+    --col-gap: 40px;
+    --reserved-v: 230px;
     padding: 20px 36px;
   }
 }
