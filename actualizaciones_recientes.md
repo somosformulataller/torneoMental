@@ -4,6 +4,16 @@ Registro de los cambios más recientes hechos en Copa Mental (producción: copam
 
 ## Bugs resueltos
 
+### Flash/rebote al navegar: los elementos aparecían ~1s y la página se recargaba
+
+Reportado tras el deploy de la carga instantánea: al hacer click en cualquier vista, el contenido aparecía un instante y luego "rebotaba" (la página entera se recargaba, comiéndose además el siguiente click).
+
+- **Diagnóstico** (reproducido con navegador automatizado + prueba de marcador `window.__marker` para distinguir navegación suave de recarga): la navegación de Next funcionaba bien; el culpable era `ServiceWorkerReload`, que recargaba la pestaña en el evento `controllerchange`. Ese evento no solo dispara cuando un service worker nuevo reemplaza al viejo (deploy) — también dispara cuando el SW recién instalado **toma control por primera vez** de una pestaña no controlada (primera visita, o tras limpiar datos, o tras cada deploy que cambia el SW). En ese caso la recarga es innecesaria (el documento ya vino fresco de la red) y solo produce el flash + click perdido.
+- **Descartados durante el diagnóstico** (con pruebas, no supuestos): el service worker interceptando fetches (bloqueado → mismo síntoma), el proxy/middleware (vaciado y hasta eliminado → mismo síntoma), mismatch de buildId cliente/servidor (coinciden), content-type de las respuestas RSC (correcto: `text/x-component`), y el fetch server-side nuevo (login→registro, páginas nunca tocadas, también lo sufría).
+- **Fix**: `ServiceWorkerReload` ahora recuerda si la pestaña ya estaba controlada al montar (`navigator.serviceWorker.controller`); si no lo estaba, la primera toma de control se ignora. Solo se recarga cuando un SW nuevo reemplaza a uno existente — el caso real de deploy con la app abierta que motivó el componente.
+- **Verificado**: con la config completa de producción (PWA + proxy), 4 clicks consecutivos entre vistas = 4 navegaciones suaves, URLs correctas, cero recargas, cero clicks perdidos (antes: el primer click causaba recarga y se perdía).
+- **Nota para el teléfono**: si tras el deploy el flash persiste en un dispositivo, es el service worker *anterior* aún en control — cerrar todas las pestañas/la app de Copa Mental y volver a abrirla lo entrega al nuevo.
+
 ### "This page couldn't load" al navegar entre vistas
 El error más grave del último tramo: el navegador mostraba "This page couldn't load. Reload to try again, or go back." al cambiar de vista, de forma frecuente.
 
