@@ -50,7 +50,7 @@ Si el admin aprobaba una recarga de tickets, el jugador tenía que recargar la p
 
 - `plan_del_proyecto.md` e `implementation_plan.md` actualizados con la lógica del torneo recurrente y la billetera de premios en USD (el esquema SQL original de esos documentos quedó desactualizado/superado por las migraciones reales).
 
-## Carga instantánea de las vistas (implementado, pendiente de deploy)
+## Carga instantánea de las vistas (implementado y pusheado; falta confirmar en producción)
 
 **Motivación**: comparando con apps de compañeros, las vistas de Copa Mental mostraban un spinner ("Cargando billetera...", etc.) notorio al navegar, mientras que otras apps cargan sin ese hueco en blanco.
 
@@ -70,3 +70,15 @@ Si el admin aprobaba una recarga de tickets, el jugador tenía que recargar la p
 - Verificado igual que las otras vistas: `/jugar?modo=practica` responde el HTML con el tablero completo (cartas + cronómetro + contador de pares, sin texto de spinner) y del tamaño del torneo activo; `/jugar` responde con el estado de preparación esperado; ambas redirigen a `/login` sin sesión.
 
 **Nota**: `credenciales.md` está desactualizado — las cuentas `admin@torneomental.com` / `jugador@torneomental.com` ya no existen en la base real.
+
+### Resumen final de la sesión (2026-07-16)
+
+Qué quedó y por qué, vista por vista:
+
+- **Inicio, Ranking y Billetera**: abren con los datos ya renderizados en el HTML (nombre, saldo, historial, posiciones). Los spinners "Cargando...", "Cargando posiciones..." y "Cargando billetera..." desaparecieron por completo.
+- **Practicar** (`/jugar?modo=practica`): abre **sin ninguna espera** — el servidor genera el tablero (temática al azar, mismo tamaño que el torneo activo; verificado: llegó con 12 cartas, igual que el torneo actual) y el HTML llega con las cartas, el cronómetro y el contador de pares ya pintados. Se eliminó incluso el spinner técnico del `<Suspense>` de `useSearchParams` — cero parpadeos.
+- **Competir** (`/jugar`): perfil y torneo llegan resueltos del servidor; la única espera restante ("Preparando el juego...", <1s) es la llamada que registra la partida y descuenta el ticket (o retoma una en curso ya pagada). Esa espera **debe existir aunque los tickets ya estén confirmados a la vista**: es el servidor confirmando "esta partida existe, está pagada y este es tu tablero oficial" — lo que impide jugar gratis o manipular el tablero. Y **no puede moverse al render del servidor**: Next pre-carga las páginas al ver los links, y el prefetch gastaría tickets sin que el jugador toque COMPETIR. Quedó documentado en el código y en `.claude/skills/verify/SKILL.md` para que nunca se cambie por accidente.
+
+**Verificación final: PASS** — build de producción local, sesión real de jugador: las 4 vistas responden 200 con su contenido server-renderizado; sin sesión (o cookie corrupta) todas redirigen a `/login`; `lint` y `build` en verde.
+
+**Deploy**: pusheado a `master` en dos commits — `b144b97` (todo el trabajo de vistas + documentación) y `ffbbdf7` (imágenes de `img/` que estaban pendientes en la carpeta de trabajo). Vercel despliega automático desde GitHub. Pendiente: abrir copamental.com en el teléfono y confirmar que la navegación se siente instantánea, especialmente Practicar.
