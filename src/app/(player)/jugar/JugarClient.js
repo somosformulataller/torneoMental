@@ -72,7 +72,7 @@ function formatStopwatch(ms) {
 // isPractice llega como prop desde el servidor (no useSearchParams: ese
 // hook suspende durante el render en servidor y obligaría a un <Suspense>
 // cuyo fallback-spinner es justo lo que queremos eliminar).
-export default function JugarClient({ isPractice, initialProfile, initialTournament, initialPracticeBoard }) {
+export default function JugarClient({ isPractice, initialProfile, initialTournament, initialUpcomingTournament, initialPracticeBoard }) {
   const router = useRouter();
   const gameStartTime = useRef(null);
   const initRef = useRef(false);
@@ -372,13 +372,24 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
     );
   }
 
-  // No tournament
+  // No tournament — si hay uno programado, se muestra el mismo cronómetro
+  // de "inicia en" que usa Ranking en vez del mensaje genérico.
   if (gameStatus === 'no_tournament') {
     return (
       <div className={styles.messageScreen}>
         <div className={styles.messageIcon}>🏆</div>
-        <h2>No hay torneo activo</h2>
-        <p>Espera a que se inicie un torneo para jugar.</p>
+        {initialUpcomingTournament ? (
+          <>
+            <h2>El nuevo torneo inicia en:</h2>
+            <CountdownTimer endTime={initialUpcomingTournament.start_time} />
+            <p>{initialUpcomingTournament.nombre}</p>
+          </>
+        ) : (
+          <>
+            <h2>No hay torneo activo</h2>
+            <p>Espera a que se inicie un torneo para jugar.</p>
+          </>
+        )}
         <button className={styles.backBtn} onClick={() => router.push('/home')}>Volver</button>
       </div>
     );

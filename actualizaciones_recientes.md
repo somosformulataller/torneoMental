@@ -100,3 +100,9 @@ Qué quedó y por qué, vista por vista:
 **Verificación final: PASS** — build de producción local, sesión real de jugador: las 4 vistas responden 200 con su contenido server-renderizado; sin sesión (o cookie corrupta) todas redirigen a `/login`; `lint` y `build` en verde.
 
 **Deploy**: pusheado a `master` en dos commits — `b144b97` (todo el trabajo de vistas + documentación) y `ffbbdf7` (imágenes de `img/` que estaban pendientes en la carpeta de trabajo). Vercel despliega automático desde GitHub. Pendiente: abrir copamental.com en el teléfono y confirmar que la navegación se siente instantánea, especialmente Practicar.
+
+## Cronómetro del próximo torneo en Competir (2026-07-17)
+
+Cuando no hay torneo activo, la pantalla de Competir mostraba solo "No hay torneo activo. Espera a que se inicie un torneo para jugar", mientras que Ranking sí mostraba el cronómetro de "El nuevo torneo inicia en:". Ahora Competir usa el mismo patrón: `jugar/page.js` (que ya consultaba los torneos `programado` para el tamaño del tablero de práctica) pasa el próximo torneo programado como prop `initialUpcomingTournament`, y `JugarClient` renderiza el `CountdownTimer` con el nombre del torneo en la pantalla de "sin torneo". Si no hay ni activo ni programado, se mantiene el mensaje genérico.
+
+**Verificado** (build de producción local + navegador real con sesión de jugadora): `/jugar` sin torneo activo muestra "El nuevo torneo inicia en:" con el conteo avanzando en vivo y el nombre "Copa Mental"; el HTML sigue **sin** tablero (`cardGrid`) en Competir — el cobro del ticket sigue siendo acción del cliente. `lint` y `build` en verde.

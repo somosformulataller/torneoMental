@@ -44,6 +44,11 @@ export default async function JugarPage({ searchParams }) {
   // sirve también el próximo programado.
   const activeTournament = tournaments?.find((t) => t.status === 'activo') || null;
   const boardTournament = activeTournament || (tournaments?.length ? tournaments[0] : null);
+  // Sin torneo activo: el próximo programado alimenta el cronómetro de
+  // "inicia en" de la pantalla de Competir (mismo patrón que Ranking).
+  const upcomingTournament = activeTournament
+    ? null
+    : tournaments?.find((t) => t.status === 'programado') || null;
 
   let initialPracticeBoard = null;
   if (isPractice) {
@@ -58,6 +63,7 @@ export default async function JugarPage({ searchParams }) {
       isPractice={isPractice}
       initialProfile={profile}
       initialTournament={activeTournament}
+      initialUpcomingTournament={upcomingTournament}
       initialPracticeBoard={initialPracticeBoard}
     />
   );
