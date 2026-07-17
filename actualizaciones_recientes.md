@@ -14,6 +14,8 @@ Reportado tras el deploy de la carga instantánea: al hacer click en cualquier v
 - **Verificado**: con la config completa de producción (PWA + proxy), 4 clicks consecutivos entre vistas = 4 navegaciones suaves, URLs correctas, cero recargas, cero clicks perdidos (antes: el primer click causaba recarga y se perdía).
 - **Nota para el teléfono**: si tras el deploy el flash persiste en un dispositivo, es el service worker *anterior* aún en control — cerrar todas las pestañas/la app de Copa Mental y volver a abrirla lo entrega al nuevo.
 
+Un segundo rebote (menor) que quedaba después del fix anterior: `PageTransition` usaba `AnimatePresence` con animación de salida. En App Router, `children` es el LayoutRouter — un elemento estable que siempre pinta la vista *actual* — así que el "clon saliente" renderizaba la vista nueva **duplicada**: dos páginas apiladas durante ~150ms, la altura del documento se duplicaba (medido: 900px → 2496px) y el layout saltaba en cada navegación. Se quitó `AnimatePresence`/exit y quedó solo el fade-in de entrada (sin animación en el primer render, para que el HTML del servidor llegue visible). Verificado: una sola vista montada en todo momento, navegación suave intacta.
+
 ### "This page couldn't load" al navegar entre vistas
 El error más grave del último tramo: el navegador mostraba "This page couldn't load. Reload to try again, or go back." al cambiar de vista, de forma frecuente.
 
