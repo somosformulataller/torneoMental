@@ -1,8 +1,11 @@
+/* Centrado con left/right + text-align (no translateX): la animación de
+   motion sobreescribe transform y descentraría el texto. */
 .popup {
   position: fixed;
   top: 45%;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  text-align: center;
   font-family: var(--font-display, 'Orbitron', sans-serif);
   font-weight: 800;
   font-size: 1.4rem;
@@ -11,4 +14,9 @@
   white-space: nowrap;
   z-index: 60;
   pointer-events: none;
+}
+
+.miss {
+  color: var(--accent-red);
+  text-shadow: 0 0 16px rgba(239, 68, 68, 0.7), 0 2px 4px rgba(0, 0, 0, 0.8);
 }

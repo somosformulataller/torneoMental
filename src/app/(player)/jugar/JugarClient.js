@@ -112,7 +112,7 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
 
   useEffect(() => {
     if (!popup) return;
-    const t = setTimeout(() => setPopup(null), 900);
+    const t = setTimeout(() => setPopup(null), popup.variant === 'miss' ? 1200 : 900);
     return () => clearTimeout(t);
   }, [popup]);
 
@@ -289,6 +289,7 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
           playMismatch();
           vibrateMismatch();
           setStreak(0);
+          setPopup({ id: `miss-${Date.now()}`, text: '✗ ¡Concéntrate!', variant: 'miss' });
           setShake(true);
           setTimeout(() => setShake(false), 900);
           setTimeout(() => {

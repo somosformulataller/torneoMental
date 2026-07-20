@@ -9,7 +9,7 @@ export default function ScorePopup({ popup }) {
       {popup && (
         <motion.div
           key={popup.id}
-          className={styles.popup}
+          className={`${styles.popup} ${popup.variant === 'miss' ? styles.miss : ''}`}
           initial={{ opacity: 0, y: 0, scale: 0.8 }}
           animate={{ opacity: 1, y: -60, scale: 1 }}
           exit={{ opacity: 0, y: -100, scale: 0.9 }}

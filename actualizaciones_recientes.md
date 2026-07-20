@@ -140,3 +140,16 @@ Estefania pidió que al voltear dos cartas distintas los efectos duren más, par
 - **Bloqueo del tablero** (`JugarClient.js`): tras el fallo, las cartas se voltean de nuevo y se libera el tablero a los **1000ms** (antes 700ms), alineado con el final de la sacudida — el error ahora cuesta ~0.3s más de reloj.
 
 **Verificado** (navegador real, Practicar, espiando `navigator.vibrate` y la clase `shake` con MutationObserver): al voltear "Delfín" y "Tigre", la clase `shake` estuvo activa 905ms, la vibración pedida fue exactamente `[80,60,80,60,120]`, y 2.1s después del fallo no quedaba ninguna carta volteada (el tablero se libera bien).
+
+## Mensaje rojo al fallar + efectos aún más fuertes (2026-07-20, segunda ronda)
+
+Estefania notó que no salía ningún mensaje en rojo al fallar. Investigado en el historial: los letreros "¡GANASTE!"/"PERDISTE" del diseño original se quitaron en el rediseño visual (commit `9895fc3`), que dejó solo el popup dorado "+10 / Racha" para los aciertos — el mensaje de error llevaba semanas sin existir, no se perdió en el cambio de ayer.
+
+- **Popup rojo nuevo al fallar**: "✗ ¡Concéntrate!" (rojo `--accent-red`, mismo mecanismo `ScorePopup` con variante `miss`, visible 1.2s; el dorado de acierto sigue igual).
+- **Bug pre-existente corregido**: el popup salía descentrado (la animación de motion pisa `transform`, que era quien centraba con `translateX(-50%)`); ahora centra con `left/right: 0` + `text-align: center`. Con "+10" casi no se notaba; con el texto largo del rojo sí.
+- **Sacudida más fuerte**: amplitud inicial de 9px → 16px (misma duración 0.9s, decae hasta 0).
+- **Vibración más larga**: `[120,80,120,80,220]` (~0.62s en total).
+
+**Verificado** (navegador real, Practicar): fallo → popup "✗ ¡Concéntrate!" en rojo centrado + shake 900ms + vibración `[120,80,120,80,220]`, tablero libre después; acierto → popup "+10" dorado centrado intacto.
+
+**Nota para el teléfono**: si tras el deploy los efectos se sienten "viejos", es el service worker de la PWA sirviendo la versión anterior — cerrar TODAS las pestañas/la app de Copa Mental y volver a abrirla. Y en iPhone la vibración web no existe (limitación de Apple, ningún sitio web puede vibrar un iPhone): allí el fallo se comunica con la sacudida visual, el mensaje rojo y el sonido.
