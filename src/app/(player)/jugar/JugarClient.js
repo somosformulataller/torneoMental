@@ -39,6 +39,24 @@ function getScatter(index) {
   return SCATTER_VARIANTS[index % SCATTER_VARIANTS.length];
 }
 
+// Mensajes del popup: los de fallo avanzan en secuencia con cada error de la
+// partida (y vuelven a empezar); los de acierto van rotando como refuerzo.
+const MISS_MESSAGES = [
+  '✗ ¡Ups! No era pareja',
+  '✗ ¡Concéntrate!',
+  '✗ ¡Fíjate bien dónde está cada carta!',
+  '✗ ¡Respira… y haz memoria!',
+  '✗ ¡Cada fallo te cuesta tiempo!',
+];
+const MATCH_MESSAGES = [
+  '¡Excelente!',
+  '¡Muy bien!',
+  '¡Qué memoria!',
+  '¡Genial!',
+  '¡Sigue así!',
+  '¡Brillante!',
+];
+
 // Únicos temas con diseños de carta disponibles. La temática debe cambiar
 // siempre entre partidas para que el jugador nunca memorice las cartas.
 const ALL_THEMES = ['tecnologia', 'naturaleza', 'animales'];
@@ -99,6 +117,7 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
   const [shake, setShake] = useState(false);
   const [popup, setPopup] = useState(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const missCountRef = useRef(0);
 
   useEffect(() => {
     // Guard against React Strict Mode's dev-only double-invoke: initGame()
@@ -270,9 +289,10 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
           setStreak((s) => {
             const next = s + 1;
             setBestStreak((best) => Math.max(best, next));
+            const cheer = MATCH_MESSAGES[(newMatched.length - 1) % MATCH_MESSAGES.length];
             setPopup({
               id: `${Date.now()}-${newMatched.length}`,
-              text: next >= 2 ? `+10 🔥 Racha x${next}` : '+10',
+              text: next >= 2 ? `+10 🔥 Racha x${next} ${cheer}` : `+10 ${cheer}`,
             });
             return next;
           });
@@ -289,7 +309,12 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
           playMismatch();
           vibrateMismatch();
           setStreak(0);
-          setPopup({ id: `miss-${Date.now()}`, text: '✗ ¡Concéntrate!', variant: 'miss' });
+          missCountRef.current += 1;
+          setPopup({
+            id: `miss-${Date.now()}`,
+            text: MISS_MESSAGES[(missCountRef.current - 1) % MISS_MESSAGES.length],
+            variant: 'miss',
+          });
           setShake(true);
           setTimeout(() => setShake(false), 900);
           setTimeout(() => {

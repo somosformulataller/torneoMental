@@ -153,3 +153,13 @@ Estefania notó que no salía ningún mensaje en rojo al fallar. Investigado en 
 **Verificado** (navegador real, Practicar): fallo → popup "✗ ¡Concéntrate!" en rojo centrado + shake 900ms + vibración `[120,80,120,80,220]`, tablero libre después; acierto → popup "+10" dorado centrado intacto.
 
 **Nota para el teléfono**: si tras el deploy los efectos se sienten "viejos", es el service worker de la PWA sirviendo la versión anterior — cerrar TODAS las pestañas/la app de Copa Mental y volver a abrirla. Y en iPhone la vibración web no existe (limitación de Apple, ningún sitio web puede vibrar un iPhone): allí el fallo se comunica con la sacudida visual, el mensaje rojo y el sonido.
+
+## Mensajes variados: secuencia al fallar y frases motivadoras al acertar (2026-07-20)
+
+Estefania pidió que no fuera siempre el mismo mensaje: cada fallo debe traer uno distinto, y los aciertos frases motivadoras.
+
+- **Fallos** (`MISS_MESSAGES` en `JugarClient.js`): secuencia de 5 mensajes que sube de tono con cada error de la partida y vuelve a empezar — "✗ ¡Ups! No era pareja" → "✗ ¡Concéntrate!" → "✗ ¡Fíjate bien dónde está cada carta!" → "✗ ¡Respira… y haz memoria!" → "✗ ¡Cada fallo te cuesta tiempo!". El contador (`missCountRef`) es por visita a la pantalla.
+- **Aciertos** (`MATCH_MESSAGES`): 6 frases que rotan según cuántas parejas van — "+10 ¡Excelente!", "+10 ¡Muy bien!", "¡Qué memoria!", "¡Genial!", "¡Sigue así!", "¡Brillante!". Con racha se combinan: "+10 🔥 Racha x2 ¡Muy bien!".
+- El popup ya no está limitado a una línea (`white-space: nowrap` → padding lateral): los mensajes largos se parten en dos líneas centradas en pantallas angostas en vez de salirse.
+
+**Verificado** (navegador real 360px de ancho, Practicar): 2 fallos seguidos mostraron los 2 primeros mensajes en orden y en rojo; 2 aciertos mostraron "+10 ¡Excelente!" y "+10 🔥 Racha x2 ¡Muy bien!" en dorado; todos los popups dentro de la pantalla (rect medido), el de racha en dos líneas limpias.
