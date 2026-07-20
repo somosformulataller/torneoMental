@@ -290,12 +290,12 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
           vibrateMismatch();
           setStreak(0);
           setShake(true);
-          setTimeout(() => setShake(false), 400);
+          setTimeout(() => setShake(false), 900);
           setTimeout(() => {
             setFlippedCards([]);
             setIsProcessing(false);
             setResultType(null);
-          }, 700);
+          }, 1000);
         }, 500);
       }
     }

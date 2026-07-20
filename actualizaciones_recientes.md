@@ -130,3 +130,13 @@ Estefania subió los dorsos nuevos (diseño de foto con la carta sobre un escrit
 **Qué se hizo**: se recortó cada foto al borde físico de la carta (con un pequeño margen interno; en naturaleza hizo falta un segundo ajuste porque la carta estaba levemente inclinada y asomaba fondo gris por la derecha) y el resultado se guardó sobre `public/cards/tecnologia/back_tecnologia.png`, `public/cards/naturaleza/back_naturaleza.png` y `public/cards/animales/back_animales.png`, que son las rutas que usa `CARD_BACKS` en `src/lib/cardThemes.js`. Los originales sin recortar quedan intactos en `public/images/cards/` por si se necesitan de nuevo. No hubo cambios de código.
 
 **Verificado** (servidor local + navegador real con sesión, tablero de Practicar): capturas de los 3 temas — tecnología (neón cian), naturaleza (marco verde) y animales (marco dorado sobre vinotinto) — 12 dorsos por tablero, cero imágenes rotas, nada del fondo de las fotos visible, esquinas redondeadas correctas.
+
+## Fallo de pareja más contundente: sacudida y vibración más largas (2026-07-20)
+
+Estefania pidió que al voltear dos cartas distintas los efectos duren más, para que el jugador sienta que equivocarse cuesta tiempo y debe concentrarse.
+
+- **Sacudida de pantalla** (`shakeScreen` en `jugar.module.css`): de 0.4s a **0.9s**, con más oscilaciones y amplitud decreciente para que el final sea suave. Sigue respetando `prefers-reduced-motion`.
+- **Vibración del teléfono** (`vibrateMismatch` en `src/lib/haptics.js`): de `[30,40,30]` (~0.1s) a `[80,60,80,60,120]` (~0.4s, tres pulsos con el último más largo).
+- **Bloqueo del tablero** (`JugarClient.js`): tras el fallo, las cartas se voltean de nuevo y se libera el tablero a los **1000ms** (antes 700ms), alineado con el final de la sacudida — el error ahora cuesta ~0.3s más de reloj.
+
+**Verificado** (navegador real, Practicar, espiando `navigator.vibrate` y la clase `shake` con MutationObserver): al voltear "Delfín" y "Tigre", la clase `shake` estuvo activa 905ms, la vibración pedida fue exactamente `[80,60,80,60,120]`, y 2.1s después del fallo no quedaba ninguna carta volteada (el tablero se libera bien).

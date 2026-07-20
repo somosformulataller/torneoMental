@@ -9,7 +9,7 @@ export function vibrateMatch() {
 }
 
 export function vibrateMismatch() {
-  if (canVibrate()) navigator.vibrate([30, 40, 30]);
+  if (canVibrate()) navigator.vibrate([80, 60, 80, 60, 120]);
 }
 
 export function vibrateVictory() {
