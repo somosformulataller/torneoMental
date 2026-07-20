@@ -122,3 +122,11 @@ Cuando no hay torneo activo, la pantalla de Competir mostraba solo "No hay torne
 **Verificado** (build de producción local + navegador real con la sesión admin, contra la base real, restaurando todo al terminar): "siguiente" deja la fila intacta y guarda el pendiente (el aviso azul aparece); "actual" actualiza la fila y preserva la config previa para los siguientes; "ambos" actualiza y limpia el pendiente. `lint` y `build` en verde.
 
 **Dato útil descubierto en el camino**: la actualización que Estefania hizo antes de este cambio SÍ se aplicó al torneo en curso (duración 2880 min, 3 ganadores, $50/$30/$20) — el comportamiento viejo siempre fue "ambos".
+
+## Dorsos nuevos de las cartas por temática (2026-07-20)
+
+Estefania subió los dorsos nuevos (diseño de foto con la carta sobre un escritorio) a `public/images/cards/back_*.png`, pero el juego lee los dorsos de `public/cards/<tema>/back_<tema>.png` — por eso seguían viéndose los viejos. Además las fotos nuevas traían todo el entorno alrededor de la carta (escritorio, teclado), y el CSS del juego (`object-fit: cover`) solo recorta para llenar el marco 3:4, no sabe dónde está la carta dentro de la foto.
+
+**Qué se hizo**: se recortó cada foto al borde físico de la carta (con un pequeño margen interno; en naturaleza hizo falta un segundo ajuste porque la carta estaba levemente inclinada y asomaba fondo gris por la derecha) y el resultado se guardó sobre `public/cards/tecnologia/back_tecnologia.png`, `public/cards/naturaleza/back_naturaleza.png` y `public/cards/animales/back_animales.png`, que son las rutas que usa `CARD_BACKS` en `src/lib/cardThemes.js`. Los originales sin recortar quedan intactos en `public/images/cards/` por si se necesitan de nuevo. No hubo cambios de código.
+
+**Verificado** (servidor local + navegador real con sesión, tablero de Practicar): capturas de los 3 temas — tecnología (neón cian), naturaleza (marco verde) y animales (marco dorado sobre vinotinto) — 12 dorsos por tablero, cero imágenes rotas, nada del fondo de las fotos visible, esquinas redondeadas correctas.
