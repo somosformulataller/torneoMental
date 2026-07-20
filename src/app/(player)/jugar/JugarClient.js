@@ -131,7 +131,8 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
 
   useEffect(() => {
     if (!popup) return;
-    const t = setTimeout(() => setPopup(null), popup.variant === 'miss' ? 1200 : 900);
+    // El mensaje de fallo es una frase completa: se le da más tiempo de lectura.
+    const t = setTimeout(() => setPopup(null), popup.variant === 'miss' ? 2000 : 900);
     return () => clearTimeout(t);
   }, [popup]);
 
