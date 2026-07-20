@@ -165,3 +165,5 @@ Estefania pidió que no fuera siempre el mismo mensaje: cada fallo debe traer un
 **Verificado** (navegador real 360px de ancho, Practicar): 2 fallos seguidos mostraron los 2 primeros mensajes en orden y en rojo; 2 aciertos mostraron "+10 ¡Excelente!" y "+10 🔥 Racha x2 ¡Muy bien!" en dorado; todos los popups dentro de la pantalla (rect medido), el de racha en dos líneas limpias.
 
 **Ajuste posterior (mismo día)**: el mensaje rojo dura más para poder leerlo — 2s fijos en vez de 1.2s (con la animación de salida queda ~2.8s visible en total, medido en navegador real). El dorado de acierto sigue en 0.9s.
+
+**Ajuste posterior 2 (mismo día)**: sacudida y vibración se repiten dos veces. La animación `shakeScreen` corre 2 ciclos (`animation: ... 2` → 1.8s, clase activa medida: 1805ms) y el patrón de vibración se duplica con una pausa de 260ms en medio (`[120,80,120,80,220,260,120,80,120,80,220]` ≈ 1.5s). El tablero se sigue liberando a los 1000ms — la segunda ronda de sacudida acompaña a las cartas volteándose de regreso, sin castigar con más tiempo de bloqueo.

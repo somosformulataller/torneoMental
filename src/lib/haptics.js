@@ -9,7 +9,8 @@ export function vibrateMatch() {
 }
 
 export function vibrateMismatch() {
-  if (canVibrate()) navigator.vibrate([120, 80, 120, 80, 220]);
+  // El patrón de fallo se repite dos veces con una pausa en medio (~1.5s).
+  if (canVibrate()) navigator.vibrate([120, 80, 120, 80, 220, 260, 120, 80, 120, 80, 220]);
 }
 
 export function vibrateVictory() {

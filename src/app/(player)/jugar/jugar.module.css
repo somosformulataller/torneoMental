@@ -67,7 +67,8 @@
 }
 
 .shake {
-  animation: shakeScreen 0.9s ease;
+  /* Dos ciclos: la sacudida se repite para que el fallo se sienta más. */
+  animation: shakeScreen 0.9s ease 2;
 }
 
 @keyframes shakeScreen {
