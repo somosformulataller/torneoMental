@@ -488,8 +488,8 @@ export default function AdminTransaccionesPage() {
                     <tr>
                       <th>Jugador</th>
                       <th>Estado</th>
-                      <th>En billetera</th>
-                      <th>Total ganado</th>
+                      <th>Monto a retirar</th>
+                      <th>Total en billetera</th>
                       <th>Datos de Pago Móvil</th>
                       <th>Acciones</th>
                     </tr>
@@ -507,8 +507,8 @@ export default function AdminTransaccionesPage() {
                             </div>
                           </td>
                           <td><Badge color={st.color}>{st.label(p)}</Badge></td>
-                          <td><span className={styles.usd}>${p.balance.toFixed(2)}</span></td>
-                          <td><span className={styles.ves}>${p.won.toFixed(2)}</span></td>
+                          <td><span className={styles.usd}>${p.pendSum.toFixed(2)}</span></td>
+                          <td><span className={styles.ves}>${(p.balance + p.pendSum).toFixed(2)}</span></td>
                           <td>
                             {hasPayout ? (
                               <div className={styles.payoutData}>
