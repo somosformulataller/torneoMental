@@ -11,6 +11,7 @@ import Spinner from '@/components/ui/Spinner';
 import FormInput from '@/components/ui/FormInput';
 import ParticleBackground from '@/components/ui/ParticleBackground';
 import { TicketIcon, LogoutIcon } from '@/components/ui/icons';
+import { TrophyIcon, WalletIcon } from '@/components/layout/NavIcons';
 import { compressImage } from '@/lib/image';
 import styles from './home.module.css';
 
@@ -244,6 +245,19 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
         <button className={styles.practiceBtn} onClick={handlePractice}>
           PRACTICAR
         </button>
+
+        {/* Antes estaban en el menú inferior (ya eliminado); ahora se accede
+            desde aquí. Más pequeños y separados de Competir/Practicar. */}
+        <div className={styles.secondaryNav}>
+          <button className={styles.secondaryNavBtn} onClick={() => router.push('/ranking')}>
+            <TrophyIcon className={styles.secondaryNavIcon} />
+            Ranking
+          </button>
+          <button className={styles.secondaryNavBtn} onClick={() => router.push('/billetera')}>
+            <WalletIcon className={styles.secondaryNavIcon} />
+            Billetera
+          </button>
+        </div>
       </div>
 
       {/* Tickets + Buy, side by side */}

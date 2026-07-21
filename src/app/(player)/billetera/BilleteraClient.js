@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
 import Modal from '@/components/ui/Modal';
 import InstallAppButton from '@/components/ui/InstallAppButton';
+import BackToHome from '@/components/ui/BackToHome';
 import styles from './billetera.module.css';
 
 // La página (Server Component) ya llega con los datos iniciales en el HTML —
@@ -185,6 +186,7 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
   return (
     <div className={styles.container}>
       <div className={styles.header}>
+        <BackToHome />
         <h1 className={styles.title}>Mi Billetera</h1>
       </div>
 

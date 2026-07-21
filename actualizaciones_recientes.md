@@ -207,3 +207,12 @@ Cada fila muestra los datos de Pago Móvil del jugador para pagarle. Filtros arr
 Descuento y devolución son atómicos en la base de datos (funciones `request_withdrawal`, `mark_withdrawal_paid`, `cancel_withdrawal`).
 
 **Paso manual pendiente:** correr la migración `020_wallet_withdrawals.sql` en el SQL Editor de Supabase antes de desplegar.
+
+## Navegación del jugador rediseñada (2026-07-21)
+
+Se eliminó el menú inferior y se reorganizó la navegación.
+
+- **Se quitó el menú inferior** de todas las pantallas del jugador.
+- **Inicio**: debajo de "Practicar" se agregaron dos botones más pequeños y separados — **Ranking** y **Billetera**. A Competir se entra desde el botón grande de siempre. Se recuperó el espacio del menú para que todo entre sin scroll (verificado en 390×844 y 360×640).
+- **Botón de volver al Inicio** en cada pantalla: flotante (círculo con icono de casa, arriba a la izquierda) en Juego y Ranking; en línea en el encabezado de Billetera ("🏠 Inicio").
+- En la pantalla de juego el cronómetro bajó al borde inferior y el tablero recuperó ese espacio (sigue entrando sin scroll).

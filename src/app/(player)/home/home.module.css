@@ -3,7 +3,9 @@
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 10px 16px calc(70px + env(safe-area-inset-bottom) + 10px);
+  /* Ya no hay menú inferior: se recupera ese espacio para que todo (incluidos
+     los botones nuevos de Ranking/Billetera) entre sin scroll. */
+  padding: 10px 16px calc(env(safe-area-inset-bottom) + 12px);
   color: var(--text-primary);
   max-width: 480px;
   margin: 0 auto;
@@ -312,6 +314,44 @@
 .practiceBtn:hover {
   border-color: rgba(255, 255, 255, 0.25);
   color: var(--text-primary);
+}
+
+/* Ranking + Billetera: acciones secundarias (antes en el menú inferior).
+   Más pequeñas que Competir/Practicar y separadas con un margen mayor. */
+.secondaryNav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.secondaryNavBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: var(--font-display, var(--font-mono, monospace));
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  padding: 7px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.secondaryNavBtn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+}
+
+.secondaryNavIcon {
+  width: 16px;
+  height: 16px;
 }
 
 .playCardWarning {

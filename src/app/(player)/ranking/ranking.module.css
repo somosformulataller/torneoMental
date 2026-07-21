@@ -1,6 +1,8 @@
 .container {
   min-height: 100vh;
-  padding: 20px 16px 100px;
+  /* padding-top deja espacio para el botón flotante de volver; sin menú
+     inferior, el padding-bottom vuelve a un valor normal. */
+  padding: 60px 16px 24px;
   max-width: 480px;
   margin: 0 auto;
   position: relative;

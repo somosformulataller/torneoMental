@@ -12,6 +12,7 @@ import GameResultModal from '@/components/game/GameResultModal';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import Spinner from '@/components/ui/Spinner';
 import ParticleBackground from '@/components/ui/ParticleBackground';
+import BackToHome from '@/components/ui/BackToHome';
 import { TicketIcon } from '@/components/ui/icons';
 import styles from './jugar.module.css';
 
@@ -446,6 +447,9 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
     <div className={`${styles.container} ${shake ? styles.shake : ''}`}>
       <ParticleBackground />
       <ScorePopup popup={popup} />
+
+      {/* Botón para regresar al Inicio (reemplaza al menú inferior) */}
+      <BackToHome floating />
 
       {/* Small elapsed-time stopwatch */}
       <div className={styles.stopwatch}>⏱ {formatStopwatch(elapsedMs)}</div>

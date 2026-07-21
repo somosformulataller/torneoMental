@@ -6,7 +6,8 @@
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 52px 8px 118px;
+  /* Sin menú inferior: el cronómetro baja y el tablero recupera ese espacio. */
+  padding: 52px 8px 64px;
   color: var(--text-primary);
   max-width: none;
   margin: 0 auto;
@@ -33,11 +34,10 @@
   border: 1px solid rgba(57, 255, 20, 0.25);
 }
 
-/* Sits just above the fixed bottom nav (70px tall) so the card grid can use
-   the entire rest of the viewport for the scattered layout. */
+/* Cronómetro fijo cerca del borde inferior (ya no hay menú inferior debajo). */
 .stopwatch {
   position: fixed;
-  bottom: calc(70px + env(safe-area-inset-bottom) + 10px);
+  bottom: calc(env(safe-area-inset-bottom) + 14px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
@@ -176,10 +176,10 @@
   --row-gap: 4px;
   --col-gap: 22px;
   --card-max-w: 84px;
-  /* 52px padding-top + 118px padding-bottom del .container, más el padding
-     vertical propio del grid y holgura para el jitter (transform) de las
-     cartas, que también cuenta para el área de scroll. */
-  --reserved-v: 200px;
+  /* 52px padding-top + 64px padding-bottom del .container (sin menú inferior),
+     más el padding vertical propio del grid y holgura para el jitter
+     (transform) de las cartas, que también cuenta para el área de scroll. */
+  --reserved-v: 150px;
   --vp-h: 100vh;
   --fit-card-w: calc(
     (var(--vp-h) - var(--reserved-v) - (var(--card-rows, 5) - 1) * var(--row-gap)) /
@@ -222,7 +222,7 @@
     --card-max-w: 110px;
     --row-gap: 12px;
     --col-gap: 32px;
-    --reserved-v: 220px;
+    --reserved-v: 170px;
     padding: 16px;
   }
 }
@@ -232,7 +232,7 @@
     --card-max-w: 128px;
     --row-gap: 16px;
     --col-gap: 40px;
-    --reserved-v: 230px;
+    --reserved-v: 180px;
     padding: 20px 36px;
   }
 }

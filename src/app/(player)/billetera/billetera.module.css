@@ -1,12 +1,16 @@
 .container {
   min-height: 100vh;
-  padding: 20px 16px 100px;
+  /* Sin menú inferior: el padding-bottom vuelve a un valor normal. */
+  padding: 16px 16px 24px;
   background: var(--bg-primary);
   max-width: 480px;
   margin: 0 auto;
 }
 
 .header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 24px;
 }
 
