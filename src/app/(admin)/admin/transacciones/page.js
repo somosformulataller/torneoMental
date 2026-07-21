@@ -22,10 +22,10 @@ const STATUS_FILTERS = [
 
 // Estado de premio/retiro de cada jugador (lado admin).
 const RETIRO_STATUS = {
-  quiere_retirar: { label: (r) => `Quiere retirar $${r.pendSum.toFixed(2)}`, color: '#06B6D4' },
-  en_billetera: { label: () => 'En billetera aún sin retirar', color: '#F59E0B' },
-  sin_saldo: { label: () => 'Sin saldo pendiente', color: '#7a7a9e' },
-  sin_premio: { label: () => 'No ha ganado premio', color: '#7a7a9e' },
+  quiere_retirar: { label: (r) => `Quiere retirar $${r.pendSum.toFixed(2)}`, color: '#22D3EE' },
+  en_billetera: { label: () => 'En billetera aún sin retirar', color: '#FBBF24' },
+  sin_saldo: { label: () => 'Sin saldo pendiente', color: '#7686A0' },
+  sin_premio: { label: () => 'No ha ganado premio', color: '#7686A0' },
 };
 
 const RETIRO_FILTERS = [
@@ -469,7 +469,7 @@ export default function AdminTransaccionesPage() {
                       <tr key={p.id}>
                         <td>{formatDate(p.created_at)}</td>
                         <td>{p.tournaments?.nombre || '—'}</td>
-                        <td><Badge color="#F59E0B">{p.position}° lugar</Badge></td>
+                        <td><Badge color="#FBBF24">{p.position}° lugar</Badge></td>
                         <td><span className={styles.prize}>${Number(p.amount_usd).toFixed(2)}</span></td>
                         <td>
                           <div className={styles.userInfo}>

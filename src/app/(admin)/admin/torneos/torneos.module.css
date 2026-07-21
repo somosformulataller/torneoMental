@@ -4,11 +4,11 @@
 }
 
 .error {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(251, 113, 133, 0.15);
   color: var(--accent-red);
   padding: 12px;
   border-radius: var(--radius-sm, 8px);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(251, 113, 133, 0.3);
   font-size: 0.85rem;
   text-align: center;
 }
@@ -94,7 +94,7 @@
 
 .deleteBtn {
   background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(251, 113, 133, 0.3);
   color: var(--accent-red);
   padding: 4px 12px;
   border-radius: 6px;
@@ -104,7 +104,7 @@
 }
 
 .deleteBtn:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(251, 113, 133, 0.1);
 }
 
 .tournName {

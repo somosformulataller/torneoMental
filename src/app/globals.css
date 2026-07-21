@@ -1,27 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;700;800&family=Orbitron:wght@600;700;800;900&family=Outfit:wght@300;400;600;700;800;900&display=swap');
 
 :root {
-  /* Copa Mental - Youthful Esports Theme */
-  --bg-primary: #0F172A; /* Slate 900 */
-  --bg-secondary: #1E293B; /* Slate 800 */
-  --bg-card: rgba(30, 41, 59, 0.8);
-  --bg-card-hover: rgba(51, 65, 85, 0.9);
+  /* Copa Mental — tema oscuro premium (cian + violeta) */
+  --bg-primary: #0A0E1A; /* navy profundo, más contraste */
+  --bg-secondary: #141B2E;
+  --bg-card: rgba(21, 29, 48, 0.82);
+  --bg-card-hover: rgba(33, 44, 71, 0.92);
 
-  /* Acentos neón */
-  --accent-cyan: #06B6D4; /* Cyan 500 */
-  --accent-green: #10B981; /* Emerald 500 */
-  --accent-orange: #F97316; /* Orange 500 */
-  --accent-red: #EF4444; /* Red 500 */
-  --accent-gold: #F59E0B; /* Amber 500 */
-  --accent-silver: #94A3B8; /* Slate 400 */
-  --accent-bronze: #B45309; /* Amber 700 */
-  --accent-pink: #06B6D4; /* Cyan 500 (antes rosado #EC4899) */
-  --accent-violet: #7c3aed;
+  /* Acentos — vivos pero refinados (nivel 400), coherentes entre sí */
+  --accent-cyan: #22D3EE; /* Cyan 400 (color primario) */
+  --accent-green: #34D399; /* Emerald 400 */
+  --accent-orange: #FB923C; /* Orange 400 */
+  --accent-red: #FB7185; /* Rose 400 */
+  --accent-gold: #FBBF24; /* Amber 400 (premios) */
+  --accent-silver: #CBD5E1; /* Slate 300 */
+  --accent-bronze: #D97706; /* Amber 600 */
+  --accent-pink: #22D3EE; /* = cian */
+  --accent-violet: #A78BFA; /* Violet 400 (color secundario) */
 
   /* Texto */
   --text-primary: #F8FAFC; /* Slate 50 */
-  --text-secondary: #CBD5E1; /* Slate 300 */
-  --text-muted: #64748B; /* Slate 500 */
+  --text-secondary: #C6D1E4; /* frío, alto contraste */
+  --text-muted: #7686A0;
 
   /* Tipografía */
   --font-primary: 'Outfit', sans-serif;
@@ -35,11 +35,11 @@
   --radius-xl: 28px;
 
   /* Sombras / glow */
-  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.55);
-  --glow-gold: 0 0 24px rgba(245, 158, 11, 0.35);
-  --glow-pink: 0 0 24px rgba(124, 58, 237, 0.35);
-  --glow-violet: 0 0 24px rgba(124, 58, 237, 0.35);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --glow-gold: 0 0 24px rgba(251, 191, 36, 0.35);
+  --glow-pink: 0 0 24px rgba(34, 211, 238, 0.35);
+  --glow-violet: 0 0 24px rgba(167, 139, 250, 0.35);
 
   /* Easing con física de resorte */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -89,13 +89,13 @@ button {
 
 /* Selection */
 ::selection {
-  background: rgba(6, 182, 212, 0.3);
+  background: rgba(34, 211, 238, 0.3);
   color: #fff;
 }
 
 /* Utilities */
 .glass-panel {
-  background: rgba(26, 26, 46, 0.7);
+  background: rgba(21, 29, 48, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);

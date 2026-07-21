@@ -31,7 +31,7 @@
   padding: 6px 12px;
   box-shadow: var(--shadow-card);
   color: var(--accent-green);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  border: 1px solid rgba(52, 211, 153, 0.25);
 }
 
 /* Cronómetro fijo cerca del borde inferior (ya no hay menú inferior debajo). */
@@ -51,7 +51,7 @@
   padding: 6px 12px;
   box-shadow: var(--shadow-card);
   color: var(--accent-cyan);
-  border: 1px solid rgba(6, 182, 212, 0.25);
+  border: 1px solid rgba(34, 211, 238, 0.25);
 }
 
 .pairsBump {
@@ -110,8 +110,8 @@
 .gameRule { color: var(--text-secondary); line-height: 1.6; max-width: 300px; }
 
 .alertBox {
-  background: rgba(249, 115, 22, 0.15);
-  border: 1px solid rgba(249, 115, 22, 0.3);
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.3);
   border-radius: 12px;
   padding: 16px 24px;
   color: var(--accent-orange);

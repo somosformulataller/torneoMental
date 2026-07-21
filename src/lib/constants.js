@@ -25,10 +25,10 @@ export const THEMES = {
 // Colores en hex (no var()) porque se les concatena un sufijo de alfa,
 // ej. `${color}20`, y eso solo es válido con hex, no con var(--token).
 export const PAYMENT_STATUSES = {
-  pendiente: { label: 'Pendiente', color: '#F59E0B' },
-  validando: { label: 'Validando', color: '#06B6D4' },
-  aprobado: { label: 'Aprobado', color: '#10B981' },
-  rechazado: { label: 'Rechazado', color: '#EF4444' },
+  pendiente: { label: 'Pendiente', color: '#FBBF24' },
+  validando: { label: 'Validando', color: '#22D3EE' },
+  aprobado: { label: 'Aprobado', color: '#34D399' },
+  rechazado: { label: 'Rechazado', color: '#FB7185' },
 };
 
 // Bancos venezolanos para el formulario de datos de Pago Móvil del jugador.
@@ -59,8 +59,8 @@ export const VENEZUELAN_BANKS = [
 ];
 
 export const TOURNAMENT_STATUSES = {
-  borrador: { label: 'Borrador', color: '#7a7a9e' },
-  programado: { label: 'Programado', color: '#06B6D4' },
-  activo: { label: 'Activo', color: '#10B981' },
-  finalizado: { label: 'Finalizado', color: '#EF4444' },
+  borrador: { label: 'Borrador', color: '#7686A0' },
+  programado: { label: 'Programado', color: '#22D3EE' },
+  activo: { label: 'Activo', color: '#34D399' },
+  finalizado: { label: 'Finalizado', color: '#FB7185' },
 };

@@ -41,7 +41,7 @@ export default function GameResultModal({
       particleCount: 120,
       spread: 80,
       origin: { y: 0.6 },
-      colors: ['#06B6D4', '#10B981', '#F59E0B'],
+      colors: ['#22D3EE', '#34D399', '#FBBF24'],
     });
 
     // Escalate the celebration for hot streaks.
@@ -51,14 +51,14 @@ export default function GameResultModal({
           particleCount: 100,
           spread: 100,
           origin: { y: 0.5 },
-          colors: ['#F59E0B', '#7c3aed'],
+          colors: ['#FBBF24', '#A78BFA'],
         });
       }, 250);
     }
     if (maxStreak >= 8) {
       setTimeout(() => {
-        confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#F59E0B'] });
-        confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#F59E0B'] });
+        confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#FBBF24'] });
+        confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#FBBF24'] });
       }, 500);
     }
   }, [isOpen, completed, maxStreak]);

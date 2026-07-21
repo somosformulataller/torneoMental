@@ -214,7 +214,7 @@
   left: 0;
   top: 0;
   bottom: 0;
-  background: linear-gradient(90deg, rgba(6, 182, 212, 0.35), rgba(16, 185, 129, 0.2));
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.35), rgba(52, 211, 153, 0.2));
   transition: width 0.3s;
 }
 
@@ -301,11 +301,11 @@
   text-align: left;
 }
 
-.playerItem:hover { border-color: rgba(6, 182, 212, 0.3); }
+.playerItem:hover { border-color: rgba(34, 211, 238, 0.3); }
 
 .playerItemActive {
   border-color: var(--accent-cyan);
-  background: rgba(6, 182, 212, 0.08);
+  background: rgba(34, 211, 238, 0.08);
 }
 
 .playerName {
@@ -388,8 +388,8 @@
 .pendingNote {
   font-size: 0.85rem;
   color: var(--accent-orange);
-  background: rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.25);
+  background: rgba(251, 146, 60, 0.1);
+  border: 1px solid rgba(251, 146, 60, 0.25);
   border-radius: 8px;
   padding: 8px 12px;
 }

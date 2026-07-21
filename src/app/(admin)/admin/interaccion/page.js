@@ -367,9 +367,9 @@ export default function AdminInteraccionPage() {
                         {selectedPlayer?.nombre} {selectedPlayer?.apellido}
                       </span>
                       <div className={styles.detailBadges}>
-                        {detail.activeNow && <Badge color="#10B981">Jugando ahora</Badge>}
-                        {detail.playedToday && <Badge color="#06B6D4">Jugó hoy</Badge>}
-                        {selectedPlayer?.blocked && <Badge color="#EF4444">Bloqueado</Badge>}
+                        {detail.activeNow && <Badge color="#34D399">Jugando ahora</Badge>}
+                        {detail.playedToday && <Badge color="#22D3EE">Jugó hoy</Badge>}
+                        {selectedPlayer?.blocked && <Badge color="#FB7185">Bloqueado</Badge>}
                       </div>
                     </div>
 

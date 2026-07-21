@@ -19,23 +19,23 @@
   font-weight: 800;
   font-family: var(--font-display, var(--font-mono, monospace));
   color: var(--accent-gold);
-  text-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+  text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
   background: rgba(0, 0, 0, 0.2);
   padding: 4px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.2);
   min-width: 130px;
   text-align: center;
 }
 
 .danger {
   color: var(--accent-red);
-  text-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
-  border-color: rgba(239, 68, 68, 0.4);
+  text-shadow: 0 0 15px rgba(251, 113, 133, 0.6);
+  border-color: rgba(251, 113, 133, 0.4);
   animation: flashDanger 1s infinite;
 }
 
 @keyframes flashDanger {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.02); box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); }
+  50% { opacity: 0.8; transform: scale(1.02); box-shadow: inset 0 0 10px rgba(251, 113, 133, 0.2); }
 }

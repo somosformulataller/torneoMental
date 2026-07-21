@@ -7,7 +7,7 @@
   background: rgba(26, 11, 46, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(124, 58, 237, 0.15);
+  border-top: 1px solid rgba(167, 139, 250, 0.15);
   z-index: 100;
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -65,7 +65,7 @@
 .active .icon {
   transform: translateY(-4px);
   opacity: 1;
-  filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.6));
+  filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.6));
 }
 
 .activeIndicator {
@@ -75,7 +75,7 @@
   height: 3px;
   background: var(--accent-pink);
   border-radius: 3px 3px 0 0;
-  box-shadow: 0 -2px 10px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 -2px 10px rgba(167, 139, 250, 0.5);
   animation: slideUpIndicator 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 

@@ -242,3 +242,12 @@ Requiere la migración `021_moderation_and_activity.sql` (columna `profiles.bloc
 - **Modal de fin de partida** (`GameResultModal`): el título ahora es **"¡Excelente jugada!"** (antes "Tablero completado"). Se quitaron el conteo de pares y la "Racha máxima"; lo único en grande es **el tiempo**. Botones: en **práctica** → *Practicar de nuevo* + *Volver a home*; en **competir** → *Jugar de nuevo* + *Ver ranking* si le quedan tickets, o *Comprar tickets* si no. Verificado completando una partida de práctica en navegador automatizado.
 - **Efecto de partículas/burbujas eliminado** de todas las pantallas (`ParticleBackground` quitado de Inicio, Competir, Ranking, login y registro).
 - **Uniformidad de colores**: Inicio usa la paleta del sistema (variables CSS: cian `#06B6D4`, verde `#10B981`, dorado `#F59E0B`, rojo `#EF4444`, violeta `#7c3aed`), pero el resto de pantallas y los modales tenían hardcodeada la paleta neón vieja (`#00f5ff`, `#39ff14`, `#ffd700`, `#ff6b9d`…) que desentonaba. Se reemplazó la paleta vieja por la nueva en todo `src` (CSS y JS: badges, confetti, `constants.js`, `themeColor`), dejando toda la app con los colores de Inicio. Verificado visualmente en Inicio, Ranking, Billetera, Interacción y el modal.
+
+## Paleta de colores mejorada en toda la app (2026-07-21)
+
+A pedido: hacer la app más atractiva visualmente, incluyendo Inicio.
+
+- **Fondos más profundos** para dar más contraste y sensación premium: `--bg-primary` de `#0F172A` a `#0A0E1A`, `--bg-secondary` a `#141B2E`, tarjetas un poco más azuladas.
+- **Acentos más vivos pero refinados** (nivel Tailwind "400", sin volver al neón chillón): cian `#06B6D4→#22D3EE` (color primario), violeta `#7c3aed→#A78BFA` (secundario), oro `#F59E0B→#FBBF24` (premios), verde `#10B981→#34D399`, naranja `#F97316→#FB923C`, rojo `#EF4444→#FB7185` (rosado, más moderno). Glows y `::selection` actualizados a juego.
+- **Cómo**: se actualizaron las variables del sistema en `globals.css` y se barrió la paleta anterior hardcodeada (hex y `rgba`) en todo `src`, incluyendo fondos sueltos de un tema viejo (`#1a1a2e`, `#0a0a0f`, `#2a2a4a`). Toda la app referencia la misma paleta, así que futuros ajustes se hacen en un solo lugar.
+- **Verificado** visualmente (navegador automatizado): Inicio, Ranking, Billetera, Interacción y el modal de fin de partida con la paleta nueva, coherentes entre sí.
