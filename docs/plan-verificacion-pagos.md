@@ -132,3 +132,11 @@ Validar factibilidad real en paralelo, sin necesidad de decidir ya:
 - Preguntar en el banco donde reciben los pagos hoy si ofrecen API para negocios (aunque no sea Mercantil/Banesco/Bancaribe, vale la pena confirmar — la lista de la sección 4 no es exhaustiva, son solo los que tienen API pública y documentada que encontré).
 
 Con esas respuestas más las de la sección 9, se puede convertir este plan en un plan de implementación concreto (como se hizo con `docs/plan-tasa-bcv.md`).
+
+## 12. Actualización (2026-07-21): apareció una opción mejor
+
+Un compañero de Estefania construyó y opera su propia API de verificación (scraping del
+portal BDV/BNC, en producción real) y ofrece acceso. Eso desplaza la recomendación de la
+sección 10 (Verifica Pago Móvil $60/mes). El análisis de esa API y el plan de
+implementación concreto están en **`docs/api-validacion-pagos.md`** — este documento
+queda como registro de la investigación de rutas.
