@@ -130,6 +130,10 @@
   color: var(--text-secondary);
 }
 
+.blockBtnRow {
+  margin-top: 8px;
+}
+
 .ref {
   background: var(--bg-secondary);
   padding: 4px 8px;

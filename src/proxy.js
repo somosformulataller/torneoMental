@@ -60,12 +60,22 @@ export async function proxy(request) {
 
     if (user) {
       let role = null
-      if (isAuthRoute || isAdminRoute) {
+      let blocked = false
+      if (isAuthRoute || isAdminRoute || isPlayerRoute) {
         const { data: profile } = await withTimeout(
-          supabase.from('profiles').select('role').eq('id', user.id).single(),
+          supabase.from('profiles').select('role, blocked').eq('id', user.id).single(),
           5000
         )
         role = profile?.role ?? 'player'
+        blocked = !!profile?.blocked
+      }
+
+      // Un usuario bloqueado no puede usar las pantallas del jugador: se le
+      // manda a una página informativa desde donde solo puede cerrar sesión.
+      if (blocked && isPlayerRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/bloqueado'
+        return NextResponse.redirect(url)
       }
 
       if (isAuthRoute) {

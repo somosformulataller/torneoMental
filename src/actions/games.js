@@ -19,6 +19,11 @@ async function currentProfile(supabase) {
 
 export async function startGameAction(tournamentId, cardLayout) {
   const supabase = await createClient();
+
+  // Un usuario bloqueado no puede iniciar partidas.
+  const { data: blocked } = await supabase.rpc('is_blocked');
+  if (blocked) return { error: 'Tu cuenta está bloqueada.' };
+
   const { data, error } = await supabase.rpc('start_game', {
     p_tournament_id: tournamentId,
     p_card_layout: cardLayout,

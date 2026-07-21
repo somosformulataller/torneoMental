@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { adminApproveTicketAction, adminRejectTicketAction } from '@/actions/tickets';
 import { markWithdrawalPaidAction, cancelWithdrawalAction } from '@/actions/wallet';
+import { adminSetUserBlockedAction } from '@/actions/admin';
 import { PAYMENT_STATUSES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import Spinner from '@/components/ui/Spinner';
@@ -66,7 +67,7 @@ export default function AdminTransaccionesPage() {
         .from('tickets')
         .select(`
           *,
-          profiles ( nombre, apellido, cedula, email ),
+          profiles ( id, nombre, apellido, cedula, email, blocked ),
           tournaments ( nombre )
         `)
         .order('created_at', { ascending: false });
@@ -92,7 +93,7 @@ export default function AdminTransaccionesPage() {
         .from('wallet_transactions')
         .select(`
           *,
-          profiles ( nombre, apellido, cedula, email, payout_nombre, payout_banco, payout_cedula, payout_telefono, wallet_balance_usd ),
+          profiles ( id, nombre, apellido, cedula, email, blocked, payout_nombre, payout_banco, payout_cedula, payout_telefono, wallet_balance_usd ),
           tournaments ( nombre )
         `)
         .order('created_at', { ascending: false });
@@ -111,7 +112,7 @@ export default function AdminTransaccionesPage() {
       const [{ data: profs }, { data: awards }, { data: pend }, { data: paid }] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, nombre, apellido, email, payout_nombre, payout_banco, payout_cedula, payout_telefono, wallet_balance_usd'),
+          .select('id, nombre, apellido, email, blocked, payout_nombre, payout_banco, payout_cedula, payout_telefono, wallet_balance_usd'),
         supabase.from('wallet_transactions').select('user_id, amount_usd'),
         supabase.from('withdrawals').select('id, user_id, amount_usd, created_at').eq('status', 'solicitado').order('created_at', { ascending: true }),
         supabase
@@ -236,6 +237,44 @@ export default function AdminTransaccionesPage() {
     } finally {
       setProcessing(false);
     }
+  }
+
+  async function handleToggleBlock(userId, blocked, name) {
+    const next = !blocked;
+    if (!window.confirm(
+      next
+        ? `¿Bloquear a ${name}? No podrá jugar, comprar tickets ni retirar hasta que lo desbloquees.`
+        : `¿Desbloquear a ${name}?`
+    )) return;
+    setProcessing(true);
+    try {
+      const { error } = await adminSetUserBlockedAction(userId, next);
+      if (error) throw new Error(error);
+      if (section === 'compras') await loadTickets();
+      else if (section === 'premiados') await loadPrizes();
+      else await loadRetiros();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  // Botón de bloquear/desbloquear para un jugador (se reutiliza en los tres
+  // bloques). `prof` debe traer id, nombre, apellido y blocked.
+  function renderBlockBtn(prof) {
+    if (!prof?.id) return null;
+    const name = `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'el jugador';
+    return (
+      <Button
+        variant={prof.blocked ? 'success' : 'ghost'}
+        size="sm"
+        disabled={processing}
+        onClick={() => handleToggleBlock(prof.id, prof.blocked, name)}
+      >
+        {prof.blocked ? '✓ Desbloquear' : '🚫 Bloquear'}
+      </Button>
+    );
   }
 
   function formatDate(dateStr) {
@@ -387,6 +426,7 @@ export default function AdminTransaccionesPage() {
                               ✕ Rechazar
                             </Button>
                           )}
+                          {renderBlockBtn(t.profiles)}
                         </div>
                       </td>
                     </tr>
@@ -435,6 +475,7 @@ export default function AdminTransaccionesPage() {
                           <div className={styles.userInfo}>
                             <span className={styles.userName}>{prof?.nombre} {prof?.apellido}</span>
                             <span className={styles.userEmail}>{prof?.email}</span>
+                            <div className={styles.blockBtnRow}>{renderBlockBtn(prof)}</div>
                           </div>
                         </td>
                         <td>
@@ -563,6 +604,7 @@ export default function AdminTransaccionesPage() {
                             <div className={styles.userInfo}>
                               <span className={styles.userName}>{p.nombre} {p.apellido}</span>
                               <span className={styles.userEmail}>{p.email}</span>
+                              <div className={styles.blockBtnRow}>{renderBlockBtn(p)}</div>
                             </div>
                           </td>
                           <td><Badge color={st.color}>{st.label(p)}</Badge></td>

@@ -12,6 +12,10 @@ export async function requestWithdrawalAction(amount) {
   } = await supabase.auth.getUser();
   if (!user) return { error: 'No autenticado' };
 
+  // Un usuario bloqueado no puede solicitar retiros.
+  const { data: blocked } = await supabase.rpc('is_blocked');
+  if (blocked) return { error: 'Tu cuenta está bloqueada.' };
+
   const amt = Number(amount);
   if (!Number.isFinite(amt) || amt <= 0) {
     return { error: 'El monto a retirar debe ser mayor a cero' };

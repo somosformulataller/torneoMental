@@ -16,6 +16,7 @@ export default function AdminSidebar() {
     { href: '/admin/recurrencia', label: 'Recurrencia', icon: '🔁' },
     { href: '/admin/usuarios', label: 'Usuarios', icon: '👥' },
     { href: '/admin/transacciones', label: 'Transacciones', icon: '💳' },
+    { href: '/admin/interaccion', label: 'Interacción', icon: '📈' },
   ];
 
   async function handleLogout() {

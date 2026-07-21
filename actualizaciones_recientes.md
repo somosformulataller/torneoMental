@@ -224,3 +224,14 @@ Se eliminó el menú inferior y se reorganizó la navegación.
 - **Inicio**: debajo de "Practicar" se agregaron dos botones más pequeños y separados — **Ranking** y **Billetera**. A Competir se entra desde el botón grande de siempre. Se recuperó el espacio del menú para que todo entre sin scroll (verificado en 390×844 y 360×640).
 - **Botón de volver al Inicio** en cada pantalla: flotante (círculo con icono de casa, arriba a la izquierda) en Juego y Ranking; en línea en el encabezado de Billetera ("🏠 Inicio").
 - En la pantalla de juego el cronómetro bajó al borde inferior y el tablero recuperó ese espacio (sigue entrando sin scroll).
+
+## Moderación de usuarios + sección Interacción (2026-07-21)
+
+Requiere la migración `021_moderation_and_activity.sql` (columna `profiles.blocked`, RPC `admin_set_user_blocked`/`is_blocked`, tabla `activity_events`).
+
+- **Usuarios registrados**: lupa de búsqueda (nombre, nombre completo, cédula, correo, WhatsApp) y columna **Acciones** con **Bloquear/Desbloquear** y **Eliminar**. Los bloqueados se marcan en rojo. No se puede bloquear/eliminar a un administrador ni a uno mismo (validado en el RPC y en la acción de servidor).
+- **Transacciones**: botón **Bloquear** en cada bloque de jugador (Compra de tickets, Jugadores premiados, Retiros).
+- **Bloqueo real**: el proxy saca a un usuario bloqueado de las pantallas del jugador hacia `/bloqueado` (pantalla "Cuenta bloqueada" con solo cerrar sesión); además `jugar`, `comprar tickets` y `retirar` lo rechazan vía `is_blocked()` (defensa en profundidad).
+- **Nueva sección del menú: Interacción** 📈. Filtro por día/mes/año. Resumen del período (usuarios activos, jugaron, premios, retiros), **pantallas más visitadas** (barras) y **embudo** Inicio → Competir → Partida completada. Buscador de jugador con ficha de detalle: jugando ahora / jugó hoy, días jugados, partidas, premios, retiros, última actividad, **dónde dejó la app** y su **recorrido de hoy** + historial de pantallas.
+- **Registro de navegación**: un `ActivityTracker` en el layout del jugador inserta un evento `screen_view` al cambiar de pantalla (RLS: cada quien solo inserta lo suyo; solo el admin lee). Se acumula desde el deploy en adelante; no hay historial previo. Los eventos de administradores se excluyen de las estadísticas.
+- **Verificado** de punta a punta (dev + Supabase real, navegador automatizado con jugador de prueba): se registran las visitas (inicio/ranking/billetera), la página Interacción renderiza con datos reales, el bloqueo desde el panel escribe `blocked=true` y redirige al jugador a `/bloqueado`, y Eliminar borra la cuenta. Datos de prueba limpiados por cascada.

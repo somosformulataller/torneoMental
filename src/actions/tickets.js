@@ -14,6 +14,10 @@ export async function requestTicketsAction({ tournamentId, quantity, paymentRefe
   } = await supabase.auth.getUser();
   if (!user) return { error: 'No autenticado' };
 
+  // Un usuario bloqueado no puede comprar tickets.
+  const { data: blocked } = await supabase.rpc('is_blocked');
+  if (blocked) return { error: 'Tu cuenta está bloqueada.' };
+
   const qty = Number(quantity);
   if (!Number.isInteger(qty) || qty <= 0) {
     return { error: 'Cantidad de tickets inválida' };

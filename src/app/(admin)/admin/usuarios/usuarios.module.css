@@ -46,6 +46,67 @@
   font-family: var(--font-mono, monospace);
 }
 
+/* Barra de búsqueda con lupa */
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.searchIcon {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.searchClear {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 6px;
+}
+
+.roleCell {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.blockedRow {
+  background: rgba(255, 56, 96, 0.05);
+}
+
+.blockedRow:hover {
+  background: rgba(255, 56, 96, 0.08) !important;
+}
+
 .tableContainer {
   background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.1);
