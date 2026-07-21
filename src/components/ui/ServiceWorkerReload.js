@@ -1,6 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+
+// Ruta de la pantalla de juego. Mientras el jugador está aquí, una recarga
+// automática le borraría el tablero (o, en torneo, provocaría el "flash" de
+// reinicio de partida), así que se difiere hasta que salga.
+const GAME_PATH = '/jugar';
 
 // Cada deploy nuevo publica un service worker distinto. next-pwa ya lo
 // activa de inmediato (skipWaiting/clientsClaim), pero una pestaña que
@@ -11,6 +17,22 @@ import { useEffect } from 'react';
 // que controla la pestaña cambió, recargamos una sola vez para que la
 // pestaña quede con el HTML/JS de la build actual.
 export default function ServiceWorkerReload() {
+  const pathname = usePathname();
+  // El listener del service worker se registra UNA sola vez, pero necesita
+  // leer la ruta actual cada vez que dispara — de ahí el ref espejo.
+  const pathRef = useRef(pathname);
+  const pendingReloadRef = useRef(false);
+
+  useEffect(() => {
+    pathRef.current = pathname;
+    // Si quedó una recarga en espera porque el jugador estaba en una partida,
+    // se ejecuta apenas sale de la pantalla de juego (momento seguro).
+    if (pendingReloadRef.current && pathname !== GAME_PATH) {
+      pendingReloadRef.current = false;
+      window.location.reload();
+    }
+  }, [pathname]);
+
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
@@ -29,6 +51,13 @@ export default function ServiceWorkerReload() {
         return;
       }
       if (reloaded) return;
+      // Nunca recargar en medio de una partida: se perdería el tablero. Se
+      // marca como pendiente y el efecto de arriba la ejecuta cuando el
+      // jugador salga de /jugar.
+      if (pathRef.current === GAME_PATH) {
+        pendingReloadRef.current = true;
+        return;
+      }
       reloaded = true;
       window.location.reload();
     }

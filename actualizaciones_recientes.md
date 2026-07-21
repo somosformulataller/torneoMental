@@ -4,6 +4,14 @@ Registro de los cambios más recientes hechos en Copa Mental (producción: copam
 
 ## Bugs resueltos
 
+### La app se recargaba sola en medio de una partida (se reiniciaba el juego)
+
+Reportado: "a veces cuando recargo o entro a alguna pantalla se vuelve a recargar sola, hace como un flash; si estoy jugando aparece una nueva partida en vez de respetar que ya estaba en una".
+
+- **Diagnóstico**: el único punto que recarga la app es `ServiceWorkerReload` (recarga una vez cuando un deploy nuevo cambia el service worker, para no quedar con la build vieja). Al desplegar seguido, cada vez que se abre/navega la app detecta el SW nuevo, lo activa, toma control (`controllerchange`) y recarga — ese es el "flash". Si ocurría estando en la pantalla de juego (`/jugar`), la recarga remontaba el componente y arrancaba una partida nueva (en práctica el tablero se pierde por diseño; en torneo se veía el reinicio).
+- **Fix**: `ServiceWorkerReload` ahora difiere la recarga mientras el jugador está en `/jugar`. Si llega un SW nuevo en medio de una partida, marca la recarga como pendiente y la ejecuta recién cuando el jugador sale del juego (a Inicio, Ranking, etc.) — un momento seguro. Fuera del juego sigue recargando de inmediato para agarrar la build nueva.
+- **Verificado** (build de producción real con PWA + service worker, navegador automatizado, disparando `controllerchange`): en Inicio un SW nuevo recarga como antes; en `/jugar` NO recarga y el tablero queda intacto (12→12 cartas); al salir a Inicio la recarga diferida se ejecuta. Los tres casos OK.
+
 ### Flash/rebote al navegar: los elementos aparecían ~1s y la página se recargaba
 
 Reportado tras el deploy de la carga instantánea: al hacer click en cualquier vista, el contenido aparecía un instante y luego "rebotaba" (la página entera se recargaba, comiéndose además el siguiente click).
