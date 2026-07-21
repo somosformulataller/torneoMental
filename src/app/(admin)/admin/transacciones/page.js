@@ -32,6 +32,7 @@ const RETIRO_FILTERS = [
   { key: 'quiere_retirar', label: 'Quieren retirar' },
   { key: 'en_billetera', label: 'Con saldo' },
   { key: 'sin_premio', label: 'Sin premio' },
+  { key: 'pagado', label: 'Pagados' },
 ];
 
 export default function AdminTransaccionesPage() {
@@ -54,6 +55,7 @@ export default function AdminTransaccionesPage() {
 
   // --- Retiros / estado de premio por jugador ---
   const [players, setPlayers] = useState([]);
+  const [paidWithdrawals, setPaidWithdrawals] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const [retiroFilter, setRetiroFilter] = useState('todos');
 
@@ -106,13 +108,19 @@ export default function AdminTransaccionesPage() {
   const loadRetiros = useCallback(async () => {
     setLoadingPlayers(true);
     try {
-      const [{ data: profs }, { data: awards }, { data: pend }] = await Promise.all([
+      const [{ data: profs }, { data: awards }, { data: pend }, { data: paid }] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, nombre, apellido, email, payout_nombre, payout_banco, payout_cedula, payout_telefono, wallet_balance_usd'),
         supabase.from('wallet_transactions').select('user_id, amount_usd'),
         supabase.from('withdrawals').select('id, user_id, amount_usd, created_at').eq('status', 'solicitado').order('created_at', { ascending: true }),
+        supabase
+          .from('withdrawals')
+          .select('id, amount_usd, created_at, paid_at, profiles ( nombre, apellido, email, payout_nombre, payout_banco, payout_cedula, payout_telefono )')
+          .eq('status', 'pagado')
+          .order('paid_at', { ascending: false }),
       ]);
+      setPaidWithdrawals(paid || []);
 
       const wonByUser = {};
       (awards || []).forEach((a) => { wonByUser[a.user_id] = (wonByUser[a.user_id] || 0) + Number(a.amount_usd); });
@@ -474,6 +482,57 @@ export default function AdminTransaccionesPage() {
 
           {loadingPlayers ? (
             <div className={styles.loading}><Spinner /></div>
+          ) : retiroFilter === 'pagado' ? (
+            paidWithdrawals.length === 0 ? (
+              <div className={styles.emptyState}>Aún no hay retiros pagados</div>
+            ) : (
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Fecha de pago</th>
+                      <th>Jugador</th>
+                      <th>Monto pagado</th>
+                      <th>Datos de Pago Móvil</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paidWithdrawals.map((w) => {
+                      const prof = w.profiles;
+                      const hasPayout = prof?.payout_nombre || prof?.payout_banco || prof?.payout_cedula || prof?.payout_telefono;
+                      return (
+                        <tr key={w.id}>
+                          <td>{w.paid_at ? formatDate(w.paid_at) : '—'}</td>
+                          <td>
+                            <div className={styles.userInfo}>
+                              <span className={styles.userName}>{prof?.nombre} {prof?.apellido}</span>
+                              <span className={styles.userEmail}>{prof?.email}</span>
+                            </div>
+                          </td>
+                          <td><span className={styles.prize}>${Number(w.amount_usd).toFixed(2)}</span></td>
+                          <td>
+                            {hasPayout ? (
+                              <div className={styles.payoutData}>
+                                <span className={styles.payoutRow}>{prof.payout_nombre || '—'}</span>
+                                <span className={styles.payoutRow}>{prof.payout_banco || '—'}</span>
+                                <span className={styles.payoutRow}>
+                                  <span className={styles.payoutLabel}>C.I. </span>{prof.payout_cedula || '—'}
+                                </span>
+                                <span className={styles.payoutRow}>
+                                  <span className={styles.payoutLabel}>Tel. </span>{prof.payout_telefono || '—'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className={styles.payoutMissing}>Sin datos cargados</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )
           ) : (() => {
             const filtered = retiroFilter === 'todos'
               ? players
