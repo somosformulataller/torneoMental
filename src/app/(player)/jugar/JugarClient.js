@@ -11,7 +11,6 @@ import ScorePopup from '@/components/game/ScorePopup';
 import GameResultModal from '@/components/game/GameResultModal';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import Spinner from '@/components/ui/Spinner';
-import ParticleBackground from '@/components/ui/ParticleBackground';
 import BackToHome from '@/components/ui/BackToHome';
 import { TicketIcon } from '@/components/ui/icons';
 import styles from './jugar.module.css';
@@ -445,7 +444,6 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
 
   return (
     <div className={`${styles.container} ${shake ? styles.shake : ''}`}>
-      <ParticleBackground />
       <ScorePopup popup={popup} />
 
       {/* Botón para regresar al Inicio (reemplaza al menú inferior) */}
@@ -505,6 +503,7 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
         timeMs={finishedTimeMs}
         onPlayAgain={handlePlayAgain}
         onGoBack={() => router.push('/home')}
+        onViewRanking={() => router.push('/ranking')}
         ticketsRemaining={profile?.tickets_balance || 0}
         reason={finishReason}
         maxStreak={bestStreak}

@@ -32,8 +32,8 @@
 
 @keyframes matchPulse {
   0% { box-shadow: none; }
-  50% { box-shadow: 0 0 25px rgba(57, 255, 20, 0.6); }
-  100% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); }
+  100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
 }
 
 /* Specular glare that follows the pointer, riding on top of the tilt */
@@ -69,7 +69,7 @@
 /* Card Back (face down) */
 .cardBack {
   background: linear-gradient(135deg, #1e1e3a, #2a2a4a);
-  border: 2px solid rgba(0, 245, 255, 0.2);
+  border: 2px solid rgba(6, 182, 212, 0.2);
   box-shadow: var(--shadow-card);
   padding: 0;
 }
@@ -87,8 +87,8 @@
 .cardBackLogo {
   font-size: 1.2rem;
   font-weight: 900;
-  color: var(--accent-cyan, #00f5ff);
-  text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+  color: var(--accent-cyan, #06B6D4);
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
   letter-spacing: 2px;
   z-index: 1;
 }
@@ -96,14 +96,14 @@
 .cardBackPattern {
   position: absolute;
   inset: 8px;
-  border: 1px solid rgba(0, 245, 255, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.1);
   border-radius: 6px;
   background: repeating-linear-gradient(
     45deg,
     transparent,
     transparent 8px,
-    rgba(0, 245, 255, 0.03) 8px,
-    rgba(0, 245, 255, 0.03) 16px
+    rgba(6, 182, 212, 0.03) 8px,
+    rgba(6, 182, 212, 0.03) 16px
   );
 }
 
@@ -111,13 +111,13 @@
 .cardFront {
   transform: rotateY(180deg);
   background: var(--bg-card, #1a1a2e);
-  border: 2px solid rgba(255, 215, 0, 0.3);
+  border: 2px solid rgba(245, 158, 11, 0.3);
   padding: 0;
 }
 
 .matched .cardFront {
-  border-color: rgba(57, 255, 20, 0.6);
-  box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
 }
 
 /* Full-bleed real card art (front image or theme back image) — the art
@@ -138,14 +138,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, rgba(0, 245, 255, 0.08), rgba(57, 255, 20, 0.08));
-  border: 1px dashed rgba(0, 245, 255, 0.3);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(16, 185, 129, 0.08));
+  border: 1px dashed rgba(6, 182, 212, 0.3);
 }
 
 .cardImagePlaceholder > span:first-child {
   font-size: 1.6rem;
   font-weight: 800;
-  color: var(--accent-cyan, #00f5ff);
+  color: var(--accent-cyan, #06B6D4);
   text-transform: uppercase;
 }
 

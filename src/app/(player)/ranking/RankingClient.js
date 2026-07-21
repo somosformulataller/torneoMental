@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
-import ParticleBackground from '@/components/ui/ParticleBackground';
 import CountdownTimer from '@/components/ui/CountdownTimer';
 import BackToHome from '@/components/ui/BackToHome';
 import styles from './ranking.module.css';
@@ -201,7 +200,6 @@ export default function RankingClient({
 
   return (
     <div className={styles.container}>
-      <ParticleBackground />
       <BackToHome floating />
       <div className={styles.header}>
         <h1 className={styles.title}>Ranking</h1>

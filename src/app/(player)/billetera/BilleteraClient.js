@@ -353,7 +353,7 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
                       servidor (Node) puede diferir en detalles mínimos del
                       navegador; no debe romper la hidratación. */}
                   <div className={styles.txDate} suppressHydrationWarning>{formatDate(p.created_at)}</div>
-                  <Badge color="#ffd700">{p.position}° lugar</Badge>
+                  <Badge color="#F59E0B">{p.position}° lugar</Badge>
                 </div>
 
                 <div className={styles.txBody}>

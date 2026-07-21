@@ -23,6 +23,7 @@ export default function GameResultModal({
   timeMs,
   onPlayAgain,
   onGoBack,
+  onViewRanking,
   ticketsRemaining,
   reason,
   maxStreak = 0,
@@ -40,7 +41,7 @@ export default function GameResultModal({
       particleCount: 120,
       spread: 80,
       origin: { y: 0.6 },
-      colors: ['#00f5ff', '#39ff14', '#ffd700'],
+      colors: ['#06B6D4', '#10B981', '#F59E0B'],
     });
 
     // Escalate the celebration for hot streaks.
@@ -50,14 +51,14 @@ export default function GameResultModal({
           particleCount: 100,
           spread: 100,
           origin: { y: 0.5 },
-          colors: ['#ffd700', '#d869ff'],
+          colors: ['#F59E0B', '#7c3aed'],
         });
       }, 250);
     }
     if (maxStreak >= 8) {
       setTimeout(() => {
-        confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ffd700'] });
-        confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ffd700'] });
+        confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#F59E0B'] });
+        confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#F59E0B'] });
       }, 500);
     }
   }, [isOpen, completed, maxStreak]);
@@ -66,44 +67,37 @@ export default function GameResultModal({
     <Modal
       isOpen={isOpen}
       onClose={onGoBack}
-      title={completed ? '¡Tablero completado!' : '¡Tiempo agotado!'}
+      title={completed ? '¡Excelente jugada!' : '¡Se acabó el tiempo!'}
     >
       <div className={styles.body}>
-        <div className={styles.streakSection}>
-          <span className={styles.streakLabel}>Pares encontrados</span>
-          <span className={`${styles.streakValue} ${completed ? styles.greenGlow : styles.redGlow}`}>
-            {pairsMatched}/{totalPairs}
-          </span>
+        <div className={styles.timeSection}>
+          <span className={styles.timeLabel}>Tu tiempo</span>
+          <span className={styles.timeValue}>{formatTime(timeMs)}</span>
         </div>
 
-        <p className={styles.pairsInfo}>Tiempo: {formatTime(timeMs)}</p>
-        {maxStreak >= 2 && (
-          <p className={styles.pairsInfo}>Racha máxima: 🔥{maxStreak}</p>
-        )}
-
-        <p className={styles.rankingNote}>
-          {isPractice
-            ? 'Modo práctica: este resultado no cuenta para el ranking ni gasta tickets.'
-            : 'Tu resultado quedó registrado en el ranking del torneo.'}
-        </p>
-
         {isPractice ? (
-          <Button variant="accent" fullWidth onClick={onPlayAgain} className={styles.actionBtn}>
-            Practicar de nuevo
-          </Button>
+          <>
+            <Button variant="accent" fullWidth onClick={onPlayAgain} className={styles.actionBtn}>
+              Practicar de nuevo
+            </Button>
+            <Button variant="ghost" fullWidth onClick={onGoBack}>
+              Volver a home
+            </Button>
+          </>
         ) : ticketsRemaining > 0 ? (
-          <Button variant="accent" fullWidth onClick={onPlayAgain} className={styles.actionBtn}>
-            Jugar de nuevo
-          </Button>
+          <>
+            <Button variant="accent" fullWidth onClick={onPlayAgain} className={styles.actionBtn}>
+              Jugar de nuevo
+            </Button>
+            <Button variant="ghost" fullWidth onClick={onViewRanking}>
+              Ver ranking
+            </Button>
+          </>
         ) : (
-          <p className={styles.noTickets}>
-            No te quedan tickets. ¡Compra más para seguir jugando!
-          </p>
+          <Button variant="accent" fullWidth onClick={onGoBack} className={styles.actionBtn}>
+            Comprar tickets
+          </Button>
         )}
-
-        <Button variant="ghost" fullWidth onClick={onGoBack}>
-          Volver
-        </Button>
       </div>
     </Modal>
   );

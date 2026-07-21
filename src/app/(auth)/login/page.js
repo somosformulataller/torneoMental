@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import ParticleBackground from '@/components/ui/ParticleBackground';
 import InstallAppButton from '@/components/ui/InstallAppButton';
 import styles from './login.module.css';
 
@@ -50,7 +49,6 @@ export default function LoginPage() {
   return (
     <div className={styles.container}>
       <div className={styles.backgroundOverlay}></div>
-      <ParticleBackground />
 
       <div className={styles.heroSection}>
         <h1 className={styles.mainTitle}>Copa Mental:<br/><span className={styles.subTitle}>Memoriza y gana</span></h1>

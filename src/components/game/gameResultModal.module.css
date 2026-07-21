@@ -5,61 +5,31 @@
   text-align: center;
 }
 
-.streakSection {
+/* El tiempo es lo único que se muestra en grande. */
+.timeSection {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  margin-bottom: 16px;
+  margin-bottom: 28px;
 }
 
-.streakLabel {
+.timeLabel {
   font-size: 0.8rem;
   color: var(--text-secondary, #7a7a9e);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.streakValue {
+.timeValue {
   font-size: 4rem;
   font-weight: 900;
   font-family: var(--font-mono, monospace);
   line-height: 1;
-}
-
-.greenGlow {
-  color: var(--accent-green, #39ff14);
-  text-shadow: 0 0 30px rgba(57, 255, 20, 0.5);
-}
-
-.redGlow {
-  color: var(--accent-pink, #ff6b9d);
-  text-shadow: 0 0 30px rgba(255, 107, 157, 0.5);
-}
-
-.pairsInfo {
-  font-size: 0.85rem;
-  color: var(--text-secondary, #7a7a9e);
-  margin-bottom: 8px;
-}
-
-.rankingNote {
-  font-size: 0.8rem;
-  color: var(--text-muted, #4a4a6a);
-  margin-bottom: 24px;
-  line-height: 1.4;
+  color: var(--accent-cyan, #06B6D4);
+  text-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
 }
 
 .actionBtn {
   margin-bottom: 12px;
-}
-
-.noTickets {
-  color: var(--accent-orange, #ff6b35);
-  font-size: 0.85rem;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: rgba(255, 107, 53, 0.1);
-  border-radius: var(--radius-md, 10px);
-  border: 1px solid rgba(255, 107, 53, 0.2);
 }

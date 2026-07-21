@@ -143,14 +143,14 @@ export default function AdminUsuariosPage() {
                   <td>{u.cedula}</td>
                   <td>{u.whatsapp}</td>
                   <td>
-                    <Badge color="#39ff14">{u.tickets_balance}</Badge>
+                    <Badge color="#10B981">{u.tickets_balance}</Badge>
                   </td>
                   <td>
                     <div className={styles.roleCell}>
-                      <Badge size="sm" color={u.role === 'admin' ? '#ff6b9d' : '#00f5ff'}>
+                      <Badge size="sm" color={u.role === 'admin' ? '#7c3aed' : '#06B6D4'}>
                         {u.role === 'admin' ? 'Admin' : 'Jugador'}
                       </Badge>
-                      {u.blocked && <Badge size="sm" color="#ff3860">Bloqueado</Badge>}
+                      {u.blocked && <Badge size="sm" color="#EF4444">Bloqueado</Badge>}
                     </div>
                   </td>
                   <td>

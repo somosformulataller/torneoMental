@@ -10,7 +10,7 @@
   font-weight: 800;
   font-size: 1.4rem;
   color: var(--accent-gold);
-  text-shadow: 0 0 16px rgba(255, 215, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 0 16px rgba(245, 158, 11, 0.7), 0 2px 4px rgba(0, 0, 0, 0.8);
   padding: 0 20px;
   z-index: 60;
   pointer-events: none;

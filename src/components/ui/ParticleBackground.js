@@ -32,7 +32,7 @@ const PARTICLE_OPTIONS = {
   fpsLimit: 60,
   particles: {
     number: { value: 26, density: { enable: true, width: 900, height: 900 } },
-    color: { value: ['#ffd700', '#d869ff', '#7c3aed'] },
+    color: { value: ['#F59E0B', '#7c3aed', '#7c3aed'] },
     opacity: { value: { min: 0.15, max: 0.5 } },
     size: { value: { min: 1, max: 3 } },
     move: {

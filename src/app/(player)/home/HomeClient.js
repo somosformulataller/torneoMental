@@ -9,7 +9,6 @@ import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import FormInput from '@/components/ui/FormInput';
-import ParticleBackground from '@/components/ui/ParticleBackground';
 import { TicketIcon, LogoutIcon } from '@/components/ui/icons';
 import { TrophyIcon, WalletIcon } from '@/components/layout/NavIcons';
 import { compressImage } from '@/lib/image';
@@ -198,8 +197,6 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
 
   return (
     <div className={styles.container}>
-      <ParticleBackground />
-
       <div className={styles.content}>
       {/* Hero */}
       <div className={styles.hero}>
