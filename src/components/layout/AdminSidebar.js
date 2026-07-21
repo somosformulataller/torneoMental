@@ -15,7 +15,7 @@ export default function AdminSidebar() {
     { href: '/admin/torneos', label: 'Torneos', icon: '🏆' },
     { href: '/admin/recurrencia', label: 'Recurrencia', icon: '🔁' },
     { href: '/admin/usuarios', label: 'Usuarios', icon: '👥' },
-    { href: '/admin/tickets', label: 'Tickets', icon: '🎫' },
+    { href: '/admin/transacciones', label: 'Transacciones', icon: '💳' },
   ];
 
   async function handleLogout() {

@@ -31,6 +31,33 @@ export const PAYMENT_STATUSES = {
   rechazado: { label: 'Rechazado', color: '#ff3860' },
 };
 
+// Bancos venezolanos para el formulario de datos de Pago Móvil del jugador.
+// Nombre visible; el valor guardado es el mismo nombre (legible para el admin
+// que hace el pago manual).
+export const VENEZUELAN_BANKS = [
+  'Banco de Venezuela',
+  'Banesco',
+  'Mercantil',
+  'Banco Provincial (BBVA)',
+  'Banco Nacional de Crédito (BNC)',
+  'Bancaribe',
+  'Banco Occidental de Descuento (BOD)',
+  'Banco del Tesoro',
+  'Banco Bicentenario',
+  'Banco Exterior',
+  'Banco Caroní',
+  'Banco Sofitasa',
+  'Banco Plaza',
+  'Banco Fondo Común (BFC)',
+  'Banco Activo',
+  '100% Banco',
+  'Bancamiga',
+  'Banco Venezolano de Crédito',
+  'Mi Banco',
+  'BanCrecer',
+  'Banco Agrícola de Venezuela',
+];
+
 export const TOURNAMENT_STATUSES = {
   borrador: { label: 'Borrador', color: '#7a7a9e' },
   programado: { label: 'Programado', color: '#00f5ff' },

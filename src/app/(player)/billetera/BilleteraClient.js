@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { PAYMENT_STATUSES } from '@/lib/constants';
+import { PAYMENT_STATUSES, VENEZUELAN_BANKS } from '@/lib/constants';
 import { deleteAccountAction } from '@/actions/account';
+import { updatePayoutInfoAction } from '@/actions/profile';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import FormInput from '@/components/ui/FormInput';
 import Modal from '@/components/ui/Modal';
 import InstallAppButton from '@/components/ui/InstallAppButton';
 import styles from './billetera.module.css';
@@ -23,6 +25,16 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  // Datos de Pago Móvil (para recibir premios). Prefill con lo ya guardado.
+  const [payout, setPayout] = useState({
+    nombre: initialProfile?.payout_nombre || '',
+    banco: initialProfile?.payout_banco || '',
+    cedula: initialProfile?.payout_cedula || '',
+    telefono: initialProfile?.payout_telefono || '',
+  });
+  const [savingPayout, setSavingPayout] = useState(false);
+  const [payoutMsg, setPayoutMsg] = useState(null); // { ok: bool, text }
 
   async function refreshData() {
     try {
@@ -98,6 +110,23 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
     }
   }
 
+  async function handleSavePayout() {
+    setSavingPayout(true);
+    setPayoutMsg(null);
+    try {
+      const { error } = await updatePayoutInfoAction(payout);
+      if (error) {
+        setPayoutMsg({ ok: false, text: error });
+        return;
+      }
+      setPayoutMsg({ ok: true, text: 'Datos guardados correctamente.' });
+    } catch {
+      setPayoutMsg({ ok: false, text: 'No se pudieron guardar los datos. Intenta de nuevo.' });
+    } finally {
+      setSavingPayout(false);
+    }
+  }
+
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('es-VE', {
       day: '2-digit', month: 'short', year: 'numeric',
@@ -139,6 +168,71 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
         </div>
         <div className={styles.balanceSub}>
           Se acumula con cada torneo ganado, no se pierde al reiniciarse el ranking.
+        </div>
+      </div>
+
+      {/* Datos de Pago Móvil — para recibir el pago de los premios */}
+      <div className={styles.payoutCard}>
+        <div className={styles.payoutTitle}>Datos para recibir tus premios</div>
+        <p className={styles.payoutSubtitle}>
+          Si ganas un torneo, te pagamos por Pago Móvil a estos datos. Complétalos para
+          que podamos pagarte sin demoras.
+        </p>
+
+        <div className={styles.payoutForm}>
+          <FormInput
+            label="Nombre completo"
+            type="text"
+            value={payout.nombre}
+            onChange={(e) => setPayout({ ...payout, nombre: e.target.value })}
+            placeholder="Como aparece en tu cuenta"
+          />
+
+          <div className={styles.payoutField}>
+            <label className={styles.payoutLabel}>Banco</label>
+            <select
+              className={styles.payoutSelect}
+              value={payout.banco}
+              onChange={(e) => setPayout({ ...payout, banco: e.target.value })}
+            >
+              <option value="">Selecciona tu banco</option>
+              {VENEZUELAN_BANKS.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
+
+          <FormInput
+            label="Cédula"
+            type="text"
+            value={payout.cedula}
+            onChange={(e) => setPayout({ ...payout, cedula: e.target.value })}
+            placeholder="Ej: V-12345678"
+          />
+
+          <FormInput
+            label="Teléfono"
+            type="tel"
+            value={payout.telefono}
+            onChange={(e) => setPayout({ ...payout, telefono: e.target.value })}
+            placeholder="Ej: 04121234567"
+          />
+
+          {payoutMsg && (
+            <p className={payoutMsg.ok ? styles.payoutSuccess : styles.payoutError}>
+              {payoutMsg.text}
+            </p>
+          )}
+
+          <Button
+            variant="primary"
+            fullWidth
+            onClick={handleSavePayout}
+            loading={savingPayout}
+            loadingText="Guardando..."
+          >
+            Guardar datos de pago
+          </Button>
         </div>
       </div>
 

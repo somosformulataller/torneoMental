@@ -268,3 +268,71 @@
   font-size: 0.85rem;
   margin-bottom: 12px;
 }
+
+/* Datos de Pago Móvil (para recibir premios) */
+.payoutCard {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg, 24px);
+  padding: 24px 20px;
+  margin-bottom: 32px;
+}
+
+.payoutTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.payoutSubtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.payoutForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.payoutField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.payoutLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.payoutSelect {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 0.95rem;
+}
+
+.payoutSelect:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+
+.payoutSuccess {
+  color: var(--accent-green);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.payoutError {
+  color: var(--accent-red, #ff3860);
+  font-size: 0.85rem;
+  text-align: center;
+}

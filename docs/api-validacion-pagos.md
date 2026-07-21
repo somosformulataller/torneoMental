@@ -5,6 +5,21 @@
 > un compañero construyó y opera su propia API que hace exactamente ese trabajo, y nos
 > ofrece acceso. Este documento la describe y define cómo integrarla a Copa Mental.
 
+## 0. Estado de implementación (2026-07-21)
+
+**Implementado y en el repo** (commit de esta fecha): usuario no-admin `copamental`
+creado, cuenta `VENEZUELA RAYMAR` en uso, módulo `src/lib/bankApi.js`, validación
+automática enganchada en la compra de tickets, modal reactivo, pantalla de
+Transacciones del admin y formulario de datos de cobro del jugador.
+
+**Falta un paso manual para que funcione en vivo:** correr la migración
+`supabase/migrations/019_payment_validation_and_payouts.sql` en el SQL Editor de
+Supabase. Agrega columnas a `tickets`/`profiles`, la referencia única y las funciones
+RPC. Sin ella, la compra sigue funcionando pero sin validación automática.
+
+Variables de entorno ya en `.env.local` (y que hay que copiar a Vercel → Production):
+`BANK_API_URL`, `BANK_API_TOKEN`, `BANK_API_ACCOUNT_NAME`.
+
 ## 1. Qué es la API
 
 - **Nombre:** Bank Automation API v1.0.0 (NestJS + Supabase).

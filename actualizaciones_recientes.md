@@ -167,3 +167,22 @@ Estefania pidió que no fuera siempre el mismo mensaje: cada fallo debe traer un
 **Ajuste posterior (mismo día)**: el mensaje rojo dura más para poder leerlo — 2s fijos en vez de 1.2s (con la animación de salida queda ~2.8s visible en total, medido en navegador real). El dorado de acierto sigue en 0.9s.
 
 **Ajuste posterior 2 (mismo día)**: sacudida y vibración se repiten dos veces. La animación `shakeScreen` corre 2 ciclos (`animation: ... 2` → 1.8s, clase activa medida: 1805ms) y el patrón de vibración se duplica con una pausa de 260ms en medio (`[120,80,120,80,220,260,120,80,120,80,220]` ≈ 1.5s). El tablero se sigue liberando a los 1000ms — la segunda ronda de sacudida acompaña a las cartas volteándose de regreso, sin castigar con más tiempo de bloqueo.
+
+## Validación automática de pagos + Transacciones del admin (2026-07-21)
+
+Se integró la **Bank Automation API** (servicio de un tercero que lee los movimientos de la cuenta BDV receptora — ver `docs/api-validacion-pagos.md`) para aprobar solos los pagos de tickets, y se agregó toda la gestión de transacciones del lado del admin.
+
+**Compra de tickets con validación automática:**
+- Al enviar la solicitud, el modal muestra "Validando tu pago…" con spinner y luego cambia solo a **¡Pago aprobado!** (se suman los tickets al instante) o a **En revisión** si el banco todavía no refleja el pago. Nunca se auto-rechaza: si no encuentra el pago, queda pendiente para el admin.
+- La validación corre en el servidor con la service-role key (`auto_approve_ticket`); la sesión del jugador nunca aprueba tickets. Compara **referencia + monto en Bs** (con tolerancia por redondeo; el sobrepago pasa, el pago corto se frena). Marca el pago como "usado" para que nadie reutilice la misma referencia.
+- El monto en Bs se calcula en el servidor con la tasa BCV (`amount_ves`, `exchange_rate_used`), no se confía en el número del navegador.
+- La referencia de pago ahora es **única**: un jugador no puede registrar dos veces el mismo número (salvo que la solicitud previa fuera rechazada). Si la repite, ve el aviso "Esa referencia ya fue registrada".
+- Se subió el límite de tiempo de la ruta `/home` a 30s (`maxDuration`) porque validar contra el banco puede tardar unos segundos.
+
+**Nueva pantalla "Transacciones" en el menú del admin** (reemplaza a "Tickets"), con dos filtros:
+- **Compra de tickets**: todas las solicitudes con su estado (pendiente, validando, aprobado, rechazado) y de dónde salió la aprobación (automática o manual). El admin puede **aprobar o rechazar manualmente cualquier solicitud, sin importar lo que diga la API**. Rechazar una ya aprobada le descuenta los tickets (sin bajar de cero). Muestra referencia, monto en USD y Bs, y el comprobante adjunto para verificar que coincidan.
+- **Jugadores premiados**: lista quiénes quedaron en posiciones premiadas de torneos finalizados, con sus **datos de Pago Móvil** para pagarles a mano. Si un jugador no cargó sus datos, sale marcado en naranja.
+
+**Formulario de datos de cobro en la Billetera del jugador:** el jugador guarda su Nombre completo, Banco (lista de bancos venezolanos), Cédula y Teléfono para recibir premios. Esos datos son los que ve el admin en "Jugadores premiados".
+
+**Paso manual pendiente:** hay que correr la migración `019_payment_validation_and_payouts.sql` en el SQL Editor de Supabase (agrega columnas, la referencia única y las funciones nuevas). Hasta que se corra, estas funciones no operan.

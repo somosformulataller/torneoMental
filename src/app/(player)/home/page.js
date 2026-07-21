@@ -2,6 +2,12 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import HomeClient from './HomeClient';
 
+// La compra de tickets (Server Action en HomeClient) valida el pago contra el
+// banco en línea, lo que puede tardar varios segundos si el proveedor tiene que
+// "scrapear". Subimos el límite por defecto (10s en Vercel) para esta ruta y
+// todas sus Server Actions, y así la validación no se corta a mitad.
+export const maxDuration = 30;
+
 // Server Component: los datos iniciales viajan dentro del HTML/RSC de la
 // navegación, así la vista aparece ya pintada en vez de mostrar el spinner
 // "Cargando..." mientras el navegador consulta Supabase. La interactividad

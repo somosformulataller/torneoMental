@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { requestTicketsAction } from '@/actions/tickets';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
+import Spinner from '@/components/ui/Spinner';
 import FormInput from '@/components/ui/FormInput';
 import ParticleBackground from '@/components/ui/ParticleBackground';
 import { TicketIcon, LogoutIcon } from '@/components/ui/icons';
@@ -25,6 +26,9 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
   const [paymentRef, setPaymentRef] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // Estado del modal de confirmación: validating → approved | pending | error.
+  const [confirmState, setConfirmState] = useState('validating');
+  const [confirmInfo, setConfirmInfo] = useState({ qty: 0, error: null });
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState(null);
   const [bcvRate, setBcvRate] = useState(null);
@@ -125,7 +129,14 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
         paymentProofPath = path;
       }
 
-      const { error } = await requestTicketsAction({
+      // Se abre el modal en "validando" mientras la solicitud consulta el banco
+      // (puede tardar unos segundos). Luego cambia solo a aprobado / en revisión.
+      setShowPaymentModal(false);
+      setConfirmState('validating');
+      setConfirmInfo({ qty: ticketQuantity, error: null });
+      setShowConfirmModal(true);
+
+      const { error, status, ticket } = await requestTicketsAction({
         tournamentId: activeTournament?.id || null,
         quantity: ticketQuantity,
         paymentReference: paymentRef,
@@ -133,20 +144,30 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
       });
 
       if (error) {
-        setBuyError(error);
+        setConfirmInfo({ qty: ticketQuantity, error });
+        setConfirmState('error');
         return;
       }
-      setShowPaymentModal(false);
-      setShowConfirmModal(true);
+
+      setConfirmInfo({ qty: ticket?.quantity ?? ticketQuantity, error: null });
+      setConfirmState(status === 'aprobado' ? 'approved' : 'pending');
       setPaymentRef('');
       handleRemoveProof();
     } catch (err) {
       console.error('Error buying tickets:', err);
-      setBuyError('No se pudo enviar la solicitud. Intenta de nuevo.');
+      setConfirmInfo({ qty: ticketQuantity, error: 'No se pudo enviar la solicitud. Intenta de nuevo.' });
+      setConfirmState('error');
     } finally {
       setBuying(false);
     }
   }
+
+  const CONFIRM_TITLES = {
+    validating: 'Validando pago',
+    approved: '¡Pago aprobado!',
+    pending: 'Pago en revisión',
+    error: 'No se pudo procesar',
+  };
 
   function formatBs(usdAmount) {
     if (!bcvRate) return null;
@@ -363,22 +384,70 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
         </div>
       </Modal>
 
-      {/* Confirmation Modal */}
+      {/* Confirmation Modal — reactivo: validando → aprobado / en revisión */}
       <Modal
         isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        title="Solicitud enviada"
+        onClose={() => { if (confirmState !== 'validating') setShowConfirmModal(false); }}
+        title={CONFIRM_TITLES[confirmState]}
       >
-        <div className={styles.confirmContent}>
-          <div className={styles.confirmIcon}>✅</div>
-          <p>Solicitud enviada. Estamos validando tu pago en segundo plano...</p>
-          <p className={styles.confirmNote}>
-            El resultado se reflejará en minutos en tu historial.
-          </p>
-          <Button variant="primary" fullWidth onClick={() => setShowConfirmModal(false)}>
-            Listo
-          </Button>
-        </div>
+        {confirmState === 'validating' && (
+          <div className={styles.confirmContent}>
+            <Spinner />
+            <p>Validando tu pago…</p>
+            <p className={styles.confirmNote}>
+              Esto puede tardar unos segundos. No cierres esta ventana.
+            </p>
+          </div>
+        )}
+
+        {confirmState === 'approved' && (
+          <div className={styles.confirmContent}>
+            <div className={styles.confirmIcon}>🎉</div>
+            <p>
+              ¡Pago aprobado! Se sumaron <strong>{confirmInfo.qty}</strong>{' '}
+              {confirmInfo.qty === 1 ? 'ticket' : 'tickets'} a tu cuenta.
+            </p>
+            <p className={styles.confirmNote}>Ya puedes jugar. ¡Mucha suerte!</p>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={() => { setShowConfirmModal(false); router.push('/jugar'); }}
+            >
+              ▶ Jugar ahora
+            </Button>
+            <Button variant="ghost" fullWidth onClick={() => setShowConfirmModal(false)}>
+              Cerrar
+            </Button>
+          </div>
+        )}
+
+        {confirmState === 'pending' && (
+          <div className={styles.confirmContent}>
+            <div className={styles.confirmIcon}>🕒</div>
+            <p>Tu pago quedó en revisión.</p>
+            <p className={styles.confirmNote}>
+              Puede tardar unos minutos. Te sumaremos los tickets apenas se apruebe —
+              no necesitas hacer nada, se actualizará solo.
+            </p>
+            <Button variant="primary" fullWidth onClick={() => setShowConfirmModal(false)}>
+              Listo
+            </Button>
+          </div>
+        )}
+
+        {confirmState === 'error' && (
+          <div className={styles.confirmContent}>
+            <div className={styles.confirmIcon}>⚠️</div>
+            <p>{confirmInfo.error}</p>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={() => { setShowConfirmModal(false); setShowPaymentModal(true); }}
+            >
+              Volver
+            </Button>
+          </div>
+        )}
       </Modal>
     </div>
   );
