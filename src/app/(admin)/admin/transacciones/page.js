@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { adminApproveTicketAction, adminRejectTicketAction } from '@/actions/tickets';
+import { markWithdrawalPaidAction, cancelWithdrawalAction } from '@/actions/wallet';
 import { PAYMENT_STATUSES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import Spinner from '@/components/ui/Spinner';
@@ -16,6 +17,21 @@ const STATUS_FILTERS = [
   { key: 'validando', label: 'Validando' },
   { key: 'aprobado', label: 'Aprobados' },
   { key: 'rechazado', label: 'Rechazados' },
+];
+
+// Estado de premio/retiro de cada jugador (lado admin).
+const RETIRO_STATUS = {
+  quiere_retirar: { label: (r) => `Quiere retirar $${r.pendSum.toFixed(2)}`, color: '#00f5ff' },
+  en_billetera: { label: () => 'En billetera aún sin retirar', color: '#ffd700' },
+  sin_saldo: { label: () => 'Sin saldo pendiente', color: '#7a7a9e' },
+  sin_premio: { label: () => 'No ha ganado premio', color: '#7a7a9e' },
+};
+
+const RETIRO_FILTERS = [
+  { key: 'todos', label: 'Todos' },
+  { key: 'quiere_retirar', label: 'Quieren retirar' },
+  { key: 'en_billetera', label: 'Con saldo' },
+  { key: 'sin_premio', label: 'Sin premio' },
 ];
 
 export default function AdminTransaccionesPage() {
@@ -35,6 +51,11 @@ export default function AdminTransaccionesPage() {
   // --- Jugadores premiados ---
   const [prizes, setPrizes] = useState([]);
   const [loadingPrizes, setLoadingPrizes] = useState(true);
+
+  // --- Retiros / estado de premio por jugador ---
+  const [players, setPlayers] = useState([]);
+  const [loadingPlayers, setLoadingPlayers] = useState(true);
+  const [retiroFilter, setRetiroFilter] = useState('todos');
 
   const loadTickets = useCallback(async () => {
     setLoadingTickets(true);
@@ -82,11 +103,51 @@ export default function AdminTransaccionesPage() {
     }
   }, [supabase]);
 
+  const loadRetiros = useCallback(async () => {
+    setLoadingPlayers(true);
+    try {
+      const [{ data: profs }, { data: awards }, { data: pend }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, nombre, apellido, email, payout_nombre, payout_banco, payout_cedula, payout_telefono, wallet_balance_usd'),
+        supabase.from('wallet_transactions').select('user_id, amount_usd'),
+        supabase.from('withdrawals').select('id, user_id, amount_usd, created_at').eq('status', 'solicitado').order('created_at', { ascending: true }),
+      ]);
+
+      const wonByUser = {};
+      (awards || []).forEach((a) => { wonByUser[a.user_id] = (wonByUser[a.user_id] || 0) + Number(a.amount_usd); });
+      const pendByUser = {};
+      (pend || []).forEach((w) => { (pendByUser[w.user_id] = pendByUser[w.user_id] || []).push(w); });
+
+      const rows = (profs || []).map((p) => {
+        const won = wonByUser[p.id] || 0;
+        const pendList = pendByUser[p.id] || [];
+        const pendSum = pendList.reduce((s, w) => s + Number(w.amount_usd), 0);
+        const balance = Number(p.wallet_balance_usd || 0);
+        let status;
+        if (pendSum > 0) status = 'quiere_retirar';
+        else if (balance > 0) status = 'en_billetera';
+        else if (won > 0) status = 'sin_saldo';
+        else status = 'sin_premio';
+        return { ...p, won, balance, pendList, pendSum, status };
+      });
+
+      const order = { quiere_retirar: 0, en_billetera: 1, sin_saldo: 2, sin_premio: 3 };
+      rows.sort((a, b) => order[a.status] - order[b.status] || b.pendSum - a.pendSum || b.balance - a.balance);
+      setPlayers(rows);
+    } catch (err) {
+      console.error('Error loading retiros:', err);
+    } finally {
+      setLoadingPlayers(false);
+    }
+  }, [supabase]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (section === 'compras') loadTickets();
-    else loadPrizes();
-  }, [section, loadTickets, loadPrizes]);
+    else if (section === 'premiados') loadPrizes();
+    else loadRetiros();
+  }, [section, loadTickets, loadPrizes, loadRetiros]);
 
   async function handleApprove(ticket) {
     if (!window.confirm(
@@ -141,6 +202,34 @@ export default function AdminTransaccionesPage() {
     }
   }
 
+  async function handleMarkPaid(w) {
+    if (!window.confirm(`¿Marcar como pagado el retiro de $${Number(w.amount_usd).toFixed(2)}?`)) return;
+    setProcessing(true);
+    try {
+      const { error } = await markWithdrawalPaidAction(w.id);
+      if (error) throw new Error(error);
+      await loadRetiros();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function handleCancelWithdrawal(w) {
+    if (!window.confirm(`¿Cancelar el retiro de $${Number(w.amount_usd).toFixed(2)}? El monto vuelve a la billetera del jugador.`)) return;
+    setProcessing(true);
+    try {
+      const { error } = await cancelWithdrawalAction(w.id);
+      if (error) throw new Error(error);
+      await loadRetiros();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('es-VE', {
       day: '2-digit', month: 'short', year: 'numeric',
@@ -166,6 +255,12 @@ export default function AdminTransaccionesPage() {
           onClick={() => setSection('premiados')}
         >
           🏆 Jugadores premiados
+        </button>
+        <button
+          className={`${styles.sectionTab} ${section === 'retiros' ? styles.sectionTabActive : ''}`}
+          onClick={() => setSection('retiros')}
+        >
+          💸 Retiros
         </button>
       </div>
 
@@ -293,7 +388,7 @@ export default function AdminTransaccionesPage() {
             </div>
           )}
         </>
-      ) : (
+      ) : section === 'premiados' ? (
         <>
           <p className={styles.hint}>
             Jugadores que quedaron en posiciones premiadas de torneos finalizados. Usa sus
@@ -357,6 +452,105 @@ export default function AdminTransaccionesPage() {
               </table>
             </div>
           )}
+        </>
+      ) : (
+        <>
+          <div className={styles.filters}>
+            {RETIRO_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                className={`${styles.filterBtn} ${retiroFilter === f.key ? styles.activeFilter : ''}`}
+                onClick={() => setRetiroFilter(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          <p className={styles.hint}>
+            Estado de premio y retiro de cada jugador. Los que <strong>quieren retirar</strong>
+            aparecen primero: paga por Pago Móvil a sus datos y luego marca el retiro como pagado.
+          </p>
+
+          {loadingPlayers ? (
+            <div className={styles.loading}><Spinner /></div>
+          ) : (() => {
+            const filtered = retiroFilter === 'todos'
+              ? players
+              : players.filter((p) => p.status === retiroFilter);
+            if (filtered.length === 0) {
+              return <div className={styles.emptyState}>No hay jugadores para mostrar</div>;
+            }
+            return (
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Jugador</th>
+                      <th>Estado</th>
+                      <th>En billetera</th>
+                      <th>Total ganado</th>
+                      <th>Datos de Pago Móvil</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((p) => {
+                      const st = RETIRO_STATUS[p.status];
+                      const hasPayout = p.payout_nombre || p.payout_banco || p.payout_cedula || p.payout_telefono;
+                      return (
+                        <tr key={p.id}>
+                          <td>
+                            <div className={styles.userInfo}>
+                              <span className={styles.userName}>{p.nombre} {p.apellido}</span>
+                              <span className={styles.userEmail}>{p.email}</span>
+                            </div>
+                          </td>
+                          <td><Badge color={st.color}>{st.label(p)}</Badge></td>
+                          <td><span className={styles.usd}>${p.balance.toFixed(2)}</span></td>
+                          <td><span className={styles.ves}>${p.won.toFixed(2)}</span></td>
+                          <td>
+                            {hasPayout ? (
+                              <div className={styles.payoutData}>
+                                <span className={styles.payoutRow}>{p.payout_nombre || '—'}</span>
+                                <span className={styles.payoutRow}>{p.payout_banco || '—'}</span>
+                                <span className={styles.payoutRow}>
+                                  <span className={styles.payoutLabel}>C.I. </span>{p.payout_cedula || '—'}
+                                </span>
+                                <span className={styles.payoutRow}>
+                                  <span className={styles.payoutLabel}>Tel. </span>{p.payout_telefono || '—'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className={styles.payoutMissing}>Sin datos cargados</span>
+                            )}
+                          </td>
+                          <td>
+                            {p.pendList.length > 0 ? (
+                              <div className={styles.actions} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                                {p.pendList.map((w) => (
+                                  <div key={w.id} className={styles.actions}>
+                                    <Button variant="success" size="sm" disabled={processing} onClick={() => handleMarkPaid(w)}>
+                                      ✓ Pagado ${Number(w.amount_usd).toFixed(2)}
+                                    </Button>
+                                    <Button variant="danger" size="sm" disabled={processing} onClick={() => handleCancelWithdrawal(w)}>
+                                      ✕ Cancelar
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className={styles.manualTag}>—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
         </>
       )}
 

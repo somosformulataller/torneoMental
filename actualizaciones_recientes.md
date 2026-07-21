@@ -186,3 +186,24 @@ Se integró la **Bank Automation API** (servicio de un tercero que lee los movim
 **Formulario de datos de cobro en la Billetera del jugador:** el jugador guarda su Nombre completo, Banco (lista de bancos venezolanos), Cédula y Teléfono para recibir premios. Esos datos son los que ve el admin en "Jugadores premiados".
 
 **Paso manual pendiente:** hay que correr la migración `019_payment_validation_and_payouts.sql` en el SQL Editor de Supabase (agrega columnas, la referencia única y las funciones nuevas). Hasta que se corra, estas funciones no operan.
+
+## Retiros de la billetera de premios (2026-07-21)
+
+El jugador ahora puede retirar su dinero de premios y el admin gestiona los retiros.
+
+**Lado del jugador (Billetera):** dentro de la tarjeta de Premios Ganados hay un campo para escribir cuánto retirar y un botón "Retirar".
+- El botón solo se activa si el monto es mayor a cero y **menor o igual** al saldo disponible.
+- Si escriben un monto mayor al saldo, aparece debajo del campo: "El monto sobrepasa el saldo de tu billetera".
+- Al retirar, se descuenta el monto de la billetera al instante y sale un modal: **"Su retiro se hará efectivo en un plazo de 15 a 30 minutos."**
+- Los retiros en proceso se muestran listados en la misma tarjeta.
+
+**Lado del admin (Transacciones → nueva pestaña "Retiros"):** una fila por jugador con su estado:
+- **"Quiere retirar $X"** — solicitó un retiro (aparecen primero); con botones "Pagado" (marca el retiro como pagado) y "Cancelar" (devuelve el monto a su billetera).
+- **"En billetera aún sin retirar"** (etiqueta amarilla) — tiene saldo de premios sin retirar.
+- **"Sin saldo pendiente"** — ganó pero ya no tiene saldo ni retiros en proceso.
+- **"No ha ganado premio"** — nunca ganó.
+Cada fila muestra los datos de Pago Móvil del jugador para pagarle. Filtros arriba para ver solo los que quieren retirar, los que tienen saldo, o los sin premio.
+
+Descuento y devolución son atómicos en la base de datos (funciones `request_withdrawal`, `mark_withdrawal_paid`, `cancel_withdrawal`).
+
+**Paso manual pendiente:** correr la migración `020_wallet_withdrawals.sql` en el SQL Editor de Supabase antes de desplegar.

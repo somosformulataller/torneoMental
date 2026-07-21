@@ -336,3 +336,89 @@
   font-size: 0.85rem;
   text-align: center;
 }
+
+/* Retiro de la billetera de premios */
+.withdrawBox {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.withdrawLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.withdrawRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.withdrawInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 0.95rem;
+}
+
+.withdrawInput:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+
+.withdrawInput:disabled {
+  opacity: 0.5;
+}
+
+.withdrawWarn {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: var(--accent-red, #ff3860);
+}
+
+.withdrawHint {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.withdrawPending {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.withdrawPendingRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--accent-orange);
+  background: rgba(255, 107, 53, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.withdrawModalContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.withdrawModalIcon {
+  font-size: 3rem;
+}

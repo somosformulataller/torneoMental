@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { PAYMENT_STATUSES, VENEZUELAN_BANKS } from '@/lib/constants';
 import { deleteAccountAction } from '@/actions/account';
 import { updatePayoutInfoAction } from '@/actions/profile';
+import { requestWithdrawalAction } from '@/actions/wallet';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
@@ -16,12 +17,19 @@ import styles from './billetera.module.css';
 // La página (Server Component) ya llega con los datos iniciales en el HTML —
 // acá solo queda la interactividad: suscripciones Realtime para refrescar
 // saldo/compras al instante y el modal de eliminar cuenta.
-export default function BilleteraClient({ userId, initialProfile, initialTickets, initialPrizes }) {
+export default function BilleteraClient({ userId, initialProfile, initialTickets, initialPrizes, initialWithdrawals = [] }) {
   const router = useRouter();
   const supabase = createClient();
   const [profile, setProfile] = useState(initialProfile);
   const [tickets, setTickets] = useState(initialTickets);
   const [prizes, setPrizes] = useState(initialPrizes);
+  const [withdrawals, setWithdrawals] = useState(initialWithdrawals);
+
+  // Retiro de la billetera de premios.
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -40,7 +48,7 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
     try {
       // Perfil, tickets y premios son independientes entre sí — se piden en
       // paralelo en vez de uno tras otro.
-      const [{ data: profileData }, { data: ticketsData }, { data: prizesData }] = await Promise.all([
+      const [{ data: profileData }, { data: ticketsData }, { data: prizesData }, { data: withdrawalsData }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
         supabase
           .from('tickets')
@@ -52,11 +60,17 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
           .select(`*, tournaments ( nombre )`)
           .eq('user_id', userId)
           .order('created_at', { ascending: false }),
+        supabase
+          .from('withdrawals')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false }),
       ]);
 
       if (profileData) setProfile(profileData);
       setTickets(ticketsData || []);
       setPrizes(prizesData || []);
+      setWithdrawals(withdrawalsData || []);
     } catch (err) {
       console.error('Error refreshing wallet data:', err);
     }
@@ -82,6 +96,12 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
         event: 'UPDATE',
         schema: 'public',
         table: 'tickets',
+        filter: `user_id=eq.${userId}`,
+      }, () => refreshData())
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'withdrawals',
         filter: `user_id=eq.${userId}`,
       }, () => refreshData())
       .subscribe();
@@ -127,6 +147,32 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
     }
   }
 
+  const walletBalance = Number(profile?.wallet_balance_usd || 0);
+  const parsedWithdraw = parseFloat(withdrawAmount);
+  const withdrawExceeds = Number.isFinite(parsedWithdraw) && parsedWithdraw > walletBalance;
+  const withdrawValid = Number.isFinite(parsedWithdraw) && parsedWithdraw > 0 && parsedWithdraw <= walletBalance;
+  const pendingWithdrawals = withdrawals.filter((w) => w.status === 'solicitado');
+
+  async function handleWithdraw() {
+    if (!withdrawValid) return;
+    setWithdrawing(true);
+    setWithdrawError(null);
+    try {
+      const { error } = await requestWithdrawalAction(parsedWithdraw);
+      if (error) {
+        setWithdrawError(error);
+        return;
+      }
+      setWithdrawAmount('');
+      setShowWithdrawModal(true);
+      // El saldo y la lista de retiros se refrescan solos vía Realtime.
+    } catch {
+      setWithdrawError('No se pudo procesar el retiro. Intenta de nuevo.');
+    } finally {
+      setWithdrawing(false);
+    }
+  }
+
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('es-VE', {
       day: '2-digit', month: 'short', year: 'numeric',
@@ -168,6 +214,53 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
         </div>
         <div className={styles.balanceSub}>
           Se acumula con cada torneo ganado, no se pierde al reiniciarse el ranking.
+        </div>
+
+        {/* Retirar de la billetera de premios */}
+        <div className={styles.withdrawBox}>
+          <label className={styles.withdrawLabel}>Retirar dinero</label>
+          <div className={styles.withdrawRow}>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              className={styles.withdrawInput}
+              value={withdrawAmount}
+              onChange={(e) => { setWithdrawAmount(e.target.value); setWithdrawError(null); }}
+              placeholder="Monto a retirar ($)"
+              disabled={walletBalance <= 0}
+            />
+            <Button
+              variant="primary"
+              onClick={handleWithdraw}
+              disabled={!withdrawValid || withdrawing}
+              loading={withdrawing}
+              loadingText="..."
+            >
+              Retirar
+            </Button>
+          </div>
+          {withdrawExceeds && (
+            <p className={styles.withdrawWarn}>El monto sobrepasa el saldo de tu billetera.</p>
+          )}
+          {withdrawError && !withdrawExceeds && (
+            <p className={styles.withdrawWarn}>{withdrawError}</p>
+          )}
+          {walletBalance <= 0 && (
+            <p className={styles.withdrawHint}>No tienes saldo disponible para retirar.</p>
+          )}
+
+          {pendingWithdrawals.length > 0 && (
+            <div className={styles.withdrawPending}>
+              {pendingWithdrawals.map((w) => (
+                <div key={w.id} className={styles.withdrawPendingRow}>
+                  <span>Retiro solicitado</span>
+                  <span>${Number(w.amount_usd).toFixed(2)} · en proceso</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -333,6 +426,20 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
           Eliminar cuenta
         </Button>
       </div>
+
+      <Modal
+        isOpen={showWithdrawModal}
+        onClose={() => setShowWithdrawModal(false)}
+        title="Retiro solicitado"
+      >
+        <div className={styles.withdrawModalContent}>
+          <div className={styles.withdrawModalIcon}>💸</div>
+          <p>Su retiro se hará efectivo en un plazo de 15 a 30 minutos.</p>
+          <Button variant="primary" fullWidth onClick={() => setShowWithdrawModal(false)}>
+            Entendido
+          </Button>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={showDeleteModal}

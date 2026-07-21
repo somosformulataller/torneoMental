@@ -16,9 +16,9 @@ export default async function BilleteraPage() {
   const user = session?.user;
   if (!user) redirect('/login');
 
-  // Perfil, tickets y premios son independientes entre sí — se piden en
-  // paralelo en vez de uno tras otro.
-  const [{ data: profile }, { data: tickets }, { data: prizes }] = await Promise.all([
+  // Perfil, tickets, premios y retiros son independientes entre sí — se piden
+  // en paralelo en vez de uno tras otro.
+  const [{ data: profile }, { data: tickets }, { data: prizes }, { data: withdrawals }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase
       .from('tickets')
@@ -30,6 +30,11 @@ export default async function BilleteraPage() {
       .select(`*, tournaments ( nombre )`)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
   ]);
 
   return (
@@ -38,6 +43,7 @@ export default async function BilleteraPage() {
       initialProfile={profile}
       initialTickets={tickets || []}
       initialPrizes={prizes || []}
+      initialWithdrawals={withdrawals || []}
     />
   );
 }
