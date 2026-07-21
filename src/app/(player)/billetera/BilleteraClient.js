@@ -165,7 +165,9 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
       }
       setWithdrawAmount('');
       setShowWithdrawModal(true);
-      // El saldo y la lista de retiros se refrescan solos vía Realtime.
+      // Refresco inmediato del saldo y la lista de retiros (no esperamos al
+      // Realtime, que puede tardar unos segundos).
+      await refreshData();
     } catch {
       setWithdrawError('No se pudo procesar el retiro. Intenta de nuevo.');
     } finally {
