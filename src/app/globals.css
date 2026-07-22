@@ -60,6 +60,8 @@ body {
   color: var(--text-primary);
   font-family: var(--font-primary);
   -webkit-font-smoothing: antialiased;
+  scrollbar-width: none; /* Firefox: sin barra visible */
+  -ms-overflow-style: none; /* Edge/IE antiguos */
 }
 
 a {
@@ -71,20 +73,16 @@ button {
   font-family: var(--font-primary);
 }
 
-/* Scrollbar */
+/* Scrollbar oculta (el scroll sigue funcionando con dedo/rueda/teclado);
+   solo se quita la barra visible del lado derecho. */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Edge/IE antiguos */
+}
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-primary);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--bg-card-hover);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-cyan);
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Edge */
 }
 
 /* Selection */
