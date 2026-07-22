@@ -37,21 +37,22 @@
 /* Cronómetro fijo cerca del borde inferior (ya no hay menú inferior debajo). */
 .stopwatch {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 14px);
+  bottom: calc(env(safe-area-inset-bottom) + 16px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
   font-family: var(--font-display, var(--font-mono, monospace));
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: 1px;
   background: var(--bg-card);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 999px;
-  padding: 6px 12px;
-  box-shadow: var(--shadow-card);
+  padding: 10px 24px;
+  box-shadow: var(--shadow-card), 0 0 24px rgba(167, 139, 250, 0.25);
   color: var(--accent-cyan);
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  border: 1px solid rgba(167, 139, 250, 0.4);
 }
 
 .pairsBump {

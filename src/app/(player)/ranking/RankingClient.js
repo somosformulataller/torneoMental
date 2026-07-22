@@ -177,7 +177,7 @@ export default function RankingClient({
   if (!activeTournament) {
     return (
       <div className={styles.container}>
-        <BackToHome floating />
+        <div className={styles.backRow}><BackToHome /></div>
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>🏆</div>
           {upcomingTournament ? (
@@ -200,7 +200,7 @@ export default function RankingClient({
 
   return (
     <div className={styles.container}>
-      <BackToHome floating />
+      <div className={styles.backRow}><BackToHome /></div>
       <div className={styles.header}>
         <h1 className={styles.title}>Ranking</h1>
         <p className={styles.subtitle}>{activeTournament.nombre}</p>
@@ -214,9 +214,6 @@ export default function RankingClient({
           label="Termina en"
           onComplete={() => refreshRanking()}
         />
-        <div className={styles.liveIndicator}>
-          <span className={styles.liveDot}></span> EN VIVO
-        </div>
         <p className={styles.rankingNotice}>
           ⚠️ Este ranking puede cambiar en el transcurso de la copa. Estar de primero ahora no garantiza el premio hasta que finalice el torneo.
         </p>

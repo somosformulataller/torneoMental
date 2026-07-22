@@ -260,3 +260,10 @@ A pedido: "aún me parece un carnaval de colores, son pocas pantallas para usar 
 - **Usuarios**: el rol Admin queda en violeta (resalta) y el rol Jugador en gris neutro, para que sigan distinguiéndose sin sumar otro color.
 - **Resultado**: la app queda en violeta + oro + grises, con verde/rojo solo como señales. Menos "carnaval", más identidad.
 - **Verificado** visualmente (navegador automatizado): Inicio, Ranking, Billetera, Usuarios e Interacción — sin cian, coherentes.
+
+## Ranking sin "EN VIVO", botón "Inicio" unificado y cronómetro grande (2026-07-22)
+
+- **Ranking**: se quitó la etiqueta roja **"EN VIVO"** del encabezado.
+- **Botón de volver al Inicio unificado**: Ranking usaba solo el icono de casa flotante en la esquina; Billetera usaba el icono + la palabra **"Inicio"**. Ahora Ranking usa el mismo componente que Billetera (icono + "Inicio"), ubicado arriba a la izquierda dentro del contenido.
+- **Cronómetro más grande en el juego** (Competir y Practicar): el cronómetro fijo en la parte inferior de la pantalla de juego pasó de `0.85rem` a `1.9rem`, con más relleno y un leve resplandor violeta, para que el tiempo se vea grande y protagonista (es una competencia por tiempo).
+- **Verificado** visualmente (navegador automatizado): Ranking con el botón "Inicio" y sin "EN VIVO"; pantalla de juego con el cronómetro grande abajo.
