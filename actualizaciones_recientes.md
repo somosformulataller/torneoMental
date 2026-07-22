@@ -291,3 +291,11 @@ A pedido: al voltear dos cartas incorrectas (en Competir y Practicar) la vibraci
 - **Cambio** en `src/lib/haptics.js` (`vibrateMismatch`): el patrón pasó de `[120,80,120,80,220,260,120,80,120,80,220]` a `[60,150,60,150,80,500,60,150,60,150,80]`.
 - **Resultado**: la **duración total se mantiene en ~1.5s** (igual que antes, como se pidió), pero el tiempo que realmente vibra bajó de **920 ms a 400 ms** (~57% menos) → se siente notablemente más suave. Un solo cambio cubre Competir y Practicar (usan el mismo componente de juego).
 - **Verificado** en el juego real (navegador automatizado): se interceptó `navigator.vibrate` al provocar un fallo; se confirmó el patrón nuevo y la duración total de 1500 ms.
+
+## Temblor de pantalla al fallar: una sola vez y más suave (2026-07-22)
+
+A pedido: al fallar, la pantalla temblaba **dos veces** y el movimiento mareaba. (La vibración del teléfono sí se deja repetida/larga; esto es solo el efecto visual.)
+
+- **Una sola vez**: `.shake` en `src/app/(player)/jugar/jugar.module.css` pasó de `animation: shakeScreen 0.9s ease 2` (dos ciclos) a `shakeScreen 0.7s ease-in-out` (un solo ciclo). En `JugarClient.js` el temporizador que mantiene la clase bajó de `1800 ms` a `700 ms`.
+- **Más suave**: el keyframe `shakeScreen` se rehízo con **menos amplitud** (pico de `16px` → `7px`) y **menos rebotes** (de 9 pasos rápidos a 3 vaivenes suaves), con curva `ease-in-out`.
+- **Verificado** en el juego real (navegador automatizado): al provocar un fallo, la animación corre **1 sola iteración** (0.7s, ease-in-out), amplitud máxima **7px**, y la pantalla hace **un único movimiento** que vuelve a su sitio y se queda quieto (sin segundo temblor).

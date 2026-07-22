@@ -317,7 +317,7 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
             variant: 'miss',
           });
           setShake(true);
-          setTimeout(() => setShake(false), 1800);
+          setTimeout(() => setShake(false), 700);
           setTimeout(() => {
             setFlippedCards([]);
             setIsProcessing(false);
