@@ -2,9 +2,9 @@
 
 import styles from './card.module.css';
 
-// Reverso de carta dibujado 100% en código (SVG). Reemplaza a los PNG con
-// borde cian. Base oscura compartida + color de acento por temática + patrón
-// sutil + monograma "CM". Nítido a cualquier resolución y muy liviano.
+// Reverso de carta dibujado 100% en código (SVG). Base oscura compartida +
+// color de acento por temática + patrón visible (sin letras/monograma).
+// Nítido a cualquier resolución y muy liviano.
 const THEMES = {
   tecnologia: { a: '#A78BFA', b: '#818CF8', pattern: 'circuit' },
   naturaleza: { a: '#34D399', b: '#4ADE80', pattern: 'topo' },
@@ -12,21 +12,25 @@ const THEMES = {
 };
 
 function CircuitPattern({ a, b }) {
-  const rows = [140, 340, 560, 780, 1000];
-  const els = [];
-  rows.forEach((y, i) => {
-    const even = i % 2 === 0;
-    const x0 = even ? 90 : 810;
-    const x1 = even ? 430 : 470;
-    els.push(<path key={`r${i}`} d={`M${x0} ${y} H${x1} V${y + 120}`} fill="none" stroke={a} strokeWidth="3" />);
-    els.push(<circle key={`r${i}a`} cx={x0} cy={y} r="7" fill={a} />);
-    els.push(<circle key={`r${i}b`} cx={x1} cy={y + 120} r="7" fill={b} />);
+  const cols = [150, 450, 750];
+  const rows = [120, 360, 600, 840, 1080];
+  const len = 120;
+  const traces = [];
+  const nodes = [];
+  cols.forEach((cx, i) => {
+    rows.forEach((cy, j) => {
+      const dirX = (i + j) % 2 === 0 ? 1 : -1;
+      const dirY = j % 2 === 0 ? 1 : -1;
+      const ex = cx + dirX * len;
+      const ey = cy + dirY * len;
+      traces.push(
+        <path key={`t${i}-${j}`} d={`M${cx} ${cy} h${dirX * len} v${dirY * len}`} fill="none" stroke={a} strokeOpacity="0.55" strokeWidth="4" strokeLinecap="round" />
+      );
+      nodes.push(<circle key={`n${i}-${j}`} cx={cx} cy={cy} r="11" fill={a} />);
+      nodes.push(<circle key={`e${i}-${j}`} cx={ex} cy={ey} r="7" fill={b} />);
+    });
   });
-  [220, 680].forEach((x, i) => {
-    els.push(<path key={`v${i}`} d={`M${x} 120 V300 H${x + 140}`} fill="none" stroke={b} strokeWidth="3" />);
-    els.push(<circle key={`v${i}c`} cx={x + 140} cy="300" r="6" fill={a} />);
-  });
-  return <g opacity="0.22">{els}</g>;
+  return <g>{traces}{nodes}</g>;
 }
 
 function TopoPattern({ a, b }) {
@@ -35,23 +39,25 @@ function TopoPattern({ a, b }) {
     const y = 40 + k * 100;
     const up = k % 2 === 0 ? -34 : 34;
     const d = `M -40 ${y} Q 65 ${y + up}, 170 ${y} T 380 ${y} T 590 ${y} T 800 ${y} T 1010 ${y}`;
-    const op = k % 2 === 0 ? 0.28 : 0.16;
+    const op = k % 2 === 0 ? 0.5 : 0.34;
     const col = k % 3 === 0 ? b : a;
-    lines.push(<path key={k} d={d} fill="none" stroke={col} strokeWidth="2.5" opacity={op} />);
+    lines.push(<path key={k} d={d} fill="none" stroke={col} strokeWidth="3.5" opacity={op} strokeLinecap="round" />);
   }
   return <g>{lines}</g>;
 }
 
 function LowPolyPattern({ a, b }) {
   const s = 150;
-  const els = [];
+  const edges = [];
+  const dots = [];
   for (let gy = 0; gy <= 1200; gy += s) {
     for (let gx = 0; gx <= 900; gx += s) {
-      els.push(<path key={`${gx}-${gy}-1`} d={`M${gx} ${gy} L${gx + s} ${gy} L${gx} ${gy + s} Z`} fill="none" stroke={a} strokeWidth="1.6" />);
-      els.push(<path key={`${gx}-${gy}-2`} d={`M${gx + s} ${gy} L${gx + s} ${gy + s} L${gx} ${gy + s} Z`} fill="none" stroke={b} strokeWidth="1.6" />);
+      edges.push(<path key={`${gx}-${gy}-1`} d={`M${gx} ${gy} L${gx + s} ${gy} L${gx} ${gy + s} Z`} fill="none" stroke={a} strokeWidth="2.2" strokeOpacity="0.34" />);
+      edges.push(<path key={`${gx}-${gy}-2`} d={`M${gx + s} ${gy} L${gx + s} ${gy + s} L${gx} ${gy + s} Z`} fill="none" stroke={b} strokeWidth="2.2" strokeOpacity="0.34" />);
+      dots.push(<circle key={`${gx}-${gy}-d`} cx={gx} cy={gy} r="6" fill={a} fillOpacity="0.85" />);
     }
   }
-  return <g opacity="0.14">{els}</g>;
+  return <g>{edges}{dots}</g>;
 }
 
 export default function CardBack({ theme = 'tecnologia' }) {
@@ -75,8 +81,8 @@ export default function CardBack({ theme = 'tecnologia' }) {
           <stop offset="0" stopColor="#141B2E" />
           <stop offset="1" stopColor="#0A0E1A" />
         </linearGradient>
-        <radialGradient id={glowId} cx="50%" cy="50%" r="55%">
-          <stop offset="0" stopColor={a} stopOpacity="0.16" />
+        <radialGradient id={glowId} cx="50%" cy="50%" r="60%">
+          <stop offset="0" stopColor={a} stopOpacity="0.12" />
           <stop offset="1" stopColor={a} stopOpacity="0" />
         </radialGradient>
         <clipPath id={clipId}>
@@ -93,23 +99,8 @@ export default function CardBack({ theme = 'tecnologia' }) {
       </g>
 
       {/* bordes finos */}
-      <rect x="26" y="26" width="848" height="1148" rx="42" fill="none" stroke={a} strokeOpacity="0.45" strokeWidth="3" />
-      <rect x="46" y="46" width="808" height="1108" rx="30" fill="none" stroke={a} strokeOpacity="0.12" strokeWidth="1.5" />
-
-      {/* emblema / monograma */}
-      <rect x="315" y="465" width="270" height="270" rx="56" fill="none" stroke={a} strokeOpacity="0.55" strokeWidth="5" />
-      <text
-        x="450"
-        y="632"
-        textAnchor="middle"
-        fontFamily="var(--font-primary, 'Outfit', sans-serif)"
-        fontWeight="900"
-        fontSize="150"
-        letterSpacing="6"
-        fill={a}
-      >
-        CM
-      </text>
+      <rect x="26" y="26" width="848" height="1148" rx="42" fill="none" stroke={a} strokeOpacity="0.55" strokeWidth="3" />
+      <rect x="46" y="46" width="808" height="1108" rx="30" fill="none" stroke={a} strokeOpacity="0.15" strokeWidth="1.5" />
     </svg>
   );
 }
