@@ -26,8 +26,8 @@
   font-weight: 900;
   font-family: var(--font-mono, monospace);
   line-height: 1;
-  color: var(--accent-cyan, #22D3EE);
-  text-shadow: 0 0 30px rgba(34, 211, 238, 0.5);
+  color: var(--accent-cyan, #A78BFA);
+  text-shadow: 0 0 30px rgba(167, 139, 250, 0.5);
 }
 
 .actionBtn {

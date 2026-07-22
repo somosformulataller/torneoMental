@@ -69,7 +69,7 @@
 /* Card Back (face down) */
 .cardBack {
   background: linear-gradient(135deg, #141B2E, #212C47);
-  border: 2px solid rgba(34, 211, 238, 0.2);
+  border: 2px solid rgba(167, 139, 250, 0.2);
   box-shadow: var(--shadow-card);
   padding: 0;
 }
@@ -87,8 +87,8 @@
 .cardBackLogo {
   font-size: 1.2rem;
   font-weight: 900;
-  color: var(--accent-cyan, #22D3EE);
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  color: var(--accent-cyan, #A78BFA);
+  text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
   letter-spacing: 2px;
   z-index: 1;
 }
@@ -96,14 +96,14 @@
 .cardBackPattern {
   position: absolute;
   inset: 8px;
-  border: 1px solid rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.1);
   border-radius: 6px;
   background: repeating-linear-gradient(
     45deg,
     transparent,
     transparent 8px,
-    rgba(34, 211, 238, 0.03) 8px,
-    rgba(34, 211, 238, 0.03) 16px
+    rgba(167, 139, 250, 0.03) 8px,
+    rgba(167, 139, 250, 0.03) 16px
   );
 }
 
@@ -138,14 +138,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(52, 211, 153, 0.08));
-  border: 1px dashed rgba(34, 211, 238, 0.3);
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), rgba(52, 211, 153, 0.08));
+  border: 1px dashed rgba(167, 139, 250, 0.3);
 }
 
 .cardImagePlaceholder > span:first-child {
   font-size: 1.6rem;
   font-weight: 800;
-  color: var(--accent-cyan, #22D3EE);
+  color: var(--accent-cyan, #A78BFA);
   text-transform: uppercase;
 }
 

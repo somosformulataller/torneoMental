@@ -22,7 +22,7 @@ const STATUS_FILTERS = [
 
 // Estado de premio/retiro de cada jugador (lado admin).
 const RETIRO_STATUS = {
-  quiere_retirar: { label: (r) => `Quiere retirar $${r.pendSum.toFixed(2)}`, color: '#22D3EE' },
+  quiere_retirar: { label: (r) => `Quiere retirar $${r.pendSum.toFixed(2)}`, color: '#A78BFA' },
   en_billetera: { label: () => 'En billetera aún sin retirar', color: '#FBBF24' },
   sin_saldo: { label: () => 'Sin saldo pendiente', color: '#7686A0' },
   sin_premio: { label: () => 'No ha ganado premio', color: '#7686A0' },

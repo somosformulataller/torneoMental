@@ -36,14 +36,14 @@
 
 .adminBadge {
   align-self: flex-start;
-  background: rgba(34, 211, 238, 0.15);
+  background: rgba(167, 139, 250, 0.15);
   color: var(--accent-pink);
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 1px;
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  border: 1px solid rgba(167, 139, 250, 0.3);
 }
 
 .nav {
@@ -76,7 +76,7 @@
 }
 
 .active {
-  background: linear-gradient(90deg, rgba(34, 211, 238, 0.1) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(167, 139, 250, 0.1) 0%, transparent 100%);
   color: var(--accent-cyan);
   border-left: 3px solid var(--accent-cyan);
 }

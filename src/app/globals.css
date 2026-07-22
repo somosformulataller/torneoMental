@@ -1,22 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;700;800&family=Orbitron:wght@600;700;800;900&family=Outfit:wght@300;400;600;700;800;900&display=swap');
 
 :root {
-  /* Copa Mental — tema oscuro premium (cian + violeta) */
+  /* Copa Mental — tema oscuro premium (violeta como color de marca) */
   --bg-primary: #0A0E1A; /* navy profundo, más contraste */
   --bg-secondary: #141B2E;
   --bg-card: rgba(21, 29, 48, 0.82);
   --bg-card-hover: rgba(33, 44, 71, 0.92);
 
-  /* Acentos — vivos pero refinados (nivel 400), coherentes entre sí */
-  --accent-cyan: #22D3EE; /* Cyan 400 (color primario) */
+  /* Acentos — violeta de marca + colores funcionales (premios, éxito, alertas) */
+  --accent-cyan: #A78BFA; /* = violeta (antes cian; conservado por compatibilidad) */
   --accent-green: #34D399; /* Emerald 400 */
   --accent-orange: #FB923C; /* Orange 400 */
   --accent-red: #FB7185; /* Rose 400 */
   --accent-gold: #FBBF24; /* Amber 400 (premios) */
   --accent-silver: #CBD5E1; /* Slate 300 */
   --accent-bronze: #D97706; /* Amber 600 */
-  --accent-pink: #22D3EE; /* = cian */
-  --accent-violet: #A78BFA; /* Violet 400 (color secundario) */
+  --accent-pink: #A78BFA; /* = violeta */
+  --accent-violet: #A78BFA; /* Violet 400 (color primario/marca) */
 
   /* Texto */
   --text-primary: #F8FAFC; /* Slate 50 */
@@ -38,7 +38,7 @@
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.6);
   --glow-gold: 0 0 24px rgba(251, 191, 36, 0.35);
-  --glow-pink: 0 0 24px rgba(34, 211, 238, 0.35);
+  --glow-pink: 0 0 24px rgba(167, 139, 250, 0.35);
   --glow-violet: 0 0 24px rgba(167, 139, 250, 0.35);
 
   /* Easing con física de resorte */
@@ -89,7 +89,7 @@ button {
 
 /* Selection */
 ::selection {
-  background: rgba(34, 211, 238, 0.3);
+  background: rgba(167, 139, 250, 0.3);
   color: #fff;
 }
 

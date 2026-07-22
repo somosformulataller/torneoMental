@@ -12,10 +12,10 @@
   background: rgba(21, 29, 48, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(34, 211, 238, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.15);
   border-radius: var(--radius-xl, 24px);
   padding: 40px 32px;
-  box-shadow: var(--shadow-lift), inset 0 0 20px rgba(34, 211, 238, 0.05);
+  box-shadow: var(--shadow-lift), inset 0 0 20px rgba(167, 139, 250, 0.05);
 }
 
 .logoContainer {
@@ -36,7 +36,7 @@
   color: var(--text-primary);
   letter-spacing: 2px;
   margin-bottom: 4px;
-  text-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+  text-shadow: 0 0 15px rgba(167, 139, 250, 0.6);
 }
 
 .subtitle {
@@ -84,7 +84,7 @@
 }
 
 .link:hover {
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
 }
 
 @keyframes float {

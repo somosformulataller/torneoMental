@@ -147,7 +147,7 @@ export default function AdminUsuariosPage() {
                   </td>
                   <td>
                     <div className={styles.roleCell}>
-                      <Badge size="sm" color={u.role === 'admin' ? '#A78BFA' : '#22D3EE'}>
+                      <Badge size="sm" color={u.role === 'admin' ? '#A78BFA' : '#CBD5E1'}>
                         {u.role === 'admin' ? 'Admin' : 'Jugador'}
                       </Badge>
                       {u.blocked && <Badge size="sm" color="#FB7185">Bloqueado</Badge>}

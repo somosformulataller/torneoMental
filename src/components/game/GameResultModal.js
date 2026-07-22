@@ -41,7 +41,7 @@ export default function GameResultModal({
       particleCount: 120,
       spread: 80,
       origin: { y: 0.6 },
-      colors: ['#22D3EE', '#34D399', '#FBBF24'],
+      colors: ['#A78BFA', '#34D399', '#FBBF24'],
     });
 
     // Escalate the celebration for hot streaks.

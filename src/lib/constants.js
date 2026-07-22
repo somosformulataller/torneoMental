@@ -26,7 +26,7 @@ export const THEMES = {
 // ej. `${color}20`, y eso solo es válido con hex, no con var(--token).
 export const PAYMENT_STATUSES = {
   pendiente: { label: 'Pendiente', color: '#FBBF24' },
-  validando: { label: 'Validando', color: '#22D3EE' },
+  validando: { label: 'Validando', color: '#A78BFA' },
   aprobado: { label: 'Aprobado', color: '#34D399' },
   rechazado: { label: 'Rechazado', color: '#FB7185' },
 };
@@ -60,7 +60,7 @@ export const VENEZUELAN_BANKS = [
 
 export const TOURNAMENT_STATUSES = {
   borrador: { label: 'Borrador', color: '#7686A0' },
-  programado: { label: 'Programado', color: '#22D3EE' },
+  programado: { label: 'Programado', color: '#A78BFA' },
   activo: { label: 'Activo', color: '#34D399' },
   finalizado: { label: 'Finalizado', color: '#FB7185' },
 };

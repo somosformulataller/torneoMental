@@ -21,7 +21,7 @@ export const metadata = {
 
 /** @type {import('next').Viewport} */
 export const viewport = {
-  themeColor: '#22D3EE',
+  themeColor: '#A78BFA',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

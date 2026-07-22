@@ -251,3 +251,12 @@ A pedido: hacer la app más atractiva visualmente, incluyendo Inicio.
 - **Acentos más vivos pero refinados** (nivel Tailwind "400", sin volver al neón chillón): cian `#06B6D4→#22D3EE` (color primario), violeta `#7c3aed→#A78BFA` (secundario), oro `#F59E0B→#FBBF24` (premios), verde `#10B981→#34D399`, naranja `#F97316→#FB923C`, rojo `#EF4444→#FB7185` (rosado, más moderno). Glows y `::selection` actualizados a juego.
 - **Cómo**: se actualizaron las variables del sistema en `globals.css` y se barrió la paleta anterior hardcodeada (hex y `rgba`) en todo `src`, incluyendo fondos sueltos de un tema viejo (`#1a1a2e`, `#0a0a0f`, `#2a2a4a`). Toda la app referencia la misma paleta, así que futuros ajustes se hacen en un solo lugar.
 - **Verificado** visualmente (navegador automatizado): Inicio, Ranking, Billetera, Interacción y el modal de fin de partida con la paleta nueva, coherentes entre sí.
+
+## Cian reemplazado por violeta en toda la app (2026-07-22)
+
+A pedido: "aún me parece un carnaval de colores, son pocas pantallas para usar tantos; reemplaza todo lo cian por violeta". La idea es tener **un solo color de marca (violeta)** y dejar los demás colores solo para funciones concretas (oro = premios, verde = éxito/pares, rojo = alerta).
+
+- **Todo el cian pasó a violeta** (`#22D3EE → #A78BFA`, y su versión `rgba`). Como casi toda la app usaba el cian a través de la variable `--accent-cyan`, bastó apuntarla al violeta; los pocos lugares con el cian escrito directo (hex y `rgba`) se barrieron en todo `src`.
+- **Usuarios**: el rol Admin queda en violeta (resalta) y el rol Jugador en gris neutro, para que sigan distinguiéndose sin sumar otro color.
+- **Resultado**: la app queda en violeta + oro + grises, con verde/rojo solo como señales. Menos "carnaval", más identidad.
+- **Verificado** visualmente (navegador automatizado): Inicio, Ranking, Billetera, Usuarios e Interacción — sin cian, coherentes.

@@ -51,7 +51,7 @@
   padding: 6px 12px;
   box-shadow: var(--shadow-card);
   color: var(--accent-cyan);
-  border: 1px solid rgba(34, 211, 238, 0.25);
+  border: 1px solid rgba(167, 139, 250, 0.25);
 }
 
 .pairsBump {

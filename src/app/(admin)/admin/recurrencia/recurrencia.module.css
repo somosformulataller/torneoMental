@@ -66,8 +66,8 @@
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--accent-cyan);
-  background: rgba(34, 211, 238, 0.08);
-  border: 1px solid rgba(34, 211, 238, 0.25);
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.25);
   border-radius: var(--radius-sm, 8px);
   padding: 10px 12px;
 }
@@ -93,7 +93,7 @@
 
 .applyOption:has(input:checked) {
   border-color: var(--accent-cyan);
-  background: rgba(34, 211, 238, 0.08);
+  background: rgba(167, 139, 250, 0.08);
 }
 
 .applyOption input {
