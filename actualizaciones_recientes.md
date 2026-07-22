@@ -281,3 +281,13 @@ Los reversos (cartas boca abajo) tenían un borde **cian** que ya no combinaba c
 - Los PNG anteriores (`public/cards/*/back_*.png`) y el mapa `CARD_BACKS` quedan **sin uso** (se pueden borrar más adelante).
 - **Pendiente (aparte)**: los **frentes** de las cartas siguen siendo las ilustraciones PNG actuales; su rediseño multicolor es un trabajo separado.
 - **Verificado** en el juego real (navegador automatizado): se cargaron partidas hasta ver las tres temáticas; los reversos se renderizan con su color, patrón y el "CM", sin cian.
+- **Ajuste posterior (mismo día)**: se **quitaron las letras "CM"** de los reversos y se **subió la intensidad** de los patrones y nodos (antes se veían muy tenues). Ahora el protagonista es el patrón, bien visible.
+
+## Vibración de fallo más suave en el juego (2026-07-22)
+
+A pedido: al voltear dos cartas incorrectas (en Competir y Practicar) la vibración se sentía muy fuerte.
+
+- **Dato clave**: el motor de vibración del teléfono solo enciende/apaga, **no regula la fuerza**. Para que se sienta más suave se usan **pulsos cortos** (toquecitos) con **pausas más largas**, en vez de zumbidos prolongados.
+- **Cambio** en `src/lib/haptics.js` (`vibrateMismatch`): el patrón pasó de `[120,80,120,80,220,260,120,80,120,80,220]` a `[60,150,60,150,80,500,60,150,60,150,80]`.
+- **Resultado**: la **duración total se mantiene en ~1.5s** (igual que antes, como se pidió), pero el tiempo que realmente vibra bajó de **920 ms a 400 ms** (~57% menos) → se siente notablemente más suave. Un solo cambio cubre Competir y Practicar (usan el mismo componente de juego).
+- **Verificado** en el juego real (navegador automatizado): se interceptó `navigator.vibrate` al provocar un fallo; se confirmó el patrón nuevo y la duración total de 1500 ms.

@@ -9,8 +9,10 @@ export function vibrateMatch() {
 }
 
 export function vibrateMismatch() {
-  // El patrón de fallo se repite dos veces con una pausa en medio (~1.5s).
-  if (canVibrate()) navigator.vibrate([120, 80, 120, 80, 220, 260, 120, 80, 120, 80, 220]);
+  // Fallo: patrón suave. El motor solo enciende/apaga (no regula fuerza), así
+  // que para que se sienta MÁS suave usamos pulsos cortos (toquecitos) con
+  // pausas más largas, manteniendo la misma duración total (~1.5s) que antes.
+  if (canVibrate()) navigator.vibrate([60, 150, 60, 150, 80, 500, 60, 150, 60, 150, 80]);
 }
 
 export function vibrateVictory() {
