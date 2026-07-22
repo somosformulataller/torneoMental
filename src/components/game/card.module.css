@@ -68,8 +68,8 @@
 
 /* Card Back (face down) */
 .cardBack {
-  background: linear-gradient(135deg, #141B2E, #212C47);
-  border: 2px solid rgba(167, 139, 250, 0.2);
+  background: #0A0E1A;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: var(--shadow-card);
   padding: 0;
 }

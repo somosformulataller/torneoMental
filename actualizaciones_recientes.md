@@ -267,3 +267,17 @@ A pedido: "aún me parece un carnaval de colores, son pocas pantallas para usar 
 - **Botón de volver al Inicio unificado**: Ranking usaba solo el icono de casa flotante en la esquina; Billetera usaba el icono + la palabra **"Inicio"**. Ahora Ranking usa el mismo componente que Billetera (icono + "Inicio"), ubicado arriba a la izquierda dentro del contenido.
 - **Cronómetro más visible en el juego** (Competir y Practicar): el cronómetro fijo en la parte inferior de la pantalla de juego pasó de `0.85rem` a `1.25rem`, con un leve resplandor violeta, para que el tiempo se lea mejor sin ocupar demasiado. Se le quitó el icono de reloj; queda **solo el número**. (Nota: una primera versión a `1.9rem` quedó demasiado grande y molestaba, se ajustó a `1.25rem`.)
 - **Verificado** visualmente (navegador automatizado): Ranking con el botón "Inicio" y sin "EN VIVO"; pantalla de juego con el cronómetro grande abajo.
+
+## Reversos de cartas rediseñados en código (SVG), sin estilo místico (2026-07-22)
+
+Los reversos (cartas boca abajo) tenían un borde **cian** que ya no combinaba con la app, y venían de imágenes PNG pesadas (hasta ~750 KB) de tamaños dispares. Se rediseñaron con un **concepto nuevo, oscuro y moderno** (no "tarot"): base oscura compartida, **un color de acento por temática**, patrón sutil y monograma "CM".
+
+- **Nuevo componente `src/components/game/CardBack.js`**: dibuja el reverso **100% en código (SVG)**, según la temática:
+  - **Tecnología** → violeta `#A78BFA` / índigo `#818CF8`, patrón de circuito.
+  - **Naturaleza** → verde `#34D399` / `#4ADE80`, patrón de líneas topográficas.
+  - **Animales** → naranja `#FB923C` / ámbar `#FBBF24`, malla low-poly de triángulos.
+- **`Card.js`** ahora usa `<CardBack theme={card.theme} />` en lugar de `<Image>` con el PNG; se quitó el estado `backImageError` (ya no hay imagen que falle). El borde del `.cardBack` se volvió neutro para que el SVG mande en cada tema.
+- **Ventajas**: nítido a cualquier resolución (no se pixela), pesa unos pocos KB (antes cientos de KB por carta → carga más rápida), y los colores salen de la misma paleta de la app.
+- Los PNG anteriores (`public/cards/*/back_*.png`) y el mapa `CARD_BACKS` quedan **sin uso** (se pueden borrar más adelante).
+- **Pendiente (aparte)**: los **frentes** de las cartas siguen siendo las ilustraciones PNG actuales; su rediseño multicolor es un trabajo separado.
+- **Verificado** en el juego real (navegador automatizado): se cargaron partidas hasta ver las tres temáticas; los reversos se renderizan con su color, patrón y el "CM", sin cian.

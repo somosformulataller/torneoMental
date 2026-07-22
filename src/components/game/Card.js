@@ -3,14 +3,13 @@
 import { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
-import { CARD_BACKS } from '@/lib/cardThemes';
+import CardBack from './CardBack';
 import styles from './card.module.css';
 
 const NO_SCATTER = { rotate: 0, x: 0, y: 0 };
 
 export default function Card({ card, index = 0, isFlipped, isMatched, onClick, disabled, scatter = NO_SCATTER }) {
   const [imageError, setImageError] = useState(false);
-  const [backImageError, setBackImageError] = useState(false);
   const sceneRef = useRef(null);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50, active: false });
 
@@ -62,24 +61,9 @@ export default function Card({ card, index = 0, isFlipped, isMatched, onClick, d
           animate={{ rotateY: isFlipped || isMatched ? 180 : 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 26 }}
         >
-          {/* Card Back (face down) */}
+          {/* Card Back (face down) — dibujado en código (SVG) */}
           <div className={styles.cardFace + ' ' + styles.cardBack}>
-            {backImageError ? (
-              <div className={styles.cardBackDesign}>
-                <span className={styles.cardBackLogo}>TM</span>
-                <div className={styles.cardBackPattern}></div>
-              </div>
-            ) : (
-              <Image
-                src={CARD_BACKS[card.theme] || CARD_BACKS.tecnologia}
-                alt="Reverso"
-                width={400}
-                height={400}
-                className={styles.cardArt}
-                loading="lazy"
-                onError={() => setBackImageError(true)}
-              />
-            )}
+            <CardBack theme={card.theme} />
           </div>
 
           {/* Card Front (face up - shows the image) */}
