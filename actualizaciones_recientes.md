@@ -265,5 +265,5 @@ A pedido: "aún me parece un carnaval de colores, son pocas pantallas para usar 
 
 - **Ranking**: se quitó la etiqueta roja **"EN VIVO"** del encabezado.
 - **Botón de volver al Inicio unificado**: Ranking usaba solo el icono de casa flotante en la esquina; Billetera usaba el icono + la palabra **"Inicio"**. Ahora Ranking usa el mismo componente que Billetera (icono + "Inicio"), ubicado arriba a la izquierda dentro del contenido.
-- **Cronómetro más grande en el juego** (Competir y Practicar): el cronómetro fijo en la parte inferior de la pantalla de juego pasó de `0.85rem` a `1.9rem`, con más relleno y un leve resplandor violeta, para que el tiempo se vea grande y protagonista (es una competencia por tiempo).
+- **Cronómetro más visible en el juego** (Competir y Practicar): el cronómetro fijo en la parte inferior de la pantalla de juego pasó de `0.85rem` a `1.25rem`, con un leve resplandor violeta, para que el tiempo se lea mejor sin ocupar demasiado. Se le quitó el icono de reloj; queda **solo el número**. (Nota: una primera versión a `1.9rem` quedó demasiado grande y molestaba, se ajustó a `1.25rem`.)
 - **Verificado** visualmente (navegador automatizado): Ranking con el botón "Inicio" y sin "EN VIVO"; pantalla de juego con el cronómetro grande abajo.

@@ -449,8 +449,8 @@ export default function JugarClient({ isPractice, initialProfile, initialTournam
       {/* Botón para regresar al Inicio (reemplaza al menú inferior) */}
       <BackToHome floating />
 
-      {/* Small elapsed-time stopwatch */}
-      <div className={styles.stopwatch}>⏱ {formatStopwatch(elapsedMs)}</div>
+      {/* Elapsed-time stopwatch (solo números, sin icono) */}
+      <div className={styles.stopwatch}>{formatStopwatch(elapsedMs)}</div>
 
       {/* Small pairs-found counter */}
       <div className={styles.pairsChip}>
