@@ -232,6 +232,34 @@
   line-height: 1.4;
 }
 
+/* Nota + botón para una compra que sigue en revisión. */
+.txPending {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.txPendingText {
+  font-size: 0.8rem;
+  color: var(--accent-gold);
+  line-height: 1.45;
+}
+
+/* Aviso de pagos en revisión sobre la tarjeta de tickets. */
+.pendingBanner {
+  margin: -8px 0 20px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--accent-gold);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 /* Delete account */
 .dangerZone {
   margin-top: 40px;

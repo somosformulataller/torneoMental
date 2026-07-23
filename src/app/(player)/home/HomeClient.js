@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
-import { requestTicketsAction } from '@/actions/tickets';
+import { requestTicketsAction, recheckMyTicketsAction } from '@/actions/tickets';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
@@ -31,6 +31,11 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
   const [confirmInfo, setConfirmInfo] = useState({ qty: 0, error: null });
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState(null);
+  const [rechecking, setRechecking] = useState(false);
+  // Compras recientes del jugador → para el mensajito de estado de pago que
+  // aparece en Home (bajo Ranking/Billetera).
+  const [recentTickets, setRecentTickets] = useState([]);
+  const [payBanner, setPayBanner] = useState(null); // 'pending' | 'approved' | null
   const [bcvRate, setBcvRate] = useState(null);
   const [bcvRateDate, setBcvRateDate] = useState(null);
   const [proofFile, setProofFile] = useState(null);
@@ -78,6 +83,98 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // Trae las últimas compras del jugador (para el estado de pago en Home).
+  const loadRecentTickets = useCallback(async () => {
+    const { data } = await supabase
+      .from('tickets')
+      .select('id, payment_status, payment_verified_at, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    setRecentTickets(data || []);
+  }, [supabase, userId]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadRecentTickets();
+    // Se refresca solo cuando cambia cualquier compra del jugador (ej. un pago
+    // pasa de "pendiente" a "aprobado").
+    const channel = supabase
+      .channel(`home_tickets_${userId}_${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tickets',
+        filter: `user_id=eq.${userId}`,
+      }, () => loadRecentTickets())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // Re-consulta el banco por los pagos en revisión mientras el jugador está en
+  // Home, para acreditarlos solos sin que tenga que hacer nada. Mismo criterio
+  // que la Billetera: al entrar si hay pendientes, y luego cada 60 s.
+  const pendingRef = useRef(0);
+  const inFlightRef = useRef(false);
+  useEffect(() => {
+    pendingRef.current = recentTickets.filter(
+      (t) => t.payment_status === 'pendiente' || t.payment_status === 'validando'
+    ).length;
+  }, [recentTickets]);
+
+  const recheckPayments = useCallback(async () => {
+    if (pendingRef.current === 0 || inFlightRef.current) return;
+    inFlightRef.current = true;
+    setRechecking(true);
+    try {
+      const res = await recheckMyTicketsAction();
+      if (res?.approved > 0) await loadRecentTickets();
+    } catch {
+      // Silencioso: se reintenta en el próximo ciclo.
+    } finally {
+      inFlightRef.current = false;
+      setRechecking(false);
+    }
+  }, [loadRecentTickets]);
+
+  useEffect(() => {
+    const id = setInterval(() => { recheckPayments(); }, 60000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Decide el mensajito de estado de pago que se muestra en Home:
+  //   'pending'  → hay un pago en revisión.
+  //   'approved' → un pago se aprobó hace pocos minutos (se muestra un rato y
+  //                luego desaparece solo).
+  //   null       → no mostrar nada.
+  useEffect(() => {
+    const APPROVED_WINDOW_MS = 4 * 60 * 1000; // se ve ~4 min tras aprobarse
+    let timer;
+    function evaluate() {
+      const pending = recentTickets.some(
+        (t) => t.payment_status === 'pendiente' || t.payment_status === 'validando'
+      );
+      if (pending) { setPayBanner('pending'); return; }
+      const approvedRecent = recentTickets.some(
+        (t) =>
+          t.payment_status === 'aprobado' &&
+          t.payment_verified_at &&
+          Date.now() - new Date(t.payment_verified_at).getTime() < APPROVED_WINDOW_MS
+      );
+      if (approvedRecent) {
+        setPayBanner('approved');
+        // Vuelve a evaluar en un rato para ocultarlo cuando pase la ventana.
+        timer = setTimeout(evaluate, 30000);
+      } else {
+        setPayBanner(null);
+      }
+    }
+    evaluate();
+    return () => clearTimeout(timer);
+  }, [recentTickets]);
 
   async function handleProofChange(e) {
     const file = e.target.files?.[0];
@@ -159,6 +256,20 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
       setConfirmState('error');
     } finally {
       setBuying(false);
+    }
+  }
+
+  // Re-consulta el banco por el pago recién enviado. Si ya aparece, la RPC del
+  // servidor acredita los tickets y pasamos el modal a "aprobado".
+  async function handleRecheckPayment() {
+    setRechecking(true);
+    try {
+      const res = await recheckMyTicketsAction();
+      if (res?.approved > 0) setConfirmState('approved');
+    } catch {
+      // Silencioso: sigue en revisión, el jugador puede reintentar o cerrar.
+    } finally {
+      setRechecking(false);
     }
   }
 
@@ -255,6 +366,17 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
             Billetera
           </button>
         </div>
+
+        {payBanner === 'pending' && (
+          <div className={`${styles.payStatus} ${styles.payStatusPending}`}>
+            ⏳ Tu pago está en revisión. Te sumaremos los tickets apenas el banco lo confirme.
+          </div>
+        )}
+        {payBanner === 'approved' && (
+          <div className={`${styles.payStatus} ${styles.payStatusApproved}`}>
+            ✅ ¡Tu pago fue aprobado! Ya tienes tus tickets listos.
+          </div>
+        )}
       </div>
 
       {/* Tickets + Buy, side by side */}
@@ -437,10 +559,20 @@ export default function HomeClient({ userId, initialProfile, initialTournament }
             <div className={styles.confirmIcon}>🕒</div>
             <p>Tu pago quedó en revisión.</p>
             <p className={styles.confirmNote}>
-              Puede tardar unos minutos. Te sumaremos los tickets apenas se apruebe —
-              no necesitas hacer nada, se actualizará solo.
+              A veces el banco tarda 1–2 minutos en reflejar el pago. Te sumaremos los
+              tickets apenas se confirme: puedes tocar “Verificar de nuevo”, o cerrar —
+              también se actualizará solo.
             </p>
-            <Button variant="primary" fullWidth onClick={() => setShowConfirmModal(false)}>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={handleRecheckPayment}
+              loading={rechecking}
+              loadingText="Verificando…"
+            >
+              Verificar de nuevo
+            </Button>
+            <Button variant="ghost" fullWidth onClick={() => setShowConfirmModal(false)}>
               Listo
             </Button>
           </div>

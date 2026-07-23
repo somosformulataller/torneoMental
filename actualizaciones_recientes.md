@@ -4,6 +4,17 @@ Registro de los cambios más recientes hechos en Copa Mental (producción: copam
 
 ## Bugs resueltos
 
+### Un pago válido se quedaba en "Pendiente" para siempre (la validación automática no reintentaba)
+
+Reportado: "compré un ticket y se queda en Pendiente en Transacciones; ¿la API no pudo validar mi pago? Debería salir el estado desde el perfil del jugador y sumar el ticket apenas la API valide".
+
+- **Diagnóstico** (verificado consultando la API del banco con la referencia real): el pago **sí era válido** — existía, el monto cuadraba exacto (737,88 Bs) y no estaba reclamado. El problema es que la validación automática contra el banco corría **una sola vez, en el instante de la compra**. Si en ese momento el banco todavía no había reflejado el pago (suele tardar 1–2 min) o su servicio estaba en enfriamiento (la API rechaza consultas por ~48 s tras una reciente), la solicitud caía a `pendiente` **sin ningún reintento**, y ahí se quedaba hasta que un admin la aprobara a mano.
+- **Fix**:
+  - Nueva acción `recheckMyTicketsAction` (`src/actions/tickets.js`): re-consulta el banco por las compras propias del jugador que siguen en `pendiente`/`validando` y las auto-aprueba si el pago ya aparece. Reutiliza la RPC idempotente `auto_approve_ticket` (solo service-role) — es seguro: solo aprueba si el banco confirma el pago real, no hay forma de forzar tickets gratis.
+  - La **Billetera** re-consulta al entrar y cada 60 s mientras haya pagos en revisión; el modal de compra en **Home** y cada compra pendiente tienen un botón "Verificar de nuevo / ahora". No se agregó cron frecuente (plan gratuito de Vercel no lo permite); el jugador, que está en la app tras pagar, dispara la re-validación.
+  - **Estado visible para el jugador**: en Home, bajo Ranking/Billetera, aparece un mensajito — "⏳ Tu pago está en revisión…" mientras se valida y "✅ ¡Tu pago fue aprobado!" unos minutos después de aprobarse (luego desaparece solo). En la Billetera, cada compra pendiente muestra la nota "en revisión" y hay un aviso de "pagos en revisión" sobre la tarjeta de tickets.
+- **Verificado** (app real, navegador automatizado, contra el banco y la base de datos de producción): con el pago pendiente real, Home mostró el estado "en revisión"; al abrir la Billetera la re-validación aprobó el pago solo (`auto`, con la respuesta del banco guardada), el saldo pasó de 3 → 4 tickets, y Home mostró el estado "aprobado". El ticket que estaba trancado quedó resuelto.
+
 ### La app se recargaba sola en medio de una partida (se reiniciaba el juego)
 
 Reportado: "a veces cuando recargo o entro a alguna pantalla se vuelve a recargar sola, hace como un flash; si estoy jugando aparece una nueva partida en vez de respetar que ya estaba en una".

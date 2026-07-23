@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PAYMENT_STATUSES, VENEZUELAN_BANKS } from '@/lib/constants';
 import { deleteAccountAction } from '@/actions/account';
 import { updatePayoutInfoAction } from '@/actions/profile';
 import { requestWithdrawalAction, redeemBalanceForTicketsAction } from '@/actions/wallet';
+import { recheckMyTicketsAction } from '@/actions/tickets';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
@@ -34,6 +35,9 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  // Re-verificación de pagos en revisión contra el banco (sin esperar al admin).
+  const [rechecking, setRechecking] = useState(false);
 
   // Canje de saldo por tickets (1 ticket = $1).
   const [redeemTickets, setRedeemTickets] = useState('');
@@ -82,6 +86,47 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
       console.error('Error refreshing wallet data:', err);
     }
   }
+
+  // Cuántas compras siguen "en revisión" (pendiente o validando). Un ref
+  // acompaña al valor para que el temporizador lea siempre el último dato sin
+  // reiniciarse en cada render.
+  const pendingCount = tickets.filter(
+    (t) => t.payment_status === 'pendiente' || t.payment_status === 'validando'
+  ).length;
+  const pendingRef = useRef(pendingCount);
+  useEffect(() => { pendingRef.current = pendingCount; }, [pendingCount]);
+
+  // Vuelve a consultar el banco por los pagos en revisión. Si alguno ya
+  // aparece, la RPC del servidor acredita los tickets y refrescamos la vista.
+  // Un ref evita que se solapen dos consultas si el temporizador y el botón
+  // coinciden.
+  const inFlightRef = useRef(false);
+  const recheckPayments = useCallback(async () => {
+    if (pendingRef.current === 0 || inFlightRef.current) return;
+    inFlightRef.current = true;
+    setRechecking(true);
+    try {
+      const res = await recheckMyTicketsAction();
+      if (res?.approved > 0) await refreshData();
+    } catch {
+      // Silencioso: si falla, se reintenta en el próximo ciclo o a mano.
+    } finally {
+      inFlightRef.current = false;
+      setRechecking(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Al entrar a la Billetera, si hay pagos en revisión, se re-consulta al
+    // banco una vez (el pago suele reflejarse 1–2 min después de comprar) y
+    // luego cada 60 s mientras sigan pendientes. La API del banco tiene un
+    // enfriamiento de ~48 s; 60 s lo respeta sin machacarla.
+    if (pendingRef.current > 0) recheckPayments();
+    const id = setInterval(() => { recheckPayments(); }, 60000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Para que el saldo de tickets y el estado de cada compra ("Pendiente" →
@@ -233,6 +278,12 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
         <div className={styles.balanceSub}>
           Valor estimado: ${(profile?.tickets_balance * 1.00 || 0).toFixed(2)} USD
         </div>
+        {pendingCount > 0 && (
+          <div className={styles.pendingBanner}>
+            ⏳ {pendingCount === 1 ? 'Tienes 1 pago en revisión' : `Tienes ${pendingCount} pagos en revisión`}.
+            Se acreditarán solos apenas el banco confirme tu pago.
+          </div>
+        )}
         <Button variant="ghost" fullWidth className={styles.buyBtn} onClick={() => router.push('/home')}>
           Comprar más tickets
         </Button>
@@ -495,6 +546,25 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
                 {t.payment_status === 'rechazado' && t.notes && (
                   <div className={styles.txNotes}>
                     <strong>Nota:</strong> {t.notes}
+                  </div>
+                )}
+
+                {(t.payment_status === 'pendiente' || t.payment_status === 'validando') && (
+                  <div className={styles.txPending}>
+                    <span className={styles.txPendingText}>
+                      ⏳ En revisión. Te sumaremos los tickets automáticamente cuando el
+                      banco confirme tu pago (suele tardar 1–2 minutos).
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={recheckPayments}
+                      loading={rechecking}
+                      loadingText="Verificando…"
+                      disabled={rechecking}
+                    >
+                      Verificar ahora
+                    </Button>
                   </div>
                 )}
               </div>

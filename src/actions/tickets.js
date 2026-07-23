@@ -74,6 +74,39 @@ export async function requestTicketsAction({ tournamentId, quantity, paymentRefe
   return { ticket, status };
 }
 
+// Re-consulta al banco las solicitudes del jugador que siguen sin resolverse
+// ('pendiente' o 'validando') y las auto-aprueba si el pago ya aparece. Cubre
+// el caso típico: al comprar, el banco todavía no había reportado el pago (o su
+// servicio estaba en enfriamiento), así que la validación única de la compra no
+// lo encontró y el ticket quedó pendiente. Con esto, el propio jugador (o la
+// Billetera cada cierto tiempo) reintenta sin depender de que el admin apruebe
+// a mano. Es seguro: solo aprueba si validatePayment confirma el pago real
+// contra el banco; no hay forma de forzar tickets gratis.
+export async function recheckMyTicketsAction() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autenticado' };
+
+  // Solo las solicitudes propias (RLS) que aún no se resolvieron.
+  const { data: pending, error } = await supabase
+    .from('tickets')
+    .select('id, payment_reference, amount_ves, payment_status')
+    .eq('user_id', user.id)
+    .in('payment_status', ['pendiente', 'validando']);
+
+  if (error) return { error: error.message };
+  if (!pending || pending.length === 0) return { approved: 0, pending: 0 };
+
+  let approved = 0;
+  for (const t of pending) {
+    const status = await tryAutoValidate(t, t.amount_ves);
+    if (status === 'aprobado') approved += 1;
+  }
+  return { approved, pending: pending.length - approved };
+}
+
 // Devuelve 'aprobado' si el banco confirmó el pago, 'pendiente' en cualquier
 // otro caso (no encontrado, monto no coincide, API caída, etc.). Nunca lanza:
 // un fallo de la validación jamás debe romper la compra.
