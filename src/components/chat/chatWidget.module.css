@@ -20,6 +20,10 @@
 .fab:hover { transform: scale(1.06); }
 .fabIcon { font-size: 1.5rem; line-height: 1; }
 
+/* En Inicio hay una barra inferior (Tickets / Comprar) que no es fija; el botón
+   se sube para no taparla. */
+.fabHome { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 78px); }
+
 /* Campana / globo rojo de no leídos */
 .badge {
   position: absolute;

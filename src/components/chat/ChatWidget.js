@@ -142,10 +142,12 @@ export default function ChatWidget() {
 
   if (!userId || pathname === '/jugar') return null;
 
+  const onHome = pathname === '/home';
+
   return (
     <>
       {!open && (
-        <button className={styles.fab} onClick={handleOpen} aria-label="Abrir chat de ayuda">
+        <button className={`${styles.fab} ${onHome ? styles.fabHome : ''}`} onClick={handleOpen} aria-label="Abrir chat de ayuda">
           <span className={styles.fabIcon}>💬</span>
           {unread > 0 && <span className={styles.badge}>{unread > 9 ? '9+' : unread}</span>}
         </button>
