@@ -50,6 +50,8 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  /* Quita el "flash" azul/gris que el móvil pinta sobre lo que tocas. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
