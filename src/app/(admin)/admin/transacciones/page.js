@@ -15,6 +15,8 @@ import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
 import RecargasModal from '@/components/admin/RecargasModal';
 import CopyPayoutButton from '@/components/admin/CopyPayoutButton';
+import ChatComposeFields from '@/components/admin/ChatComposeFields';
+import { sendComposeToPlayer, composeHasContent } from '@/lib/adminChat';
 import styles from './transacciones.module.css';
 
 const REF_TYPE_FILTERS = [
@@ -94,6 +96,17 @@ export default function AdminTransaccionesPage() {
 
   // Historial de recargas (compras de tickets) de un usuario.
   const [recargasUser, setRecargasUser] = useState(null); // { id, name }
+
+  // Redactar algo para el chat del jugador (nota / voz / foto). Compartido por
+  // el modal de aprobar pago y el de "nota al jugador".
+  const [composeText, setComposeText] = useState('');
+  const [composeAudio, setComposeAudio] = useState(null);
+  const [composeDoc, setComposeDoc] = useState(null);
+  const [approveModal, setApproveModal] = useState(null); // { ticket }
+  const [soloAprobar, setSoloAprobar] = useState(false);
+  const [chatModal, setChatModal] = useState(null); // { userId, name } — nota suelta
+  // Nota al jugador al pagar un retiro (se envía a su chat).
+  const [payNote, setPayNote] = useState('');
 
   const loadTickets = useCallback(async () => {
     setLoadingTickets(true);
@@ -268,19 +281,59 @@ export default function AdminTransaccionesPage() {
     else loadReferences();
   }, [section, loadTickets, loadPrizes, loadRetiros, loadReferences]);
 
-  async function handleApprove(ticket) {
-    if (!window.confirm(
-      `¿Aprobar ${ticket.quantity} tickets para ${ticket.profiles?.nombre || 'el jugador'}?` +
-      (ticket.payment_status === 'rechazado' ? '\n\nEsta solicitud estaba rechazada.' : '')
-    )) return;
+  function resetCompose() {
+    setComposeText('');
+    setComposeAudio(null);
+    setComposeDoc(null);
+  }
 
+  // Aprobar pago: abre un modal donde (opcional) se le manda al chat una nota,
+  // nota de voz o foto/documento, o se marca "solo aprobar".
+  function openApproveModal(ticket) {
+    resetCompose();
+    setSoloAprobar(false);
+    setApproveModal({ ticket });
+  }
+
+  async function confirmApprove() {
+    const ticket = approveModal?.ticket;
+    if (!ticket) return;
     setProcessing(true);
     try {
+      const compose = { text: composeText, audio: composeAudio, doc: composeDoc };
+      if (!soloAprobar && composeHasContent(compose)) {
+        await sendComposeToPlayer(supabase, ticket.user_id, compose);
+      }
       const { error } = await adminApproveTicketAction(ticket.id);
       if (error) throw new Error(error);
+      setApproveModal(null);
+      resetCompose();
       await loadTickets();
     } catch (err) {
       alert('Error al aprobar: ' + err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  // Nota al jugador (sin aprobar), en relación a su compra.
+  function openChatModal(prof) {
+    if (!prof?.id) return;
+    resetCompose();
+    setChatModal({ userId: prof.id, name: `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'el jugador' });
+  }
+
+  async function confirmSendChat() {
+    if (!chatModal) return;
+    const compose = { text: composeText, audio: composeAudio, doc: composeDoc };
+    if (!composeHasContent(compose)) { alert('Escribe una nota, graba un audio o adjunta un archivo.'); return; }
+    setProcessing(true);
+    try {
+      await sendComposeToPlayer(supabase, chatModal.userId, compose);
+      setChatModal(null);
+      resetCompose();
+    } catch (err) {
+      alert('Error al enviar: ' + err.message);
     } finally {
       setProcessing(false);
     }
@@ -329,6 +382,7 @@ export default function AdminTransaccionesPage() {
     setPayRef('');
     setPayProofFile(null);
     setPayProofPreview(null);
+    setPayNote('');
   }
 
   async function handlePayProofChange(e) {
@@ -349,6 +403,7 @@ export default function AdminTransaccionesPage() {
     setPayRef('');
     setPayProofFile(null);
     setPayProofPreview(null);
+    setPayNote('');
   }
 
   async function handleConfirmPay() {
@@ -370,6 +425,12 @@ export default function AdminTransaccionesPage() {
       }
       const { error } = await markWithdrawalPaidAction(w.id, ref, proofPath);
       if (error) throw new Error(error);
+      // Nota opcional al jugador por su chat (avisándole del pago).
+      const note = payNote.trim();
+      if (note) {
+        try { await sendComposeToPlayer(supabase, w.user_id, { text: note }); }
+        catch (e) { alert('El retiro se marcó pagado, pero no se pudo enviar la nota al chat: ' + e.message); }
+      }
       closePayModal();
       await loadRetiros();
     } catch (err) {
@@ -687,10 +748,10 @@ export default function AdminTransaccionesPage() {
                             <Button
                               variant="success"
                               size="sm"
-                              onClick={() => handleApprove(t)}
+                              onClick={() => openApproveModal(t)}
                               disabled={processing}
                             >
-                              ✓ Aprobar
+                              ✓ Aprobar pago
                             </Button>
                           )}
                           {t.payment_status !== 'rechazado' && (
@@ -704,6 +765,9 @@ export default function AdminTransaccionesPage() {
                             </Button>
                           )}
                           {renderTicketAdjust(t.profiles)}
+                          <Button variant="ghost" size="sm" disabled={processing} onClick={() => openChatModal(t.profiles)}>
+                            💬 Nota
+                          </Button>
                           {renderBlockBtn(t.profiles)}
                         </div>
                       </td>
@@ -1061,6 +1125,16 @@ export default function AdminTransaccionesPage() {
               <img src={payProofPreview} alt="Comprobante" className={styles.proofPreview} />
             )}
           </div>
+          <div>
+            <label className={styles.fileLabel}>Nota para el jugador (opcional)</label>
+            <textarea
+              className={styles.textarea}
+              rows={2}
+              value={payNote}
+              onChange={(e) => setPayNote(e.target.value)}
+              placeholder="Se le envía a su chat. Ej: ¡Listo! Te pagué tu retiro por Pago Móvil."
+            />
+          </div>
           <Button
             variant="success"
             fullWidth
@@ -1118,6 +1192,72 @@ export default function AdminTransaccionesPage() {
           onClose={() => setRecargasUser(null)}
         />
       )}
+
+      {/* Modal: aprobar pago (con nota/voz/foto opcional al chat) */}
+      <Modal
+        isOpen={!!approveModal}
+        onClose={() => { if (!processing) { setApproveModal(null); resetCompose(); } }}
+        title="Aprobar pago"
+      >
+        {approveModal && (
+          <div className={styles.modalContent}>
+            <p>
+              Aprobar <strong>{approveModal.ticket.quantity} ticket(s)</strong> de{' '}
+              <strong>{approveModal.ticket.profiles?.nombre} {approveModal.ticket.profiles?.apellido}</strong>
+              {approveModal.ticket.payment_status === 'rechazado' && ' (esta solicitud estaba rechazada)'}.
+            </p>
+            <label className={styles.checkboxRow}>
+              <input type="checkbox" checked={soloAprobar} onChange={(e) => setSoloAprobar(e.target.checked)} />
+              Solo aprobar (no enviarle nada al jugador)
+            </label>
+            {!soloAprobar && (
+              <ChatComposeFields
+                text={composeText} setText={setComposeText}
+                audio={composeAudio} setAudio={setComposeAudio}
+                doc={composeDoc} setDoc={setComposeDoc}
+                disabled={processing}
+              />
+            )}
+            <Button
+              variant="success"
+              fullWidth
+              onClick={confirmApprove}
+              disabled={processing}
+              loading={processing}
+              loadingText="Aprobando..."
+            >
+              ✓ Aprobar
+            </Button>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal: nota al jugador (sin aprobar) */}
+      <Modal
+        isOpen={!!chatModal}
+        onClose={() => { if (!processing) { setChatModal(null); resetCompose(); } }}
+        title={chatModal ? `Nota para ${chatModal.name}` : 'Nota al jugador'}
+      >
+        <div className={styles.modalContent}>
+          <p className={styles.modalHint}>Lo que envíes le llegará al chat del jugador (con su campana de aviso).</p>
+          <ChatComposeFields
+            text={composeText} setText={setComposeText}
+            audio={composeAudio} setAudio={setComposeAudio}
+            doc={composeDoc} setDoc={setComposeDoc}
+            disabled={processing}
+          />
+          <Button
+            variant="primary"
+            fullWidth
+            onClick={confirmSendChat}
+            disabled={processing}
+            loading={processing}
+            loadingText="Enviando..."
+          >
+            Enviar al chat
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

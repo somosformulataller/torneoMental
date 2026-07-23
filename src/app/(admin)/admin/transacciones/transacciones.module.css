@@ -271,6 +271,22 @@
   gap: 16px;
 }
 
+.modalHint {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.checkboxRow input { width: 16px; height: 16px; cursor: pointer; }
+
 .textarea {
   width: 100%;
   background: var(--bg-secondary);
