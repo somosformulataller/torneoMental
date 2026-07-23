@@ -4,6 +4,14 @@ Registro de los cambios más recientes hechos en Copa Mental (producción: copam
 
 ## Bugs resueltos
 
+### Los botones de acciones en Transacciones se cortaban
+
+Reportado: "los botones no se están adaptando bien horizontalmente al contenedor de las secciones en Transacciones, por ejemplo los botones de sumar y restar tickets se cortan".
+
+- **Diagnóstico**: la celda de acciones (`.actions`) era un `flex` sin `flex-wrap`, así que en filas con varios botones (Aprobar, Rechazar, ＋/− Tickets, Bloquear) estos no bajaban de línea y se cortaban.
+- **Fix**: `flex-wrap: wrap` en `.actions` (los botones se acomodan en varias líneas dentro de la celda).
+- **Verificado** (navegador automatizado, filtro "Todos"): de 72 botones de acción medidos, ninguno se sale de su celda (antes se cortaban).
+
 ### Un pago válido se quedaba en "Pendiente" para siempre (la validación automática no reintentaba)
 
 Reportado: "compré un ticket y se queda en Pendiente en Transacciones; ¿la API no pudo validar mi pago? Debería salir el estado desde el perfil del jugador y sumar el ticket apenas la API valide".
@@ -68,6 +76,9 @@ Si el admin aprobaba una recarga de tickets, el jugador tenía que recargar la p
 
 ## Funcionalidades nuevas
 
+- **Chat — notas de voz, iniciar chat desde el admin, etiquetas y filtros** (2026-07-23, migración 024): (1) Notas de voz en el chat del jugador y del admin (componente `AudioRecorder` con `MediaRecorder`, tope 2 min; viajan como un adjunto más en el bucket `chat-attachments` y se reproducen con `<audio>`). (2) El admin puede buscar cualquier usuario (nombre/correo/cédula) e iniciarle una conversación (`chat_admin_start_conversation`); el primer mensaje de soporte le enciende la campana al jugador, aunque nunca hubiera abierto el chat (el `ChatWidget` se suscribe a la creación de su conversación). (3) Etiquetas por conversación — **pendiente / prioridad / resuelto** (`chat_admin_set_status`, default pendiente) — con filtros por etiqueta y un chip de color en cada chat. Verificado end-to-end: búsqueda, inicio de conversación, mensaje de soporte, cambio de etiqueta, filtro y campana del jugador.
+- **Retiros — referencia + comprobante del pago** (2026-07-23, migración 025): al marcar un retiro como pagado, el admin guarda el número de referencia del Pago Móvil y (opcional) una captura del comprobante (bucket privado `withdrawal-proofs`; `mark_withdrawal_paid` ahora recibe referencia y ruta del comprobante). En la lista de "Pagados" se ven la referencia y un botón "Ver".
+- **Transacciones — buscador/historial de referencias** (2026-07-23): nueva pestaña "🔎 Referencias" que junta los pagos **recibidos** (referencias de compras de tickets, ↓ Recibido) y los pagos **hechos** (referencias de retiros pagados, ↑ Pagado), con búsqueda por número de referencia y filtro por tipo. Verificado end-to-end.
 - **Música de fondo durante la partida**: antes solo había efectos de sonido puntuales; ahora hay un loop musical (osciladores Web Audio) mientras `gameStatus === 'playing'`.
 - **Botón de instalar la app (PWA)**: nuevo componente `InstallAppButton`, visible en login, registro y billetera, usando el evento `beforeinstallprompt`. Se generaron los íconos `icon-192x192.png` / `icon-512x512.png` que faltaban en el manifest.
 - **Historial de ganadores de copas anteriores**: nueva sección en Ranking que agrupa por torneo los pagos de `tournament_winners`, mostrando medallas y montos.
