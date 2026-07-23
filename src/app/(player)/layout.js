@@ -1,6 +1,7 @@
 import PageTransition from '@/components/layout/PageTransition';
 import SoundToggle from '@/components/ui/SoundToggle';
 import ActivityTracker from '@/components/ui/ActivityTracker';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 // El menú inferior (Navbar) se eliminó: ahora se navega a Competir/Practicar/
 // Ranking/Billetera desde los botones del Inicio, y cada pantalla tiene su
@@ -11,6 +12,7 @@ export default function PlayerLayout({ children }) {
       <ActivityTracker />
       <PageTransition>{children}</PageTransition>
       <SoundToggle />
+      <ChatWidget />
     </div>
   );
 }

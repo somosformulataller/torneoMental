@@ -299,3 +299,14 @@ A pedido: al fallar, la pantalla temblaba **dos veces** y el movimiento mareaba.
 - **Una sola vez**: `.shake` en `src/app/(player)/jugar/jugar.module.css` pasó de `animation: shakeScreen 0.9s ease 2` (dos ciclos) a `shakeScreen 0.7s ease-in-out` (un solo ciclo). En `JugarClient.js` el temporizador que mantiene la clase bajó de `1800 ms` a `700 ms`.
 - **Más suave**: el keyframe `shakeScreen` se rehízo con **menos amplitud** (pico de `16px` → `7px`) y **menos rebotes** (de 9 pasos rápidos a 3 vaivenes suaves), con curva `ease-in-out`.
 - **Verificado** en el juego real (navegador automatizado): al provocar un fallo, la animación corre **1 sola iteración** (0.7s, ease-in-out), amplitud máxima **7px**, y la pantalla hace **un único movimiento** que vuelve a su sitio y se queda quieto (sin segundo temblor).
+
+## Chat de atención al cliente (2026-07-22)
+
+Nueva función: chat entre cada jugador y atención al cliente. **Requiere correr la migración `022_chat.sql` en Supabase antes de subir a producción.**
+
+- **Jugador**: chat flotante (botón abajo a la derecha) en las pantallas de jugador (oculto dentro de una partida). Puede escribir, tocar **preguntas rápidas** y chatear en vivo. Una **campana roja** con el número de mensajes sin leer aparece sobre el ícono cuando soporte responde.
+- **Admin**: nueva sección **Chat** en el menú lateral, con lista de conversaciones por jugador (con contador de no leídos), el hilo de mensajes, caja para responder, e historial guardado. Pestaña **Preguntas rápidas** para crear/editar/activar/ordenar/borrar las preguntas que ve el jugador.
+- **Soporte = cuenta de administrador** (decisión de la dueña); **aviso = campana roja dentro de la app** (sin push del sistema).
+- **Tiempo real**: los mensajes llegan al instante (Supabase Realtime) sin recargar. **Seguridad**: cada quien ve solo lo suyo (RLS); los mensajes se crean vía funciones `SECURITY DEFINER` para que no se pueda falsear el remitente.
+- **Archivos**: `supabase/migrations/022_chat.sql`, `src/actions/chat.js`, `src/components/chat/ChatWidget.js` (+CSS, montado en el layout del jugador), `src/app/(admin)/admin/chat/page.js` (+CSS), enlace en `AdminSidebar.js`. Detalle en `docs/chat.md`.
+- **Estado**: código listo y probado que la interfaz se renderiza (widget del jugador y panel del admin). Pendiente: correr la migración y verificar el flujo completo antes de subir a producción.

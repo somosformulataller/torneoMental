@@ -1,0 +1,182 @@
+/* Botón flotante (abajo a la derecha) */
+.fab {
+  position: fixed;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  right: 16px;
+  z-index: 60;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: linear-gradient(135deg, var(--accent-violet), #7C6BE0);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-lift), 0 0 20px rgba(167, 139, 250, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s var(--ease-spring);
+}
+.fab:hover { transform: scale(1.06); }
+.fabIcon { font-size: 1.5rem; line-height: 1; }
+
+/* Campana / globo rojo de no leídos */
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 10px rgba(251, 113, 133, 0.6);
+}
+
+/* Panel del chat */
+.panel {
+  position: fixed;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  right: 16px;
+  z-index: 60;
+  width: min(370px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 100px));
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+  animation: chatIn 0.25s var(--ease-spring);
+}
+
+@keyframes chatIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--accent-violet), #7C6BE0);
+  color: #fff;
+}
+.title { font-weight: 800; font-size: 1rem; }
+.subtitle { font-size: 0.78rem; opacity: 0.9; margin-top: 2px; }
+.close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.close:hover { background: rgba(255, 255, 255, 0.28); }
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin: auto 0;
+  line-height: 1.5;
+  padding: 0 12px;
+}
+
+.bubble {
+  max-width: 80%;
+  padding: 9px 13px;
+  border-radius: 16px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.mine {
+  align-self: flex-end;
+  background: var(--accent-violet);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+}
+.theirs {
+  align-self: flex-start;
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-bottom-left-radius: 5px;
+}
+
+.quickRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  max-height: 108px;
+  overflow-y: auto;
+}
+.quickChip {
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.1);
+  color: var(--accent-violet);
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.quickChip:hover:not(:disabled) { background: rgba(167, 139, 250, 0.22); }
+.quickChip:disabled { opacity: 0.5; cursor: default; }
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-primary);
+}
+.input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  outline: none;
+}
+.input:focus { border-color: var(--accent-violet); }
+.sendBtn {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-violet);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.sendBtn:hover:not(:disabled) { transform: scale(1.08); }
+.sendBtn:disabled { opacity: 0.45; cursor: default; }

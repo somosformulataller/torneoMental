@@ -1,0 +1,269 @@
+.container {
+  padding: 24px;
+  max-width: 1100px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.tabs { display: flex; gap: 8px; }
+.tab {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.tabActive {
+  background: var(--accent-violet);
+  color: #fff;
+  border-color: var(--accent-violet);
+}
+
+/* Layout de chat: lista + hilo */
+.chatLayout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  height: 620px;
+}
+@media (max-width: 760px) {
+  .chatLayout { grid-template-columns: 1fr; height: auto; }
+}
+
+.convList {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  overflow-y: auto;
+  padding: 8px;
+}
+.loading { display: flex; justify-content: center; padding: 30px; }
+.emptyList { color: var(--text-muted); text-align: center; padding: 24px; font-size: 0.9rem; }
+
+.convItem {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background 0.15s ease;
+}
+.convItem:hover { background: var(--bg-card-hover); }
+.convActive { background: var(--bg-card-hover); }
+.convTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.convName { font-weight: 700; color: var(--text-primary); font-size: 0.92rem; }
+.convBadge {
+  background: var(--accent-red);
+  color: #fff;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.convPreview {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+.convTime { color: var(--text-muted); font-size: 0.7rem; }
+
+/* Hilo activo */
+.thread {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 420px;
+}
+.threadEmpty {
+  margin: auto;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  padding: 40px;
+  text-align: center;
+}
+.threadHeader {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.threadName { font-weight: 800; color: var(--text-primary); }
+.threadEmail { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+
+.threadMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bubble {
+  max-width: 72%;
+  padding: 9px 13px;
+  border-radius: 16px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.mine {
+  align-self: flex-end;
+  background: var(--accent-violet);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+}
+.theirs {
+  align-self: flex-start;
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-bottom-left-radius: 5px;
+}
+.bubbleTime {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.replyRow {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.replyInput {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+}
+.replyInput:focus { border-color: var(--accent-violet); }
+.replyBtn {
+  padding: 0 20px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent-violet);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.replyBtn:disabled { opacity: 0.45; cursor: default; }
+
+/* Preguntas rápidas */
+.quickPanel {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  max-width: 720px;
+}
+.quickHelp { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 16px; line-height: 1.5; }
+.quickAdd { display: flex; gap: 8px; margin-bottom: 16px; }
+.quickAddInput {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+}
+.quickAddInput:focus { border-color: var(--accent-violet); }
+.quickAddBtn {
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent-violet);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.quickAddBtn:disabled { opacity: 0.45; cursor: default; }
+
+.quickItems { display: flex; flex-direction: column; gap: 8px; }
+.quickItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.quickInactive { opacity: 0.55; }
+.quickOrder { display: flex; flex-direction: column; }
+.quickOrder button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.65rem;
+  line-height: 1;
+  padding: 1px;
+}
+.quickOrder button:disabled { opacity: 0.3; cursor: default; }
+.quickText {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  outline: none;
+}
+.quickText:focus { border-color: rgba(167, 139, 250, 0.5); background: var(--bg-card); }
+.quickToggle {
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--accent-violet);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.quickDel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+.quickDel:hover { opacity: 1; }
