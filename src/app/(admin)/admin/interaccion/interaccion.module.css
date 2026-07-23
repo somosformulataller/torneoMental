@@ -394,6 +394,20 @@
   padding: 8px 12px;
 }
 
+.recargasBtn {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.1);
+  color: var(--accent-violet);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.recargasBtn:hover { background: rgba(167, 139, 250, 0.2); }
+
 .detailRow {
   display: flex;
   justify-content: space-between;

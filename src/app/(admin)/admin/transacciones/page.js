@@ -13,6 +13,8 @@ import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
+import RecargasModal from '@/components/admin/RecargasModal';
+import CopyPayoutButton from '@/components/admin/CopyPayoutButton';
 import styles from './transacciones.module.css';
 
 const REF_TYPE_FILTERS = [
@@ -81,6 +83,9 @@ export default function AdminTransaccionesPage() {
   const [refSearch, setRefSearch] = useState('');
   const [refTypeFilter, setRefTypeFilter] = useState('todos');
   const [viewingWithdrawProof, setViewingWithdrawProof] = useState(null);
+
+  // Historial de recargas (compras de tickets) de un usuario.
+  const [recargasUser, setRecargasUser] = useState(null); // { id, name }
 
   const loadTickets = useCallback(async () => {
     setLoadingTickets(true);
@@ -433,6 +438,17 @@ export default function AdminTransaccionesPage() {
     );
   }
 
+  // Botón para ver el historial de recargas (compras de tickets) de un jugador.
+  function renderRecargasBtn(prof) {
+    if (!prof?.id) return null;
+    const name = `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'el jugador';
+    return (
+      <Button variant="ghost" size="sm" onClick={() => setRecargasUser({ id: prof.id, name })}>
+        🧾 Recargas
+      </Button>
+    );
+  }
+
   // Botón de bloquear/desbloquear para un jugador (se reutiliza en los tres
   // bloques). `prof` debe traer id, nombre, apellido y blocked.
   function renderBlockBtn(prof) {
@@ -539,6 +555,7 @@ export default function AdminTransaccionesPage() {
                         <div className={styles.userInfo}>
                           <span className={styles.userName}>{t.profiles?.nombre} {t.profiles?.apellido}</span>
                           <span className={styles.userEmail}>{t.profiles?.email}</span>
+                          <div className={styles.blockBtnRow}>{renderRecargasBtn(t.profiles)}</div>
                         </div>
                       </td>
                       <td>{t.profiles?.cedula}</td>
@@ -655,7 +672,7 @@ export default function AdminTransaccionesPage() {
                           <div className={styles.userInfo}>
                             <span className={styles.userName}>{prof?.nombre} {prof?.apellido}</span>
                             <span className={styles.userEmail}>{prof?.email}</span>
-                            <div className={styles.blockBtnRow}>{renderBlockBtn(prof)}</div>
+                            <div className={styles.blockBtnRow}>{renderBlockBtn(prof)} {renderRecargasBtn(prof)}</div>
                           </div>
                         </td>
                         <td>
@@ -669,6 +686,7 @@ export default function AdminTransaccionesPage() {
                               <span className={styles.payoutRow}>
                                 <span className={styles.payoutLabel}>Tel. </span>{prof.payout_telefono || '—'}
                               </span>
+                              <CopyPayoutButton data={prof} />
                             </div>
                           ) : (
                             <span className={styles.payoutMissing}>Sin datos cargados</span>
@@ -754,6 +772,7 @@ export default function AdminTransaccionesPage() {
                                 <span className={styles.payoutRow}>
                                   <span className={styles.payoutLabel}>Tel. </span>{prof.payout_telefono || '—'}
                                 </span>
+                                <CopyPayoutButton data={prof} />
                               </div>
                             ) : (
                               <span className={styles.payoutMissing}>Sin datos cargados</span>
@@ -796,7 +815,7 @@ export default function AdminTransaccionesPage() {
                             <div className={styles.userInfo}>
                               <span className={styles.userName}>{p.nombre} {p.apellido}</span>
                               <span className={styles.userEmail}>{p.email}</span>
-                              <div className={styles.blockBtnRow}>{renderBlockBtn(p)}</div>
+                              <div className={styles.blockBtnRow}>{renderBlockBtn(p)} {renderRecargasBtn(p)}</div>
                             </div>
                           </td>
                           <td><Badge color={st.color}>{st.label(p)}</Badge></td>
@@ -813,6 +832,7 @@ export default function AdminTransaccionesPage() {
                                 <span className={styles.payoutRow}>
                                   <span className={styles.payoutLabel}>Tel. </span>{p.payout_telefono || '—'}
                                 </span>
+                                <CopyPayoutButton data={p} />
                               </div>
                             ) : (
                               <span className={styles.payoutMissing}>Sin datos cargados</span>
@@ -1009,6 +1029,14 @@ export default function AdminTransaccionesPage() {
           </Button>
         </div>
       </Modal>
+
+      {recargasUser && (
+        <RecargasModal
+          userId={recargasUser.id}
+          name={recargasUser.name}
+          onClose={() => setRecargasUser(null)}
+        />
+      )}
     </div>
   );
 }

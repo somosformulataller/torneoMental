@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { SCREEN_LABELS } from '@/lib/activity';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
+import RecargasModal from '@/components/admin/RecargasModal';
 import styles from './interaccion.module.css';
 
 const GRANULARITIES = [
@@ -65,6 +66,7 @@ export default function AdminInteraccionPage() {
   const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [recargasUser, setRecargasUser] = useState(null); // { id, name }
 
   const range = useMemo(() => computeRange(dateValue, granularity), [dateValue, granularity]);
 
@@ -380,6 +382,15 @@ export default function AdminInteraccionPage() {
                       <DetailStat label="Retiros pagados" value={`${detail.wdPaidCount} · $${detail.wdPaidSum.toFixed(2)}`} />
                     </div>
 
+                    {selectedPlayer && (
+                      <button
+                        className={styles.recargasBtn}
+                        onClick={() => setRecargasUser({ id: selectedPlayer.id, name: `${selectedPlayer.nombre} ${selectedPlayer.apellido}` })}
+                      >
+                        🧾 Ver historial de recargas
+                      </button>
+                    )}
+
                     {detail.wdPendingCount > 0 && (
                       <p className={styles.pendingNote}>
                         Tiene {detail.wdPendingCount} retiro(s) pendiente(s) por ${detail.wdPendingSum.toFixed(2)}.
@@ -438,6 +449,14 @@ export default function AdminInteraccionPage() {
             </div>
           </div>
         </>
+      )}
+
+      {recargasUser && (
+        <RecargasModal
+          userId={recargasUser.id}
+          name={recargasUser.name}
+          onClose={() => setRecargasUser(null)}
+        />
       )}
     </div>
   );

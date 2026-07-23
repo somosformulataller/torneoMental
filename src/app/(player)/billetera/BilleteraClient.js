@@ -204,9 +204,12 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
   const withdrawExceeds = Number.isFinite(parsedWithdraw) && parsedWithdraw > walletBalance;
   const withdrawValid = Number.isFinite(parsedWithdraw) && parsedWithdraw > 0 && parsedWithdraw <= walletBalance;
   const pendingWithdrawals = withdrawals.filter((w) => w.status === 'solicitado');
+  // Solo un retiro a la vez: mientras haya uno en proceso, no puede pedir otro.
+  // La sección se re-habilita cuando soporte lo aprueba (pasa a 'pagado').
+  const hasPendingWithdrawal = pendingWithdrawals.length > 0;
 
   async function handleWithdraw() {
-    if (!withdrawValid) return;
+    if (!withdrawValid || hasPendingWithdrawal) return;
     setWithdrawing(true);
     setWithdrawError(null);
     try {
@@ -315,25 +318,25 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
               value={withdrawAmount}
               onChange={(e) => { setWithdrawAmount(e.target.value); setWithdrawError(null); }}
               placeholder="Monto a retirar ($)"
-              disabled={walletBalance <= 0}
+              disabled={walletBalance <= 0 || hasPendingWithdrawal}
             />
             <Button
               variant="primary"
               onClick={handleWithdraw}
-              disabled={!withdrawValid || withdrawing}
+              disabled={!withdrawValid || withdrawing || hasPendingWithdrawal}
               loading={withdrawing}
               loadingText="..."
             >
               Retirar
             </Button>
           </div>
-          {withdrawExceeds && (
+          {withdrawExceeds && !hasPendingWithdrawal && (
             <p className={styles.withdrawWarn}>El monto sobrepasa el saldo de tu billetera.</p>
           )}
           {withdrawError && !withdrawExceeds && (
             <p className={styles.withdrawWarn}>{withdrawError}</p>
           )}
-          {walletBalance <= 0 && (
+          {walletBalance <= 0 && !hasPendingWithdrawal && (
             <p className={styles.withdrawHint}>No tienes saldo disponible para retirar.</p>
           )}
 
@@ -345,6 +348,9 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
                   <span>${Number(w.amount_usd).toFixed(2)} · en proceso</span>
                 </div>
               ))}
+              <p className={styles.withdrawHint}>
+                Tienes un retiro en proceso. Podrás solicitar otro cuando sea aprobado.
+              </p>
             </div>
           )}
         </div>
