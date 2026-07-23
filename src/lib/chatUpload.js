@@ -5,12 +5,21 @@
 
 export const CHAT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
-// Solo imágenes o PDF (documentos/comprobantes).
+// Adjuntos del selector de archivos: imágenes o PDF (documentos/comprobantes).
 export function validateChatFile(file) {
   if (!file) return 'Archivo inválido.';
   if (file.size > CHAT_MAX_BYTES) return 'El archivo supera los 5 MB.';
   const ok = (file.type || '').startsWith('image/') || file.type === 'application/pdf';
   if (!ok) return 'Solo se permiten imágenes o PDF.';
+  return null;
+}
+
+// Notas de voz (grabadas en el navegador). Mismo límite de tamaño; ~2 min de
+// audio opus pesan bastante menos que 5 MB.
+export function validateChatAudio(file) {
+  if (!file) return 'Audio inválido.';
+  if (file.size > CHAT_MAX_BYTES) return 'La nota de voz es demasiado larga.';
+  if (!(file.type || '').startsWith('audio/')) return 'Formato de audio no válido.';
   return null;
 }
 

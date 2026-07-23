@@ -2,12 +2,27 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { adminReplyChatAction, markChatReadAdminAction, adminAdjustTicketsAction } from '@/actions/chat';
+import {
+  adminReplyChatAction,
+  markChatReadAdminAction,
+  adminAdjustTicketsAction,
+  adminStartConversationAction,
+  adminSetChatStatusAction,
+} from '@/actions/chat';
 import { adminSetUserBlockedAction } from '@/actions/admin';
-import { uploadChatAttachment, validateChatFile } from '@/lib/chatUpload';
+import { uploadChatAttachment, validateChatFile, validateChatAudio } from '@/lib/chatUpload';
 import ChatAttachment from '@/components/chat/ChatAttachment';
+import AudioRecorder from '@/components/chat/AudioRecorder';
 import Spinner from '@/components/ui/Spinner';
 import styles from './chat.module.css';
+
+// Etiquetas/estado de una conversación (color por estado).
+const STATUS_META = {
+  pendiente: { label: 'Pendiente', color: '#FBBF24' },
+  prioridad: { label: 'Prioridad', color: '#FB7185' },
+  resuelto: { label: 'Resuelto', color: '#34D399' },
+};
+const STATUS_ORDER = ['pendiente', 'prioridad', 'resuelto'];
 
 export default function AdminChatPage() {
   const supabase = createClient();
@@ -21,6 +36,12 @@ export default function AdminChatPage() {
   const [uploading, setUploading] = useState(false);
   const [playerProfile, setPlayerProfile] = useState(null); // { id, tickets_balance, blocked }
   const [acting, setActing] = useState(false);
+  // Filtro por etiqueta y buscador para iniciar chat con cualquier usuario.
+  const [filter, setFilter] = useState('todos'); // 'todos' | 'pendiente' | 'prioridad' | 'resuelto'
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [userResults, setUserResults] = useState([]);
+  const [searching, setSearching] = useState(false);
   const listRef = useRef(null);
   const fileRef = useRef(null);
   const activeIdRef = useRef(null);
@@ -146,6 +167,80 @@ export default function AdminChatPage() {
     }
   }
 
+  // Nota de voz del admin → se sube a la carpeta del jugador de la conversación.
+  async function handleAudioReply(file) {
+    if (!activeConv) return;
+    const err = validateChatAudio(file);
+    if (err) { alert(err); return; }
+    setUploading(true);
+    try {
+      const att = await uploadChatAttachment(supabase, activeConv.user_id, file);
+      const res = await sendReply('', att);
+      if (res?.error) alert('Error: ' + res.error);
+    } catch (er) {
+      alert('No se pudo enviar la nota de voz: ' + er.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  // ---- etiqueta/estado de la conversación ----
+  async function handleSetStatus(status) {
+    if (!activeConv || activeConv.status === status) return;
+    const convId = activeConv.conversation_id;
+    // Optimista: se refleja al instante y se revierte si la RPC falla.
+    setActiveConv((c) => (c ? { ...c, status } : c));
+    setConversations((prev) => prev.map((c) => (c.conversation_id === convId ? { ...c, status } : c)));
+    const { error } = await adminSetChatStatusAction(convId, status);
+    if (error) { alert('Error: ' + error); loadConversations(); }
+  }
+
+  // ---- buscador de usuarios para iniciar una conversación ----
+  async function handleUserSearch(term) {
+    setUserSearch(term);
+    // Se quitan caracteres que rompen la sintaxis del filtro .or() de PostgREST.
+    const q = term.trim().replace(/[,()*]/g, ' ').trim();
+    if (q.length < 2) { setUserResults([]); return; }
+    setSearching(true);
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nombre, apellido, email, cedula')
+        .eq('role', 'player')
+        .or(`nombre.ilike.%${q}%,apellido.ilike.%${q}%,email.ilike.%${q}%,cedula.ilike.%${q}%`)
+        .order('nombre', { ascending: true })
+        .limit(15);
+      setUserResults(data || []);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function startConversationWith(prof) {
+    const { conversationId, error } = await adminStartConversationAction(prof.id);
+    if (error) { alert('Error: ' + error); return; }
+    // Puede que ya existiera: si está en la lista, la abrimos; si no, armamos
+    // el objeto y recargamos la lista para que aparezca.
+    const existing = conversations.find((c) => c.conversation_id === conversationId);
+    const conv = existing || {
+      conversation_id: conversationId,
+      user_id: prof.id,
+      nombre: prof.nombre,
+      apellido: prof.apellido,
+      email: prof.email,
+      last_message_at: new Date().toISOString(),
+      last_body: null,
+      last_sender: null,
+      unread: 0,
+      status: 'pendiente',
+    };
+    setShowNewChat(false);
+    setUserSearch('');
+    setUserResults([]);
+    await openConversation(conv);
+    loadConversations();
+  }
+
   // ---- acciones sobre el jugador desde el chat ----
   async function handleAdjustTickets(sign) {
     if (!playerProfile) return;
@@ -222,6 +317,10 @@ export default function AdminChatPage() {
     return d.toLocaleString('es-VE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
+  const filteredConversations = filter === 'todos'
+    ? conversations
+    : conversations.filter((c) => (c.status || 'pendiente') === filter);
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -238,30 +337,89 @@ export default function AdminChatPage() {
 
       {tab === 'chats' ? (
         <div className={styles.chatLayout}>
-          {/* Lista de conversaciones */}
-          <div className={styles.convList}>
-            {loading ? (
-              <div className={styles.loading}><Spinner /></div>
-            ) : conversations.length === 0 ? (
-              <div className={styles.emptyList}>Aún no hay conversaciones.</div>
-            ) : (
-              conversations.map((c) => (
-                <button
-                  key={c.conversation_id}
-                  className={`${styles.convItem} ${activeConv?.conversation_id === c.conversation_id ? styles.convActive : ''}`}
-                  onClick={() => openConversation(c)}
-                >
-                  <div className={styles.convTop}>
-                    <span className={styles.convName}>{c.nombre} {c.apellido}</span>
-                    {c.unread > 0 && <span className={styles.convBadge}>{c.unread}</span>}
-                  </div>
-                  <div className={styles.convPreview}>
-                    {c.last_sender === 'support' ? 'Tú: ' : ''}{c.last_body || '—'}
-                  </div>
-                  <div className={styles.convTime}>{fmtTime(c.last_message_at)}</div>
-                </button>
-              ))
+          {/* Columna izquierda: filtros + buscador + lista */}
+          <div className={styles.convCol}>
+            <div className={styles.convToolbar}>
+              <div className={styles.filterChips}>
+                {['todos', ...STATUS_ORDER].map((f) => (
+                  <button
+                    key={f}
+                    className={`${styles.filterChip} ${filter === f ? styles.filterChipActive : ''}`}
+                    onClick={() => setFilter(f)}
+                  >
+                    {f === 'todos' ? 'Todos' : STATUS_META[f].label}
+                  </button>
+                ))}
+              </div>
+              <button className={styles.newChatBtn} onClick={() => setShowNewChat((v) => !v)}>
+                {showNewChat ? '✕ Cerrar' : '＋ Nuevo chat'}
+              </button>
+            </div>
+
+            {showNewChat && (
+              <div className={styles.searchPanel}>
+                <input
+                  className={styles.searchInput}
+                  type="text"
+                  placeholder="Buscar usuario por nombre, correo o cédula…"
+                  value={userSearch}
+                  onChange={(e) => handleUserSearch(e.target.value)}
+                  autoFocus
+                />
+                <div className={styles.searchResults}>
+                  {searching && <div className={styles.searchHint}>Buscando…</div>}
+                  {!searching && userSearch.trim().length >= 2 && userResults.length === 0 && (
+                    <div className={styles.searchHint}>Sin resultados.</div>
+                  )}
+                  {!searching && userSearch.trim().length < 2 && (
+                    <div className={styles.searchHint}>Escribe al menos 2 letras.</div>
+                  )}
+                  {userResults.map((u) => (
+                    <button key={u.id} className={styles.searchItem} onClick={() => startConversationWith(u)}>
+                      <span className={styles.searchName}>{u.nombre} {u.apellido}</span>
+                      <span className={styles.searchMeta}>{u.email}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
+
+            <div className={styles.convList}>
+              {loading ? (
+                <div className={styles.loading}><Spinner /></div>
+              ) : filteredConversations.length === 0 ? (
+                <div className={styles.emptyList}>
+                  {conversations.length === 0 ? 'Aún no hay conversaciones.' : 'No hay chats con esta etiqueta.'}
+                </div>
+              ) : (
+                filteredConversations.map((c) => {
+                  const st = STATUS_META[c.status] || STATUS_META.pendiente;
+                  return (
+                    <button
+                      key={c.conversation_id}
+                      className={`${styles.convItem} ${activeConv?.conversation_id === c.conversation_id ? styles.convActive : ''}`}
+                      onClick={() => openConversation(c)}
+                    >
+                      <div className={styles.convTop}>
+                        <span className={styles.convName}>{c.nombre} {c.apellido}</span>
+                        <div className={styles.convTopRight}>
+                          <span className={styles.statusTag} style={{ color: st.color, borderColor: `${st.color}66` }}>
+                            {st.label}
+                          </span>
+                          {c.unread > 0 && <span className={styles.convBadge}>{c.unread}</span>}
+                        </div>
+                      </div>
+                      <div className={styles.convPreview}>
+                        {c.last_body
+                          ? `${c.last_sender === 'support' ? 'Tú: ' : ''}${c.last_body}`
+                          : (c.last_sender ? '📎 Adjunto' : 'Conversación nueva')}
+                      </div>
+                      <div className={styles.convTime}>{fmtTime(c.last_message_at)}</div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           {/* Conversación activa */}
@@ -279,6 +437,23 @@ export default function AdminChatPage() {
                     <div className={styles.threadEmail}>
                       {activeConv.email}
                       {playerProfile && <> · 🎫 {playerProfile.tickets_balance} tickets</>}
+                    </div>
+                    <div className={styles.statusRow}>
+                      <span className={styles.statusRowLabel}>Etiqueta:</span>
+                      {STATUS_ORDER.map((s) => {
+                        const active = (activeConv.status || 'pendiente') === s;
+                        const meta = STATUS_META[s];
+                        return (
+                          <button
+                            key={s}
+                            className={`${styles.statusChip} ${active ? styles.statusChipActive : ''}`}
+                            style={active ? { background: `${meta.color}22`, borderColor: meta.color, color: meta.color } : undefined}
+                            onClick={() => handleSetStatus(s)}
+                          >
+                            {meta.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   {playerProfile && playerProfile.role !== 'admin' && (
@@ -323,6 +498,7 @@ export default function AdminChatPage() {
                   >
                     {uploading ? '…' : '📎'}
                   </button>
+                  <AudioRecorder onRecorded={handleAudioReply} disabled={uploading || sending} />
                   <input
                     className={styles.replyInput}
                     type="text"

@@ -18,6 +18,17 @@ export default function ChatAttachment({ path, name, type }) {
   }, [path]);
 
   const isImage = (type || '').startsWith('image/');
+  const isAudio = (type || '').startsWith('audio/');
+
+  if (isAudio) {
+    return url ? (
+      <audio controls preload="metadata" src={url} className={styles.audio}>
+        <a href={url} target="_blank" rel="noreferrer">🎤 nota de voz</a>
+      </audio>
+    ) : (
+      <span className={styles.loading}>🎤 nota de voz…</span>
+    );
+  }
 
   if (isImage) {
     return url ? (

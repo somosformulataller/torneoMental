@@ -35,6 +35,30 @@ export async function adminReplyChatAction(conversationId, body, attachment = nu
   return { messageId: data };
 }
 
+// El admin inicia (o recupera) la conversación con cualquier usuario para
+// escribirle primero. Devuelve el id de la conversación; el mensaje que el
+// admin envíe luego es el que le enciende la campana al jugador.
+export async function adminStartConversationAction(userId) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('chat_admin_start_conversation', {
+    p_user_id: userId,
+  });
+  if (error) return { error: error.message };
+  return { conversationId: data };
+}
+
+// El admin cambia la etiqueta/estado de una conversación
+// ('pendiente' | 'prioridad' | 'resuelto').
+export async function adminSetChatStatusAction(conversationId, status) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('chat_admin_set_status', {
+    p_conversation_id: conversationId,
+    p_status: status,
+  });
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 // El admin suma (delta > 0) o resta (delta < 0) tickets a un usuario.
 export async function adminAdjustTicketsAction(userId, delta) {
   const supabase = await createClient();

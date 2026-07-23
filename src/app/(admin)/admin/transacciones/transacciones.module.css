@@ -183,6 +183,7 @@
 .actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* Datos de Pago Móvil del jugador premiado */
@@ -253,4 +254,68 @@
 .textarea:focus {
   outline: none;
   border-color: var(--accent-cyan);
+}
+
+/* Buscador de referencias */
+.refToolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.refSearch {
+  flex: 1;
+  min-width: 220px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+}
+.refSearch:focus { border-color: var(--accent-violet); }
+
+.typeIn {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent-green);
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.typeOut {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent-violet);
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
+/* Modal de pago de retiro */
+.fileLabel {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.fileInput {
+  width: 100%;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.proofPreview {
+  margin-top: 10px;
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: 8px;
+  display: block;
 }

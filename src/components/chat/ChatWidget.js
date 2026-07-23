@@ -7,8 +7,9 @@ import {
   sendChatMessageAction,
   markChatReadPlayerAction,
 } from '@/actions/chat';
-import { uploadChatAttachment, validateChatFile } from '@/lib/chatUpload';
+import { uploadChatAttachment, validateChatFile, validateChatAudio } from '@/lib/chatUpload';
 import ChatAttachment from './ChatAttachment';
+import AudioRecorder from './AudioRecorder';
 import styles from './chatWidget.module.css';
 
 // Chat flotante del jugador (esquina inferior derecha). Permite escribir a
@@ -101,6 +102,34 @@ export default function ChatWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
+  // ---- si el admin INICIA la conversación (el jugador aún no tenía una) ----
+  // Captamos su creación en vivo para engancharnos a ella y encender la campana
+  // con el primer mensaje de soporte.
+  useEffect(() => {
+    if (!userId || conversationId) return;
+    const channel = supabase
+      .channel(`chat_player_newconv_${userId}_${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_conversations',
+        filter: `user_id=eq.${userId}`,
+      }, (payload) => {
+        setConversationId(payload.new.id);
+        if (openRef.current) {
+          loadMessages(payload.new.id);
+          markChatReadPlayerAction();
+        } else {
+          supabase.rpc('chat_player_unread').then(({ data }) => {
+            if (typeof data === 'number') setUnread(data);
+          });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, conversationId]);
+
   // ---- autoscroll al final cuando entran mensajes o se abre ----
   useEffect(() => {
     if (open && listRef.current) {
@@ -157,6 +186,21 @@ export default function ChatWidget() {
       await send('', att);
     } catch (er) {
       alert('No se pudo subir el archivo: ' + er.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  // Nota de voz grabada en el widget → se sube como adjunto y se envía.
+  async function handleAudio(file) {
+    const err = validateChatAudio(file);
+    if (err) { alert(err); return; }
+    setUploading(true);
+    try {
+      const att = await uploadChatAttachment(supabase, userId, file);
+      await send('', att);
+    } catch (er) {
+      alert('No se pudo enviar la nota de voz: ' + er.message);
     } finally {
       setUploading(false);
     }
@@ -240,6 +284,7 @@ export default function ChatWidget() {
             >
               {uploading ? '…' : '📎'}
             </button>
+            <AudioRecorder onRecorded={handleAudio} disabled={uploading || sending} />
             <input
               className={styles.input}
               type="text"

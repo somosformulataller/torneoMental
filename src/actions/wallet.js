@@ -49,10 +49,13 @@ export async function redeemBalanceForTicketsAction(tickets) {
 }
 
 // El admin marca un retiro como pagado (ya lo pagó por Pago Móvil a mano).
-export async function markWithdrawalPaidAction(withdrawalId) {
+// Puede guardar el número de referencia y la ruta del comprobante que subió.
+export async function markWithdrawalPaidAction(withdrawalId, reference = null, proofPath = null) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('mark_withdrawal_paid', {
     p_withdrawal_id: withdrawalId,
+    p_reference: reference,
+    p_proof_path: proofPath,
   });
   if (error) return { error: error.message };
   return { withdrawal: data };

@@ -19,6 +19,11 @@
   text-decoration: underline;
   word-break: break-word;
 }
+.audio {
+  display: block;
+  max-width: 220px;
+  height: 40px;
+}
 .loading {
   font-size: 0.8rem;
   opacity: 0.75;

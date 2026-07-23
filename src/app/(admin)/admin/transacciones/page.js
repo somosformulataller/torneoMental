@@ -7,11 +7,19 @@ import { markWithdrawalPaidAction, cancelWithdrawalAction } from '@/actions/wall
 import { adminSetUserBlockedAction } from '@/actions/admin';
 import { adminAdjustTicketsAction } from '@/actions/chat';
 import { PAYMENT_STATUSES } from '@/lib/constants';
+import { compressImage } from '@/lib/image';
 import Modal from '@/components/ui/Modal';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import FormInput from '@/components/ui/FormInput';
 import styles from './transacciones.module.css';
+
+const REF_TYPE_FILTERS = [
+  { key: 'todos', label: 'Todas' },
+  { key: 'recibido', label: 'Recibidos (compras)' },
+  { key: 'pagado', label: 'Pagados (retiros)' },
+];
 
 const STATUS_FILTERS = [
   { key: 'todos', label: 'Todos' },
@@ -60,6 +68,19 @@ export default function AdminTransaccionesPage() {
   const [paidWithdrawals, setPaidWithdrawals] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const [retiroFilter, setRetiroFilter] = useState('todos');
+
+  // --- Modal para pagar un retiro (referencia + comprobante) ---
+  const [payModal, setPayModal] = useState(null); // { withdrawal }
+  const [payRef, setPayRef] = useState('');
+  const [payProofFile, setPayProofFile] = useState(null);
+  const [payProofPreview, setPayProofPreview] = useState(null);
+
+  // --- Buscador / historial de referencias ---
+  const [references, setReferences] = useState([]);
+  const [loadingRefs, setLoadingRefs] = useState(true);
+  const [refSearch, setRefSearch] = useState('');
+  const [refTypeFilter, setRefTypeFilter] = useState('todos');
+  const [viewingWithdrawProof, setViewingWithdrawProof] = useState(null);
 
   const loadTickets = useCallback(async () => {
     setLoadingTickets(true);
@@ -118,7 +139,7 @@ export default function AdminTransaccionesPage() {
         supabase.from('withdrawals').select('id, user_id, amount_usd, created_at').eq('status', 'solicitado').order('created_at', { ascending: true }),
         supabase
           .from('withdrawals')
-          .select('id, amount_usd, created_at, paid_at, profiles ( nombre, apellido, email, payout_nombre, payout_banco, payout_cedula, payout_telefono )')
+          .select('id, user_id, amount_usd, created_at, paid_at, payment_reference, payment_proof_path, profiles ( nombre, apellido, email, payout_nombre, payout_banco, payout_cedula, payout_telefono )')
           .eq('status', 'pagado')
           .order('paid_at', { ascending: false }),
       ]);
@@ -152,12 +173,64 @@ export default function AdminTransaccionesPage() {
     }
   }, [supabase]);
 
+  // Historial/búsqueda de referencias: compras recibidas (tickets) + retiros
+  // pagados a los jugadores. Se juntan en una sola lista ordenada por fecha.
+  const loadReferences = useCallback(async () => {
+    setLoadingRefs(true);
+    try {
+      const [{ data: tk }, { data: wd }] = await Promise.all([
+        supabase
+          .from('tickets')
+          .select('id, payment_reference, amount_usd, amount_ves, created_at, payment_status, profiles ( nombre, apellido, email )')
+          .not('payment_reference', 'is', null)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('withdrawals')
+          .select('id, payment_reference, amount_usd, paid_at, profiles ( nombre, apellido, email )')
+          .eq('status', 'pagado')
+          .order('paid_at', { ascending: false }),
+      ]);
+
+      const recibidos = (tk || []).map((t) => ({
+        id: `t_${t.id}`,
+        type: 'recibido',
+        ref: t.payment_reference,
+        amount: Number(t.amount_usd),
+        date: t.created_at,
+        name: `${t.profiles?.nombre || ''} ${t.profiles?.apellido || ''}`.trim() || '—',
+        email: t.profiles?.email || '',
+        status: t.payment_status,
+      }));
+      const pagados = (wd || [])
+        .filter((w) => w.payment_reference)
+        .map((w) => ({
+          id: `w_${w.id}`,
+          type: 'pagado',
+          ref: w.payment_reference,
+          amount: Number(w.amount_usd),
+          date: w.paid_at,
+          name: `${w.profiles?.nombre || ''} ${w.profiles?.apellido || ''}`.trim() || '—',
+          email: w.profiles?.email || '',
+          status: 'pagado',
+        }));
+      const merged = [...recibidos, ...pagados].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      setReferences(merged);
+    } catch (err) {
+      console.error('Error loading references:', err);
+    } finally {
+      setLoadingRefs(false);
+    }
+  }, [supabase]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (section === 'compras') loadTickets();
     else if (section === 'premiados') loadPrizes();
-    else loadRetiros();
-  }, [section, loadTickets, loadPrizes, loadRetiros]);
+    else if (section === 'retiros') loadRetiros();
+    else loadReferences();
+  }, [section, loadTickets, loadPrizes, loadRetiros, loadReferences]);
 
   async function handleApprove(ticket) {
     if (!window.confirm(
@@ -212,17 +285,77 @@ export default function AdminTransaccionesPage() {
     }
   }
 
-  async function handleMarkPaid(w) {
-    if (!window.confirm(`¿Marcar como pagado el retiro de $${Number(w.amount_usd).toFixed(2)}?`)) return;
+  // Abrir el modal para pagar un retiro (pedir referencia + comprobante).
+  function openPayModal(w, player) {
+    if (payProofPreview) URL.revokeObjectURL(payProofPreview);
+    const name = `${player?.nombre || ''} ${player?.apellido || ''}`.trim() || 'el jugador';
+    setPayModal({ withdrawal: w, name });
+    setPayRef('');
+    setPayProofFile(null);
+    setPayProofPreview(null);
+  }
+
+  async function handlePayProofChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('El comprobante debe ser una imagen.'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('La imagen no puede pesar más de 5 MB.'); return; }
+    const compressed = await compressImage(file);
+    if (payProofPreview) URL.revokeObjectURL(payProofPreview);
+    setPayProofFile(compressed);
+    setPayProofPreview(URL.createObjectURL(compressed));
+  }
+
+  function closePayModal() {
+    if (payProofPreview) URL.revokeObjectURL(payProofPreview);
+    setPayModal(null);
+    setPayRef('');
+    setPayProofFile(null);
+    setPayProofPreview(null);
+  }
+
+  async function handleConfirmPay() {
+    const w = payModal?.withdrawal;
+    if (!w) return;
+    const ref = payRef.trim();
+    if (!ref) { alert('Escribe el número de referencia del pago que hiciste.'); return; }
     setProcessing(true);
     try {
-      const { error } = await markWithdrawalPaidAction(w.id);
+      let proofPath = null;
+      if (payProofFile) {
+        const safe = (payProofFile.name || 'comprobante.jpg').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-60);
+        const path = `${w.user_id}/${w.id}_${Date.now()}_${safe}`;
+        const { error: upErr } = await supabase.storage
+          .from('withdrawal-proofs')
+          .upload(path, payProofFile, { contentType: payProofFile.type, upsert: false });
+        if (upErr) throw new Error('No se pudo subir el comprobante: ' + upErr.message);
+        proofPath = path;
+      }
+      const { error } = await markWithdrawalPaidAction(w.id, ref, proofPath);
       if (error) throw new Error(error);
+      closePayModal();
       await loadRetiros();
     } catch (err) {
       alert('Error: ' + err.message);
     } finally {
       setProcessing(false);
+    }
+  }
+
+  async function handleViewWithdrawalProof(w) {
+    if (!w.payment_proof_path) return;
+    setViewingWithdrawProof(w.id);
+    try {
+      const { data, error } = await supabase.storage
+        .from('withdrawal-proofs')
+        .createSignedUrl(w.payment_proof_path, 60);
+      if (error) throw error;
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      alert('No se pudo abrir el comprobante');
+    } finally {
+      setViewingWithdrawProof(null);
     }
   }
 
@@ -348,6 +481,12 @@ export default function AdminTransaccionesPage() {
           onClick={() => setSection('retiros')}
         >
           💸 Retiros
+        </button>
+        <button
+          className={`${styles.sectionTab} ${section === 'referencias' ? styles.sectionTabActive : ''}`}
+          onClick={() => setSection('referencias')}
+        >
+          🔎 Referencias
         </button>
       </div>
 
@@ -543,7 +682,7 @@ export default function AdminTransaccionesPage() {
             </div>
           )}
         </>
-      ) : (
+      ) : section === 'retiros' ? (
         <>
           <div className={styles.filters}>
             {RETIRO_FILTERS.map((f) => (
@@ -575,6 +714,8 @@ export default function AdminTransaccionesPage() {
                       <th>Fecha de pago</th>
                       <th>Jugador</th>
                       <th>Monto pagado</th>
+                      <th>Referencia</th>
+                      <th>Comprobante</th>
                       <th>Datos de Pago Móvil</th>
                     </tr>
                   </thead>
@@ -592,6 +733,16 @@ export default function AdminTransaccionesPage() {
                             </div>
                           </td>
                           <td><span className={styles.prize}>${Number(w.amount_usd).toFixed(2)}</span></td>
+                          <td>{w.payment_reference ? <code className={styles.ref}>{w.payment_reference}</code> : <span className={styles.userEmail}>—</span>}</td>
+                          <td>
+                            {w.payment_proof_path ? (
+                              <Button variant="ghost" size="sm" disabled={viewingWithdrawProof === w.id} loading={viewingWithdrawProof === w.id} onClick={() => handleViewWithdrawalProof(w)}>
+                                Ver
+                              </Button>
+                            ) : (
+                              <span className={styles.userEmail}>—</span>
+                            )}
+                          </td>
                           <td>
                             {hasPayout ? (
                               <div className={styles.payoutData}>
@@ -672,8 +823,8 @@ export default function AdminTransaccionesPage() {
                               <div className={styles.actions} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
                                 {p.pendList.map((w) => (
                                   <div key={w.id} className={styles.actions}>
-                                    <Button variant="success" size="sm" disabled={processing} onClick={() => handleMarkPaid(w)}>
-                                      ✓ Pagado ${Number(w.amount_usd).toFixed(2)}
+                                    <Button variant="success" size="sm" disabled={processing} onClick={() => openPayModal(w, p)}>
+                                      ✓ Pagar ${Number(w.amount_usd).toFixed(2)}
                                     </Button>
                                     <Button variant="danger" size="sm" disabled={processing} onClick={() => handleCancelWithdrawal(w)}>
                                       ✕ Cancelar
@@ -694,7 +845,133 @@ export default function AdminTransaccionesPage() {
             );
           })()}
         </>
+      ) : (
+        /* ---- Referencias: buscador + historial (recibidos + pagados) ---- */
+        <>
+          <div className={styles.refToolbar}>
+            <input
+              className={styles.refSearch}
+              type="text"
+              placeholder="Buscar por número de referencia…"
+              value={refSearch}
+              onChange={(e) => setRefSearch(e.target.value)}
+            />
+            <div className={styles.filters}>
+              {REF_TYPE_FILTERS.map((f) => (
+                <button
+                  key={f.key}
+                  className={`${styles.filterBtn} ${refTypeFilter === f.key ? styles.activeFilter : ''}`}
+                  onClick={() => setRefTypeFilter(f.key)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <p className={styles.hint}>
+            Historial de referencias: los pagos <strong>recibidos</strong> por compra de tickets y los
+            pagos <strong>hechos</strong> a los jugadores por sus retiros. Busca por número de referencia.
+          </p>
+
+          {loadingRefs ? (
+            <div className={styles.loading}><Spinner /></div>
+          ) : (() => {
+            const term = refSearch.trim().toLowerCase();
+            const filtered = references.filter((r) =>
+              (refTypeFilter === 'todos' || r.type === refTypeFilter) &&
+              (term === '' || (r.ref || '').toLowerCase().includes(term))
+            );
+            if (filtered.length === 0) {
+              return <div className={styles.emptyState}>No se encontraron referencias.</div>;
+            }
+            return (
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Referencia</th>
+                      <th>Tipo</th>
+                      <th>Jugador</th>
+                      <th>Monto</th>
+                      <th>Fecha</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((r) => (
+                      <tr key={r.id}>
+                        <td><code className={styles.ref}>{r.ref}</code></td>
+                        <td>
+                          {r.type === 'recibido'
+                            ? <span className={styles.typeIn}>↓ Recibido</span>
+                            : <span className={styles.typeOut}>↑ Pagado</span>}
+                        </td>
+                        <td>
+                          <div className={styles.userInfo}>
+                            <span className={styles.userName}>{r.name}</span>
+                            <span className={styles.userEmail}>{r.email}</span>
+                          </div>
+                        </td>
+                        <td><span className={styles.usd}>${r.amount.toFixed(2)}</span></td>
+                        <td>{formatDate(r.date)}</td>
+                        <td>
+                          {r.type === 'recibido'
+                            ? <Badge color={PAYMENT_STATUSES[r.status]?.color}>{PAYMENT_STATUSES[r.status]?.label}</Badge>
+                            : <Badge color="#34D399">Pagado</Badge>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+        </>
       )}
+
+      {/* Modal: pagar un retiro (referencia + comprobante) */}
+      <Modal
+        isOpen={!!payModal}
+        onClose={closePayModal}
+        title="Registrar pago del retiro"
+      >
+        <div className={styles.modalContent}>
+          <p>
+            Retiro de{' '}
+            <strong>${payModal ? Number(payModal.withdrawal.amount_usd).toFixed(2) : ''}</strong>
+            {' '}a{' '}
+            <strong>{payModal?.name}</strong>.
+            Escribe el número de referencia del Pago Móvil que hiciste y, si quieres,
+            adjunta el comprobante.
+          </p>
+          <FormInput
+            label="Número de referencia"
+            type="text"
+            value={payRef}
+            onChange={(e) => setPayRef(e.target.value)}
+            placeholder="Ej: 001234567"
+          />
+          <div>
+            <label className={styles.fileLabel}>Comprobante (opcional)</label>
+            <input type="file" accept="image/*" onChange={handlePayProofChange} className={styles.fileInput} />
+            {payProofPreview && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={payProofPreview} alt="Comprobante" className={styles.proofPreview} />
+            )}
+          </div>
+          <Button
+            variant="success"
+            fullWidth
+            onClick={handleConfirmPay}
+            disabled={processing || !payRef.trim()}
+            loading={processing}
+            loadingText="Guardando..."
+          >
+            ✓ Marcar como pagado
+          </Button>
+        </div>
+      </Modal>
 
       {/* Reject Modal */}
       <Modal
