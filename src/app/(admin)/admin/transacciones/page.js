@@ -23,6 +23,12 @@ const REF_TYPE_FILTERS = [
   { key: 'pagado', label: 'Pagados (retiros)' },
 ];
 
+// Normaliza una referencia para comparar (ignora mayúsculas, espacios y signos):
+// así "123-456", "123 456" y "123456" se detectan como la misma.
+function normRef(ref) {
+  return (ref || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 const STATUS_FILTERS = [
   { key: 'todos', label: 'Todos' },
   { key: 'pendiente', label: 'Pendientes' },
@@ -55,6 +61,8 @@ export default function AdminTransaccionesPage() {
   const [tickets, setTickets] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [statusFilter, setStatusFilter] = useState('pendiente');
+  // Índice de TODAS las referencias (normalizadas) → para detectar repetidas.
+  const [refIndex, setRefIndex] = useState({});
   const [viewingProof, setViewingProof] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -99,13 +107,36 @@ export default function AdminTransaccionesPage() {
         `)
         .order('created_at', { ascending: false });
 
-      if (statusFilter !== 'todos') {
+      // "Pendientes" ahora incluye también validando y rechazados, para revisar
+      // en un solo lugar las solicitudes con problemas o anomalías.
+      if (statusFilter === 'pendiente') {
+        query = query.in('payment_status', ['pendiente', 'validando', 'rechazado']);
+      } else if (statusFilter !== 'todos') {
         query = query.eq('payment_status', statusFilter);
       }
 
-      const { data, error } = await query;
+      // En paralelo, TODAS las referencias (livianas) para detectar repetidas.
+      const [{ data, error }, { data: allRefs }] = await Promise.all([
+        query,
+        supabase
+          .from('tickets')
+          .select('id, payment_reference, payment_status, created_at, profiles ( nombre, apellido )'),
+      ]);
       if (error) throw error;
       setTickets(data || []);
+
+      const idx = {};
+      (allRefs || []).forEach((r) => {
+        const k = normRef(r.payment_reference);
+        if (!k) return;
+        (idx[k] = idx[k] || []).push({
+          id: r.id,
+          status: r.payment_status,
+          created_at: r.created_at,
+          name: `${r.profiles?.nombre || ''} ${r.profiles?.apellido || ''}`.trim() || '—',
+        });
+      });
+      setRefIndex(idx);
     } catch (err) {
       console.error('Error loading tickets:', err);
     } finally {
@@ -473,6 +504,35 @@ export default function AdminTransaccionesPage() {
     });
   }
 
+  // Detecta anomalías de una compra y arma su etiqueta + nota. Hoy detecta lo
+  // que se puede saber de los datos: referencia repetida/reutilizada (posible
+  // pago duplicado) y falta de comprobante. (Si la foto no concuerda con el
+  // banco/referencia hay que revisarla a ojo: el sistema no lee la imagen.)
+  function ticketAnomalies(t) {
+    const list = [];
+    const key = normRef(t.payment_reference);
+    const others = (refIndex[key] || []).filter((o) => o.id !== t.id);
+    if (key && others.length > 0) {
+      const rejected = others.some((o) => o.status === 'rechazado');
+      const parts = others
+        .slice(0, 4)
+        .map((o) => `${o.name} · ${PAYMENT_STATUSES[o.status]?.label || o.status} · ${formatDate(o.created_at)}`);
+      list.push({
+        label: 'Referencia repetida',
+        color: '#FB7185',
+        note: `Esta misma referencia ya aparece en ${others.length} solicitud(es) más${rejected ? ' (una ya fue rechazada)' : ''}: ${parts.join('  |  ')}${others.length > 4 ? '…' : ''}. Revisa si es un pago duplicado o una referencia reutilizada.`,
+      });
+    }
+    if (!t.payment_proof_path) {
+      list.push({
+        label: 'Sin comprobante',
+        color: '#FBBF24',
+        note: 'El jugador no adjuntó foto del pago. Verifica la referencia y el monto directamente contra el banco.',
+      });
+    }
+    return list;
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -525,6 +585,11 @@ export default function AdminTransaccionesPage() {
             resultado de la validación automática. Si el jugador adjuntó comprobante,
             verifica que la <strong>referencia</strong> y el <strong>monto</strong> coincidan
             con la imagen antes de aprobar.
+            {statusFilter === 'pendiente' && (
+              <> En <strong>Pendientes</strong> también aparecen los <strong>rechazados</strong> y las
+              solicitudes con <strong>anomalías</strong> (referencia repetida o reutilizada, sin
+              comprobante), marcadas con una etiqueta ⚠ y una nota explicando el caso.</>
+            )}
           </p>
 
           {loadingTickets ? (
@@ -559,7 +624,20 @@ export default function AdminTransaccionesPage() {
                         </div>
                       </td>
                       <td>{t.profiles?.cedula}</td>
-                      <td><code className={styles.ref}>{t.payment_reference}</code></td>
+                      <td>
+                        <code className={styles.ref}>{t.payment_reference}</code>
+                        {ticketAnomalies(t).map((a, i) => (
+                          <div key={i} className={styles.anomaly}>
+                            <span
+                              className={styles.anomalyTag}
+                              style={{ color: a.color, borderColor: `${a.color}66`, background: `${a.color}1f` }}
+                            >
+                              ⚠ {a.label}
+                            </span>
+                            <span className={styles.anomalyNote}>{a.note}</span>
+                          </div>
+                        ))}
+                      </td>
                       <td>
                         {t.payment_proof_path ? (
                           <Button
@@ -588,6 +666,9 @@ export default function AdminTransaccionesPage() {
                         <Badge color={PAYMENT_STATUSES[t.payment_status]?.color}>
                           {PAYMENT_STATUSES[t.payment_status]?.label}
                         </Badge>
+                        {t.payment_status === 'rechazado' && t.notes && (
+                          <div className={styles.rejectNote}>Motivo: {t.notes}</div>
+                        )}
                       </td>
                       <td>
                         {t.payment_status === 'aprobado' ? (

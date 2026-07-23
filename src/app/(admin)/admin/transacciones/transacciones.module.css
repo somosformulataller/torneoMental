@@ -142,6 +142,37 @@
   font-size: 0.85rem;
 }
 
+/* Anomalías de una compra (referencia repetida, sin comprobante, etc.) */
+.anomaly {
+  margin-top: 8px;
+  max-width: 260px;
+}
+.anomalyTag {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.anomalyNote {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+.rejectNote {
+  margin-top: 6px;
+  max-width: 220px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--accent-red);
+}
+
 .amountInfo {
   display: flex;
   flex-direction: column;
