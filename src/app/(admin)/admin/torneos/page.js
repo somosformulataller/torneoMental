@@ -176,10 +176,7 @@ export default function AdminTorneosPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Torneos</h1>
-        <Button variant="primary" size="sm" onClick={() => handleOpenModal()}>
-          + Nuevo Torneo
-        </Button>
+        <h1 className={styles.title}>Historial de Torneos</h1>
       </div>
 
       {loading ? (

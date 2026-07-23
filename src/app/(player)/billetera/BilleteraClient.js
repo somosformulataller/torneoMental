@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { PAYMENT_STATUSES, VENEZUELAN_BANKS } from '@/lib/constants';
 import { deleteAccountAction } from '@/actions/account';
 import { updatePayoutInfoAction } from '@/actions/profile';
-import { requestWithdrawalAction } from '@/actions/wallet';
+import { requestWithdrawalAction, redeemBalanceForTicketsAction } from '@/actions/wallet';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import FormInput from '@/components/ui/FormInput';
@@ -34,6 +34,12 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  // Canje de saldo por tickets (1 ticket = $1).
+  const [redeemTickets, setRedeemTickets] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemError, setRedeemError] = useState(null);
+  const [redeemOk, setRedeemOk] = useState(false);
 
   // Datos de Pago Móvil (para recibir premios). Prefill con lo ya guardado.
   const [payout, setPayout] = useState({
@@ -176,6 +182,31 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
     }
   }
 
+  const maxRedeem = Math.floor(walletBalance);
+  const parsedRedeem = parseInt(redeemTickets, 10);
+  const redeemValid = Number.isInteger(parsedRedeem) && parsedRedeem > 0 && parsedRedeem <= maxRedeem;
+
+  async function handleRedeem() {
+    if (!redeemValid) return;
+    setRedeeming(true);
+    setRedeemError(null);
+    setRedeemOk(false);
+    try {
+      const { error } = await redeemBalanceForTicketsAction(parsedRedeem);
+      if (error) {
+        setRedeemError(error);
+        return;
+      }
+      setRedeemTickets('');
+      setRedeemOk(true);
+      await refreshData();
+    } catch {
+      setRedeemError('No se pudo canjear. Intenta de nuevo.');
+    } finally {
+      setRedeeming(false);
+    }
+  }
+
   function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('es-VE', {
       day: '2-digit', month: 'short', year: 'numeric',
@@ -266,6 +297,58 @@ export default function BilleteraClient({ userId, initialProfile, initialTickets
             </div>
           )}
         </div>
+      </div>
+
+      {/* Canjear saldo de premios por tickets (1 ticket = $1) */}
+      <div className={styles.redeemCard}>
+        <div className={styles.balanceHeader}>
+          <span className={styles.balanceLabel}>Canjear saldo por tickets</span>
+          <span className={styles.balanceIcon}>🎟️</span>
+        </div>
+
+        {walletBalance <= 0 ? (
+          <p className={styles.redeemEmpty}>
+            Aún no tienes saldo para canjear. ¡Gana el ranking para ganar premios! 🏆
+          </p>
+        ) : (
+          <>
+            <p className={styles.redeemHint}>
+              Convierte tu saldo de premios en tickets para seguir jugando.
+              <strong> 1 ticket = $1.</strong> Tienes ${walletBalance.toFixed(2)} (hasta {maxRedeem} tickets).
+            </p>
+            <div className={styles.withdrawRow}>
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                step="1"
+                max={maxRedeem}
+                className={styles.withdrawInput}
+                value={redeemTickets}
+                onChange={(e) => { setRedeemTickets(e.target.value); setRedeemError(null); setRedeemOk(false); }}
+                placeholder="¿Cuántos tickets?"
+              />
+              <Button
+                variant="primary"
+                onClick={handleRedeem}
+                disabled={!redeemValid || redeeming}
+                loading={redeeming}
+                loadingText="..."
+              >
+                Canjear
+              </Button>
+            </div>
+            {parsedRedeem > maxRedeem && (
+              <p className={styles.withdrawWarn}>No tienes saldo suficiente para {parsedRedeem} tickets.</p>
+            )}
+            {redeemError && (
+              <p className={styles.withdrawWarn}>{redeemError}</p>
+            )}
+            {redeemOk && (
+              <p className={styles.redeemOk}>¡Listo! Tus tickets fueron acreditados. 🎫</p>
+            )}
+          </>
+        )}
       </div>
 
       {/* Datos de Pago Móvil — para recibir el pago de los premios */}

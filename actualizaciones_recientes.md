@@ -310,3 +310,15 @@ Nueva función: chat entre cada jugador y atención al cliente. **Requiere corre
 - **Tiempo real**: los mensajes llegan al instante (Supabase Realtime) sin recargar. **Seguridad**: cada quien ve solo lo suyo (RLS); los mensajes se crean vía funciones `SECURITY DEFINER` para que no se pueda falsear el remitente.
 - **Archivos**: `supabase/migrations/022_chat.sql`, `src/actions/chat.js`, `src/components/chat/ChatWidget.js` (+CSS, montado en el layout del jugador), `src/app/(admin)/admin/chat/page.js` (+CSS), enlace en `AdminSidebar.js`. Detalle en `docs/chat.md`.
 - **Estado**: código listo y probado que la interfaz se renderiza (widget del jugador y panel del admin). Pendiente: correr la migración y verificar el flujo completo antes de subir a producción.
+
+## Adjuntos en el chat, tickets desde admin, canje de saldo y ajustes de menú (2026-07-22)
+
+Paquete grande. **Requiere correr la migración `023_chat_attachments_tickets.sql` en Supabase antes de subir a producción** (excepto los cambios de menú, que son solo de interfaz).
+
+- **Adjuntar archivos en el chat** (jugador y admin): botón 📎 para enviar una imagen o PDF (máx. 5 MB). Se suben a un bucket privado `chat-attachments` con RLS (cada quien ve solo lo de su conversación; admin ve todo). Las imágenes se muestran en miniatura; los PDF como enlace. Componente `ChatAttachment` + `src/lib/chatUpload.js`.
+- **Acciones del admin desde el chat**: en la cabecera de cada conversación, botones para **sumar/restar tickets** y **bloquear/desbloquear** al jugador, mostrando su saldo de tickets y estado.
+- **Tickets +/- en Transacciones**: en "Compra de tickets", cada jugador tiene botones **＋/− Tickets** (además del de bloquear que ya existía).
+- **Canjear saldo por tickets (Billetera)**: nueva tarjeta donde el jugador convierte su saldo de premios en tickets (**1 ticket = $1**). Si no tiene saldo, muestra "Aún no tienes saldo para canjear. ¡Gana el ranking para ganar premios!".
+- **Menú del admin** (solo interfaz, sin migración): se **ocultó el botón "+ Nuevo Torneo"** en Torneos (basta con el torneo recurrente editable en su sección); "Torneos" pasó a llamarse **"Historial de Torneos"** y "Recurrencia" a **"Torneo recurrente"**.
+- **Base de datos** (migración 023): columnas de adjunto en `chat_messages`; bucket `chat-attachments` + políticas; `chat_send_message`/`chat_admin_reply` aceptan adjunto; RPC `admin_adjust_tickets` (sumar/restar, no deja negativo); RPC `redeem_balance_for_tickets` (canje 1:1). Server actions en `src/actions/chat.js` y `src/actions/wallet.js`.
+- **Estado**: código listo, lint limpio. Pendiente: correr la migración 023 y verificar el flujo completo antes de pushear.

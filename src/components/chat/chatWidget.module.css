@@ -184,3 +184,18 @@
 }
 .sendBtn:hover:not(:disabled) { transform: scale(1.08); }
 .sendBtn:disabled { opacity: 0.45; cursor: default; }
+
+.attachBtn {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.attachBtn:hover:not(:disabled) { border-color: var(--accent-violet); }
+.attachBtn:disabled { opacity: 0.5; cursor: default; }

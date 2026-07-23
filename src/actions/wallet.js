@@ -26,6 +26,28 @@ export async function requestWithdrawalAction(amount) {
   return { withdrawal: data };
 }
 
+// El jugador canjea parte de su saldo de premios por tickets (1 ticket = $1).
+export async function redeemBalanceForTicketsAction(tickets) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autenticado' };
+
+  const { data: blocked } = await supabase.rpc('is_blocked');
+  if (blocked) return { error: 'Tu cuenta está bloqueada.' };
+
+  const n = Number(tickets);
+  if (!Number.isInteger(n) || n <= 0) {
+    return { error: 'La cantidad de tickets debe ser un número entero mayor a cero' };
+  }
+
+  const { data, error } = await supabase.rpc('redeem_balance_for_tickets', { p_tickets: n });
+  if (error) return { error: error.message };
+  return { profile: data };
+}
+
 // El admin marca un retiro como pagado (ya lo pagó por Pago Móvil a mano).
 export async function markWithdrawalPaidAction(withdrawalId) {
   const supabase = await createClient();

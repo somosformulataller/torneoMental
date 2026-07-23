@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { adminApproveTicketAction, adminRejectTicketAction } from '@/actions/tickets';
 import { markWithdrawalPaidAction, cancelWithdrawalAction } from '@/actions/wallet';
 import { adminSetUserBlockedAction } from '@/actions/admin';
+import { adminAdjustTicketsAction } from '@/actions/chat';
 import { PAYMENT_STATUSES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import Spinner from '@/components/ui/Spinner';
@@ -260,6 +261,45 @@ export default function AdminTransaccionesPage() {
     }
   }
 
+  // Suma (signo +1) o resta (-1) tickets a un jugador; pregunta la cantidad.
+  async function handleAdjustTickets(userId, sign, name) {
+    const raw = window.prompt(
+      `¿Cuántos tickets quieres ${sign > 0 ? 'SUMAR a' : 'RESTAR a'} ${name}?`,
+      '1'
+    );
+    if (raw == null) return;
+    const qty = parseInt(raw, 10);
+    if (!Number.isInteger(qty) || qty <= 0) { alert('Escribe un número entero mayor a 0.'); return; }
+    setProcessing(true);
+    try {
+      const { error } = await adminAdjustTicketsAction(userId, sign * qty);
+      if (error) throw new Error(error);
+      if (section === 'compras') await loadTickets();
+      else if (section === 'premiados') await loadPrizes();
+      else await loadRetiros();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  // Botones +/- tickets para un jugador. `prof` debe traer id, nombre, apellido.
+  function renderTicketAdjust(prof) {
+    if (!prof?.id) return null;
+    const name = `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'el jugador';
+    return (
+      <>
+        <Button variant="ghost" size="sm" disabled={processing} onClick={() => handleAdjustTickets(prof.id, 1, name)}>
+          ＋ Tickets
+        </Button>
+        <Button variant="ghost" size="sm" disabled={processing} onClick={() => handleAdjustTickets(prof.id, -1, name)}>
+          − Tickets
+        </Button>
+      </>
+    );
+  }
+
   // Botón de bloquear/desbloquear para un jugador (se reutiliza en los tres
   // bloques). `prof` debe traer id, nombre, apellido y blocked.
   function renderBlockBtn(prof) {
@@ -426,6 +466,7 @@ export default function AdminTransaccionesPage() {
                               ✕ Rechazar
                             </Button>
                           )}
+                          {renderTicketAdjust(t.profiles)}
                           {renderBlockBtn(t.profiles)}
                         </div>
                       </td>

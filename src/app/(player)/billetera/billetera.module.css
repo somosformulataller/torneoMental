@@ -426,3 +426,31 @@
 .withdrawModalIcon {
   font-size: 3rem;
 }
+
+/* Canjear saldo por tickets */
+.redeemCard {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.12), rgba(167, 139, 250, 0.02));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: var(--radius-lg, 24px);
+  padding: 24px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+.redeemEmpty {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+.redeemHint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 6px 0 14px;
+}
+.redeemHint strong { color: var(--accent-violet); }
+.redeemOk {
+  color: var(--accent-green);
+  font-size: 0.85rem;
+  margin-top: 10px;
+}

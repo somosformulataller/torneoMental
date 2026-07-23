@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { adminReplyChatAction, markChatReadAdminAction } from '@/actions/chat';
+import { adminReplyChatAction, markChatReadAdminAction, adminAdjustTicketsAction } from '@/actions/chat';
+import { adminSetUserBlockedAction } from '@/actions/admin';
+import { uploadChatAttachment, validateChatFile } from '@/lib/chatUpload';
+import ChatAttachment from '@/components/chat/ChatAttachment';
 import Spinner from '@/components/ui/Spinner';
 import styles from './chat.module.css';
 
@@ -15,7 +18,11 @@ export default function AdminChatPage() {
   const [messages, setMessages] = useState([]);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [playerProfile, setPlayerProfile] = useState(null); // { id, tickets_balance, blocked }
+  const [acting, setActing] = useState(false);
   const listRef = useRef(null);
+  const fileRef = useRef(null);
   const activeIdRef = useRef(null);
   useEffect(() => { activeIdRef.current = activeConv?.conversation_id || null; }, [activeConv]);
 
@@ -73,19 +80,40 @@ export default function AdminChatPage() {
   async function loadMessages(convId) {
     const { data } = await supabase
       .from('chat_messages')
-      .select('id, sender, body, created_at')
+      .select('id, sender, body, created_at, attachment_path, attachment_name, attachment_type')
       .eq('conversation_id', convId)
       .order('created_at', { ascending: true });
     setMessages(data || []);
   }
 
+  async function loadPlayerProfile(userId) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, tickets_balance, blocked, role')
+      .eq('id', userId)
+      .single();
+    setPlayerProfile(data || null);
+  }
+
   async function openConversation(conv) {
     setActiveConv(conv);
+    setPlayerProfile(null);
     await loadMessages(conv.conversation_id);
+    loadPlayerProfile(conv.user_id);
     await markChatReadAdminAction(conv.conversation_id);
     setConversations((prev) => prev.map((c) =>
       c.conversation_id === conv.conversation_id ? { ...c, unread: 0 } : c
     ));
+  }
+
+  async function sendReply(body, attachment = null) {
+    if (!activeConv) return { error: 'Sin conversación' };
+    const res = await adminReplyChatAction(activeConv.conversation_id, body, attachment);
+    if (!res?.error) {
+      await loadMessages(activeConv.conversation_id);
+      loadConversations();
+    }
+    return res;
   }
 
   async function handleReply(e) {
@@ -94,15 +122,64 @@ export default function AdminChatPage() {
     if (!body || sending || !activeConv) return;
     setSending(true);
     setReply('');
-    const res = await adminReplyChatAction(activeConv.conversation_id, body);
-    if (!res?.error) {
-      await loadMessages(activeConv.conversation_id);
-      loadConversations();
-    } else {
-      setReply(body);
-      alert('Error: ' + res.error);
-    }
+    const res = await sendReply(body);
+    if (res?.error) { setReply(body); alert('Error: ' + res.error); }
     setSending(false);
+  }
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !activeConv) return;
+    const err = validateChatFile(file);
+    if (err) { alert(err); return; }
+    setUploading(true);
+    try {
+      // Se guarda en la carpeta del jugador de esta conversación.
+      const att = await uploadChatAttachment(supabase, activeConv.user_id, file);
+      const res = await sendReply('', att);
+      if (res?.error) alert('Error: ' + res.error);
+    } catch (er) {
+      alert('No se pudo subir el archivo: ' + er.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  // ---- acciones sobre el jugador desde el chat ----
+  async function handleAdjustTickets(sign) {
+    if (!playerProfile) return;
+    const raw = window.prompt(`¿Cuántos tickets quieres ${sign > 0 ? 'SUMAR' : 'RESTAR'}?`, '1');
+    if (raw == null) return;
+    const qty = parseInt(raw, 10);
+    if (!Number.isInteger(qty) || qty <= 0) { alert('Escribe un número entero mayor a 0.'); return; }
+    setActing(true);
+    try {
+      const { error, profile } = await adminAdjustTicketsAction(playerProfile.id, sign * qty);
+      if (error) throw new Error(error);
+      if (profile) setPlayerProfile((p) => ({ ...p, tickets_balance: profile.tickets_balance }));
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleToggleBlock() {
+    if (!playerProfile) return;
+    const next = !playerProfile.blocked;
+    const who = activeConv ? `${activeConv.nombre} ${activeConv.apellido}` : 'este jugador';
+    if (!window.confirm(next ? `¿Bloquear a ${who}?` : `¿Desbloquear a ${who}?`)) return;
+    setActing(true);
+    try {
+      const { error } = await adminSetUserBlockedAction(playerProfile.id, next);
+      if (error) throw new Error(error);
+      setPlayerProfile((p) => ({ ...p, blocked: next }));
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setActing(false);
+    }
   }
 
   // ---- CRUD preguntas rápidas ----
@@ -195,19 +272,57 @@ export default function AdminChatPage() {
               <>
                 <div className={styles.threadHeader}>
                   <div>
-                    <div className={styles.threadName}>{activeConv.nombre} {activeConv.apellido}</div>
-                    <div className={styles.threadEmail}>{activeConv.email}</div>
+                    <div className={styles.threadName}>
+                      {activeConv.nombre} {activeConv.apellido}
+                      {playerProfile?.blocked && <span className={styles.blockedTag}>Bloqueado</span>}
+                    </div>
+                    <div className={styles.threadEmail}>
+                      {activeConv.email}
+                      {playerProfile && <> · 🎫 {playerProfile.tickets_balance} tickets</>}
+                    </div>
                   </div>
+                  {playerProfile && playerProfile.role !== 'admin' && (
+                    <div className={styles.threadActions}>
+                      <button className={styles.actBtn} disabled={acting} onClick={() => handleAdjustTickets(1)}>＋ Tickets</button>
+                      <button className={styles.actBtn} disabled={acting} onClick={() => handleAdjustTickets(-1)}>− Tickets</button>
+                      <button
+                        className={`${styles.actBtn} ${playerProfile.blocked ? styles.actUnblock : styles.actBlock}`}
+                        disabled={acting}
+                        onClick={handleToggleBlock}
+                      >
+                        {playerProfile.blocked ? '✓ Desbloquear' : '🚫 Bloquear'}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.threadMessages} ref={listRef}>
                   {messages.map((m) => (
                     <div key={m.id} className={`${styles.bubble} ${m.sender === 'support' ? styles.mine : styles.theirs}`}>
-                      <div>{m.body}</div>
+                      {m.attachment_path && (
+                        <ChatAttachment path={m.attachment_path} name={m.attachment_name} type={m.attachment_type} />
+                      )}
+                      {m.body && <div>{m.body}</div>}
                       <div className={styles.bubbleTime}>{fmtTime(m.created_at)}</div>
                     </div>
                   ))}
                 </div>
                 <form className={styles.replyRow} onSubmit={handleReply}>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    style={{ display: 'none' }}
+                    onChange={handleFile}
+                  />
+                  <button
+                    type="button"
+                    className={styles.attachBtn}
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading || sending}
+                    title="Adjuntar imagen o PDF"
+                  >
+                    {uploading ? '…' : '📎'}
+                  </button>
                   <input
                     className={styles.replyInput}
                     type="text"

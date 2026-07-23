@@ -114,9 +114,63 @@
 .threadHeader {
   padding: 14px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-.threadName { font-weight: 800; color: var(--text-primary); }
+.threadName {
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .threadEmail { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+.blockedTag {
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.threadActions { display: flex; gap: 6px; flex-wrap: wrap; }
+.actBtn {
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--accent-violet);
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.actBtn:disabled { opacity: 0.5; cursor: default; }
+.actBlock {
+  border-color: rgba(251, 113, 133, 0.5);
+  background: rgba(251, 113, 133, 0.12);
+  color: var(--accent-red);
+}
+.actUnblock {
+  border-color: rgba(52, 211, 153, 0.5);
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--accent-green);
+}
+.attachBtn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.attachBtn:hover:not(:disabled) { border-color: var(--accent-violet); }
+.attachBtn:disabled { opacity: 0.5; cursor: default; }
 
 .threadMessages {
   flex: 1;

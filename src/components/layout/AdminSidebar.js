@@ -12,8 +12,8 @@ export default function AdminSidebar() {
 
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/torneos', label: 'Torneos', icon: '🏆' },
-    { href: '/admin/recurrencia', label: 'Recurrencia', icon: '🔁' },
+    { href: '/admin/torneos', label: 'Historial de Torneos', icon: '🏆' },
+    { href: '/admin/recurrencia', label: 'Torneo recurrente', icon: '🔁' },
     { href: '/admin/usuarios', label: 'Usuarios', icon: '👥' },
     { href: '/admin/transacciones', label: 'Transacciones', icon: '💳' },
     { href: '/admin/interaccion', label: 'Interacción', icon: '📈' },

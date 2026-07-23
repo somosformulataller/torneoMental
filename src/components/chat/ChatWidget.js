@@ -7,6 +7,8 @@ import {
   sendChatMessageAction,
   markChatReadPlayerAction,
 } from '@/actions/chat';
+import { uploadChatAttachment, validateChatFile } from '@/lib/chatUpload';
+import ChatAttachment from './ChatAttachment';
 import styles from './chatWidget.module.css';
 
 // Chat flotante del jugador (esquina inferior derecha). Permite escribir a
@@ -23,7 +25,9 @@ export default function ChatWidget() {
   const [unread, setUnread] = useState(0);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const listRef = useRef(null);
+  const fileRef = useRef(null);
   const openRef = useRef(false);
 
   useEffect(() => { openRef.current = open; }, [open]);
@@ -31,7 +35,7 @@ export default function ChatWidget() {
   const loadMessages = useCallback(async (convId) => {
     const { data } = await supabase
       .from('chat_messages')
-      .select('id, sender, body, created_at')
+      .select('id, sender, body, created_at, attachment_path, attachment_name, attachment_type')
       .eq('conversation_id', convId)
       .order('created_at', { ascending: true });
     if (data) setMessages(data);
@@ -112,12 +116,12 @@ export default function ChatWidget() {
     }
   }
 
-  async function send(text) {
+  async function send(text, attachment = null) {
     const body = (text ?? input).trim();
-    if (!body || sending) return;
+    if ((!body && !attachment) || sending) return;
     setSending(true);
-    setInput('');
-    const res = await sendChatMessageAction(body);
+    if (!attachment) setInput('');
+    const res = await sendChatMessageAction(body, attachment);
     if (!res?.error) {
       if (conversationId) {
         loadMessages(conversationId);
@@ -134,10 +138,28 @@ export default function ChatWidget() {
           loadMessages(conv.id);
         }
       }
-    } else {
+    } else if (!attachment) {
       setInput(body); // devolver el texto si falló
     }
     setSending(false);
+    return res;
+  }
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const err = validateChatFile(file);
+    if (err) { alert(err); return; }
+    setUploading(true);
+    try {
+      const att = await uploadChatAttachment(supabase, userId, file);
+      await send('', att);
+    } catch (er) {
+      alert('No se pudo subir el archivo: ' + er.message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   if (!userId || pathname === '/jugar') return null;
@@ -174,7 +196,10 @@ export default function ChatWidget() {
                 key={m.id}
                 className={`${styles.bubble} ${m.sender === 'player' ? styles.mine : styles.theirs}`}
               >
-                {m.body}
+                {m.attachment_path && (
+                  <ChatAttachment path={m.attachment_path} name={m.attachment_name} type={m.attachment_type} />
+                )}
+                {m.body && <div>{m.body}</div>}
               </div>
             ))}
           </div>
@@ -198,6 +223,23 @@ export default function ChatWidget() {
             className={styles.inputRow}
             onSubmit={(e) => { e.preventDefault(); send(); }}
           >
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              style={{ display: 'none' }}
+              onChange={handleFile}
+            />
+            <button
+              type="button"
+              className={styles.attachBtn}
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading || sending}
+              aria-label="Adjuntar archivo"
+              title="Adjuntar imagen o PDF"
+            >
+              {uploading ? '…' : '📎'}
+            </button>
             <input
               className={styles.input}
               type="text"

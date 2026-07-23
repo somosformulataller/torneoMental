@@ -1,0 +1,25 @@
+.imgLink { display: inline-block; }
+.img {
+  max-width: 180px;
+  max-height: 180px;
+  border-radius: 10px;
+  display: block;
+  object-fit: cover;
+}
+.file {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: underline;
+  word-break: break-word;
+}
+.loading {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}

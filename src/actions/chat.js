@@ -7,23 +7,43 @@ import { createClient } from '@/lib/supabase/server';
 // falsee el remitente. Las lecturas (mensajes, no leídos, lista de
 // conversaciones) las hace el cliente directo con RLS/RPC.
 
-// Jugador envía un mensaje (crea su conversación la primera vez).
-export async function sendChatMessageAction(body) {
+// Jugador envía un mensaje (crea su conversación la primera vez). Puede llevar
+// un adjunto opcional { path, name, type } (ya subido al storage por el cliente).
+export async function sendChatMessageAction(body, attachment = null) {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('chat_send_message', { p_body: body });
+  const { data, error } = await supabase.rpc('chat_send_message', {
+    p_body: body,
+    p_attachment_path: attachment?.path ?? null,
+    p_attachment_name: attachment?.name ?? null,
+    p_attachment_type: attachment?.type ?? null,
+  });
   if (error) return { error: error.message };
   return { messageId: data };
 }
 
-// Soporte (admin) responde en una conversación.
-export async function adminReplyChatAction(conversationId, body) {
+// Soporte (admin) responde en una conversación (con adjunto opcional).
+export async function adminReplyChatAction(conversationId, body, attachment = null) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('chat_admin_reply', {
     p_conversation_id: conversationId,
     p_body: body,
+    p_attachment_path: attachment?.path ?? null,
+    p_attachment_name: attachment?.name ?? null,
+    p_attachment_type: attachment?.type ?? null,
   });
   if (error) return { error: error.message };
   return { messageId: data };
+}
+
+// El admin suma (delta > 0) o resta (delta < 0) tickets a un usuario.
+export async function adminAdjustTicketsAction(userId, delta) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('admin_adjust_tickets', {
+    p_user_id: userId,
+    p_delta: delta,
+  });
+  if (error) return { error: error.message };
+  return { profile: data };
 }
 
 // El jugador marca su conversación como leída (limpia la campana).
